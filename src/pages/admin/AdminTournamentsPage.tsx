@@ -4,6 +4,8 @@ import { Plus, Trophy, Calendar, Users, DollarSign, Edit2, Trash2, Eye, Search }
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
+import { createTournament } from '../../api/adminService';
+import { parseApiError } from '../../api/authService';
 
 type StatusFilter = 'all' | 'upcoming' | 'active' | 'completed';
 
@@ -21,18 +23,61 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
   completed: { label: 'Đã kết thúc', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
 };
 
+const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
+const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
+
+const INIT_FORM = { name: '', startDate: '', endDate: '', numberOfRounds: '' };
+
 export function AdminTournamentsPage() {
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  const [form, setForm] = useState(INIT_FORM);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const filtered = TOURNAMENTS.filter(t =>
     (filter === 'all' || t.status === filter) &&
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  function set(field: string, value: string) {
+    setForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  async function handleCreate() {
+    setError(''); setSuccess('');
+    if (!form.name || !form.startDate || !form.endDate || !form.numberOfRounds) {
+      setError('Vui lòng điền đầy đủ tất cả các trường.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await createTournament({
+        name: form.name,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        numberOfRounds: Number(form.numberOfRounds),
+      });
+      setSuccess('Tạo giải đấu thành công!');
+      setForm(INIT_FORM);
+    } catch (err: unknown) {
+      setError(parseApiError(err as Error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function closeModal() {
+    setShowModal(false);
+    setError(''); setSuccess('');
+    setForm(INIT_FORM);
+  }
+
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <Topbar />
@@ -85,12 +130,9 @@ export function AdminTournamentsPage() {
                   className="glass-panel rounded-xl p-5 border border-glass-border hover:border-gold/20 transition-all group"
                 >
                   <div className="flex items-center gap-5">
-                    {/* Icon */}
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 flex items-center justify-center shrink-0">
                       <Trophy size={20} className="text-gold" />
                     </div>
-
-                    {/* Main Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
                         <h3 className="text-base font-serif text-white group-hover:text-champagne transition-colors">{t.name}</h3>
@@ -107,8 +149,6 @@ export function AdminTournamentsPage() {
                         <span className="text-muted/60">{t.location}</span>
                       </div>
                     </div>
-
-                    {/* Actions */}
                     <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors" title="Xem chi tiết">
                         <Eye size={15} />
@@ -124,7 +164,6 @@ export function AdminTournamentsPage() {
                     </div>
                   </div>
 
-                  {/* Progress bar for active */}
                   {t.status === 'active' && (
                     <div className="mt-4 pt-4 border-t border-glass-border">
                       <div className="flex justify-between text-[11px] text-muted mb-1.5 font-medium">
@@ -158,29 +197,57 @@ export function AdminTournamentsPage() {
             className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20"
           >
             <h2 className="text-xl font-serif text-white mb-6">Tạo giải đấu mới</h2>
+
             <div className="space-y-4">
-              {[
-                { label: 'Tên giải đấu', placeholder: 'VD: Giải Đua Mùa Thu 2026' },
-                { label: 'Địa điểm', placeholder: 'VD: Trường đua Phú Thọ' },
-                { label: 'Tổng giải thưởng', placeholder: 'VD: ₫500.000.000' },
-              ].map(f => (
-                <div key={f.label}>
-                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">{f.label}</label>
-                  <input placeholder={f.placeholder} className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors" />
-                </div>
-              ))}
-              <div className="grid grid-cols-2 gap-4">
-                {['Ngày bắt đầu', 'Ngày kết thúc'].map(l => (
-                  <div key={l}>
-                    <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">{l}</label>
-                    <input type="date" className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors" />
-                  </div>
-                ))}
+              <div>
+                <label className={LABEL}>Tên giải đấu *</label>
+                <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="VD: Giải Đua Mùa Thu 2026" className={INPUT} />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LABEL}>Ngày bắt đầu *</label>
+                  <input
+                    type="datetime-local"
+                    value={form.startDate}
+                    onChange={e => set('startDate', e.target.value)}
+                    className={INPUT}
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+                <div>
+                  <label className={LABEL}>Ngày kết thúc *</label>
+                  <input
+                    type="datetime-local"
+                    value={form.endDate}
+                    onChange={e => set('endDate', e.target.value)}
+                    className={INPUT}
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={LABEL}>Số vòng đua *</label>
+                <input
+                  value={form.numberOfRounds}
+                  onChange={e => set('numberOfRounds', e.target.value)}
+                  type="number"
+                  min="1"
+                  placeholder="VD: 5"
+                  className={INPUT}
+                />
+              </div>
+
+              {error && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>}
+              {success && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{success}</div>}
             </div>
+
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
-              <button onClick={() => setShowModal(false)} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold">Tạo giải đấu</button>
+              <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
+              <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
+                {loading ? 'Đang tạo…' : 'Tạo giải đấu'}
+              </button>
             </div>
           </motion.div>
         </div>

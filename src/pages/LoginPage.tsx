@@ -3,15 +3,8 @@ import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { setMockUser, getRoleDashboard } from '../utils/mockAuth';
-
-const roles = [
-  { id: 'owner', label: 'Horse\nOwner', emoji: '🐎' },
-  { id: 'jockey', label: 'Jockey', emoji: '🏇' },
-  { id: 'referee', label: 'Referee', emoji: '⚖️' },
-  { id: 'spectator', label: 'Spectator', emoji: '👁️' },
-  { id: 'admin', label: 'Admin', emoji: '🛡️' },
-];
+import { login, parseApiError } from '../api/authService';
+import { getDashboardPath } from '../utils/roleRoutes';
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -57,11 +50,22 @@ function CornerOrnament() {
 export function LoginPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string>('owner');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function handleSignIn() {
-    setMockUser(selectedRole);
-    navigate(getRoleDashboard(selectedRole));
+  async function handleSignIn() {
+    setError('');
+    setLoading(true);
+    try {
+      const user = await login(email, password);
+      navigate(getDashboardPath(user.role), { replace: true });
+    } catch (err: unknown) {
+      setError(parseApiError(err as Error));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -163,7 +167,6 @@ export function LoginPage() {
 
           {/* Right: Login form */}
           <section className="w-full flex justify-center">
-            {/* Gradient border wrapper */}
             <div className="w-full max-w-md" style={{
               padding: '1px',
               borderRadius: '16px',
@@ -211,6 +214,8 @@ export function LoginPage() {
                     style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
                     type="email"
                     placeholder="email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
                     onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
                   />
@@ -227,6 +232,9 @@ export function LoginPage() {
                       style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
                       onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
                       onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
                     />
@@ -250,62 +258,33 @@ export function LoginPage() {
                   <a href="#" style={{ color: '#d4af37' }}>Forgot password?</a>
                 </motion.div>
 
+                {/* Error message */}
+                {error && (
+                  <motion.div
+                    variants={fadeUp}
+                    className="rounded-md px-4 py-3 text-sm"
+                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+                  >
+                    {error}
+                  </motion.div>
+                )}
+
                 {/* Submit */}
                 <motion.div variants={fadeUp}>
                   <button
-                    className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                    className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
                     style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: '#0b101e' }}
                     type="button"
                     onClick={handleSignIn}
+                    disabled={loading}
                   >
-                    Sign In
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                    </svg>
+                    {loading ? 'Signing in…' : 'Sign In'}
+                    {!loading && (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                      </svg>
+                    )}
                   </button>
-                </motion.div>
-
-                {/* Role selector */}
-                <motion.div variants={fadeUp}>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Select Your Role
-                  </label>
-                </motion.div>
-                <motion.div variants={fadeUp} className="grid grid-cols-5 gap-2">
-                  {roles.map((role) => (
-                    <button
-                      key={role.id}
-                      type="button"
-                      onClick={() => setSelectedRole(role.id)}
-                      className="flex flex-col items-center justify-center p-2 rounded-lg gap-1.5 transition-all duration-300"
-                      style={{
-                        border: selectedRole === role.id ? '1px solid #d4af37' : '1px solid rgba(148,163,184,0.2)',
-                        background: selectedRole === role.id ? 'rgba(212,175,55,0.1)' : 'transparent',
-                        transform: 'none',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (selectedRole !== role.id) (e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)');
-                      }}
-                      onMouseLeave={(e) => {
-                        if (selectedRole !== role.id) (e.currentTarget.style.borderColor = 'rgba(148,163,184,0.2)');
-                      }}
-                    >
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center"
-                        style={{ background: 'rgba(30,41,59,0.4)' }}
-                      >
-                        <span className="text-sm">{role.emoji}</span>
-                      </div>
-                      <span
-                        className="text-[9px] text-center leading-tight"
-                        style={{ color: selectedRole === role.id ? '#e2e8f0' : '#94a3b8' }}
-                      >
-                        {role.label.split('\n').map((line, i) => (
-                          <span key={i}>{line}{i < role.label.split('\n').length - 1 && <br />}</span>
-                        ))}
-                      </span>
-                    </button>
-                  ))}
                 </motion.div>
 
                 {/* Register link */}

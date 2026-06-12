@@ -5,7 +5,7 @@ import {
   ShieldCheck, FileText, Target, Star, Activity,
   Megaphone, UserCheck, AlertTriangle, Wallet,
 } from 'lucide-react';
-import { getMockUser, clearMockUser } from '../../utils/mockAuth';
+import { getCurrentUser, logout } from '../../api/authService';
 
 interface NavItem {
   icon: React.ElementType;
@@ -66,15 +66,21 @@ const ROLE_LABELS: Record<string, string> = {
   spectator: 'Spectator',
 };
 
+function toRoleKey(role: string | undefined): string {
+  if (!role) return 'spectator';
+  const lower = role.toLowerCase();
+  return lower === 'horseowner' ? 'owner' : lower;
+}
+
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = getMockUser();
-  const role = user?.role ?? 'owner';
-  const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.owner;
+  const user = getCurrentUser();
+  const roleKey = toRoleKey(user?.role);
+  const navItems = NAV_BY_ROLE[roleKey] ?? NAV_BY_ROLE.spectator;
 
   function handleLogout() {
-    clearMockUser();
+    logout();
     navigate('/login');
   }
 
@@ -116,11 +122,11 @@ export function Sidebar() {
       <div className="px-4 py-4 border-t border-glass-border shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-gold/30 to-gold/10 border border-gold/30 flex items-center justify-center font-serif text-base font-bold text-champagne">
-            {user?.name?.[0] ?? 'U'}
+            {user?.fullName?.[0] ?? 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-white truncate">{user?.name ?? 'User'}</div>
-            <div className="text-[11px] text-gold font-medium">{ROLE_LABELS[role] ?? role}</div>
+            <div className="text-sm font-semibold text-white truncate">{user?.fullName ?? 'User'}</div>
+            <div className="text-[11px] text-gold font-medium">{ROLE_LABELS[roleKey] ?? user?.role}</div>
           </div>
           <button
             onClick={handleLogout}

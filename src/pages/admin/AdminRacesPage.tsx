@@ -4,6 +4,8 @@ import { Plus, Calendar, Users, Flag, Clock, Edit2, Eye, ChevronDown } from 'luc
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
+import { createRace } from '../../api/adminService';
+import { parseApiError } from '../../api/authService';
 
 const TOURNAMENTS = [
   { id: 1, name: 'Giải Đua Mùa Xuân 2026' },
@@ -39,16 +41,60 @@ const STATUS_CONFIG = {
   completed: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
 };
 
+const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
+const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
+
+const INIT_FORM = { roundId: '', name: '', raceDate: '', distanceMeter: '', maxLanes: '' };
+
 export function AdminRacesPage() {
   const [selectedTournament, setSelectedTournament] = useState(1);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const [form, setForm] = useState(INIT_FORM);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
   const races = RACES_BY_TOURNAMENT[selectedTournament] ?? [];
   const tournament = TOURNAMENTS.find(t => t.id === selectedTournament)!;
 
+  function set(field: string, value: string) {
+    setForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  async function handleCreate() {
+    setError(''); setSuccess('');
+    if (!form.roundId || !form.name || !form.raceDate || !form.distanceMeter || !form.maxLanes) {
+      setError('Vui lòng điền đầy đủ tất cả các trường.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await createRace({
+        roundId: Number(form.roundId),
+        name: form.name,
+        raceDate: form.raceDate,
+        distanceMeter: Number(form.distanceMeter),
+        maxLanes: Number(form.maxLanes),
+      });
+      setSuccess('Tạo cuộc đua thành công!');
+      setForm(INIT_FORM);
+    } catch (err: unknown) {
+      setError(parseApiError(err as Error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function closeModal() {
+    setShowModal(false);
+    setError(''); setSuccess('');
+    setForm(INIT_FORM);
+  }
+
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <Topbar />
@@ -182,28 +228,49 @@ export function AdminRacesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20">
             <h2 className="text-xl font-serif text-white mb-6">Thêm cuộc đua mới</h2>
+
             <div className="space-y-4">
-              {[
-                { label: 'Tên cuộc đua', placeholder: 'VD: Vòng 4 - Bán Kết' },
-                { label: 'Cự ly (m)', placeholder: 'VD: 1600' },
-              ].map(f => (
-                <div key={f.label}>
-                  <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">{f.label}</label>
-                  <input placeholder={f.placeholder} className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors" />
-                </div>
-              ))}
-              <div className="grid grid-cols-2 gap-4">
-                {['Ngày đua', 'Giờ bắt đầu'].map(l => (
-                  <div key={l}>
-                    <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">{l}</label>
-                    <input type={l === 'Ngày đua' ? 'date' : 'time'} className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors" />
-                  </div>
-                ))}
+              <div>
+                <label className={LABEL}>Round ID *</label>
+                <input value={form.roundId} onChange={e => set('roundId', e.target.value)} type="number" min="1" placeholder="ID vòng đấu" className={INPUT} />
               </div>
+
+              <div>
+                <label className={LABEL}>Tên cuộc đua *</label>
+                <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="VD: Vòng 4 - Bán Kết" className={INPUT} />
+              </div>
+
+              <div>
+                <label className={LABEL}>Ngày & giờ đua *</label>
+                <input
+                  type="datetime-local"
+                  value={form.raceDate}
+                  onChange={e => set('raceDate', e.target.value)}
+                  className={INPUT}
+                  style={{ colorScheme: 'dark' }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LABEL}>Cự ly (m) *</label>
+                  <input value={form.distanceMeter} onChange={e => set('distanceMeter', e.target.value)} type="number" min="100" placeholder="VD: 1600" className={INPUT} />
+                </div>
+                <div>
+                  <label className={LABEL}>Số làn đua (Max Lanes) *</label>
+                  <input value={form.maxLanes} onChange={e => set('maxLanes', e.target.value)} type="number" min="1" placeholder="VD: 12" className={INPUT} />
+                </div>
+              </div>
+
+              {error && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>}
+              {success && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{success}</div>}
             </div>
+
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
-              <button onClick={() => setShowModal(false)} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold">Lưu</button>
+              <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
+              <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
+                {loading ? 'Đang tạo…' : 'Lưu cuộc đua'}
+              </button>
             </div>
           </motion.div>
         </div>

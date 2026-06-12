@@ -1,12 +1,25 @@
 import { Navigate } from 'react-router-dom';
+import { getCurrentUser } from '../api/authService';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
+  allowedRoles?: string[];
 }
 
-export function PrivateRoute({ children }: PrivateRouteProps) {
-  // TODO: thay bằng kiểm tra auth thật từ services/auth.js
-  const isAuthenticated = true;
+export function PrivateRoute({ children, allowedRoles }: PrivateRouteProps) {
+  const user = getCurrentUser();
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles) {
+    const userRoleKey = user.role?.toLowerCase().replace(/[\s_-]/g, '') ?? '';
+    const allowed = allowedRoles.map(r => r.toLowerCase().replace(/[\s_-]/g, ''));
+    if (!allowed.includes(userRoleKey)) {
+      return <Navigate to="/login" replace />;
+    }
+  }
+
+  return <>{children}</>;
 }

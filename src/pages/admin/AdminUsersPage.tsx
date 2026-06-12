@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, MoreHorizontal, CheckCircle, XCircle, Edit2, Users } from 'lucide-react';
+import { Search, Plus, MoreHorizontal, CheckCircle, XCircle, Edit2, Users, Eye, EyeOff } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
+import { getRoles, createAccount } from '../../api/adminService';
+import { parseApiError } from '../../api/authService';
 
 type RoleFilter = 'all' | 'owner' | 'jockey' | 'referee' | 'spectator' | 'admin';
 
@@ -37,9 +39,74 @@ const STATUS_LABELS: Record<string, string> = { active: 'Hoạt động', pendin
 
 const ROLE_COUNTS = USERS.reduce((acc, u) => { acc[u.role] = (acc[u.role] || 0) + 1; return acc; }, {} as Record<string, number>);
 
+const NEEDS_LICENSE = ['Jockey', 'Referee'];
+
+const INIT_FORM = { fullName: '', email: '', password: '', role: '', licenseNumber: '', experienceYears: '' };
+
+const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
+const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
+
 export function AdminUsersPage() {
   const [filter, setFilter] = useState<RoleFilter>('all');
   const [search, setSearch] = useState('');
+
+  const [showModal, setShowModal] = useState(false);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [form, setForm] = useState(INIT_FORM);
+  const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!showModal) return;
+    getRoles()
+      .then((data: unknown) => {
+        const raw = Array.isArray(data) ? data
+          : Array.isArray((data as { result?: unknown }).result) ? (data as { result: unknown[] }).result
+          : [];
+        setRoles(raw.map((r: unknown) => (typeof r === 'string' ? r : (r as { name?: string }).name ?? '')).filter(Boolean));
+      })
+      .catch(() => setRoles([]));
+  }, [showModal]);
+
+  function set(field: string, value: string) {
+    setForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  async function handleCreate() {
+    setError(''); setSuccess('');
+    if (!form.fullName || !form.email || !form.password || !form.role) {
+      setError('Vui lòng điền đầy đủ các trường bắt buộc.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const body: Record<string, unknown> = {
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+      };
+      if (NEEDS_LICENSE.includes(form.role)) {
+        if (form.licenseNumber) body.licenseNumber = form.licenseNumber;
+        if (form.experienceYears) body.experienceYears = Number(form.experienceYears);
+      }
+      await createAccount(body);
+      setSuccess('Tạo tài khoản thành công!');
+      setForm(INIT_FORM);
+    } catch (err: unknown) {
+      setError(parseApiError(err as Error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function closeModal() {
+    setShowModal(false);
+    setError(''); setSuccess('');
+    setForm(INIT_FORM);
+  }
 
   const filtered = USERS.filter(u =>
     (filter === 'all' || u.role === filter) &&
@@ -47,7 +114,7 @@ export function AdminUsersPage() {
   );
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
       <div className="relative flex-1 min-w-0 overflow-y-auto">
         <Topbar />
@@ -59,7 +126,7 @@ export function AdminUsersPage() {
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             actions={
-              <button className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
+              <button onClick={() => setShowModal(true)} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
                 <Plus size={16} /> Thêm người dùng
               </button>
             }
@@ -170,6 +237,101 @@ export function AdminUsersPage() {
 
         </main>
       </div>
+
+      {/* Create Account Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20 max-h-[90vh] overflow-y-auto"
+          >
+            <h2 className="text-xl font-serif text-white mb-6">Tạo tài khoản mới</h2>
+
+            <div className="space-y-4">
+              {/* Full Name */}
+              <div>
+                <label className={LABEL}>Họ và tên *</label>
+                <input value={form.fullName} onChange={e => set('fullName', e.target.value)} placeholder="Nguyễn Văn A" className={INPUT} />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className={LABEL}>Email *</label>
+                <input value={form.email} onChange={e => set('email', e.target.value)} type="email" placeholder="example@email.com" className={INPUT} />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className={LABEL}>Mật khẩu *</label>
+                <div className="relative">
+                  <input
+                    value={form.password}
+                    onChange={e => set('password', e.target.value)}
+                    type={showPwd ? 'text' : 'password'}
+                    placeholder="Tối thiểu 6 ký tự"
+                    className={INPUT + ' pr-10'}
+                  />
+                  <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute inset-y-0 right-3 flex items-center text-muted hover:text-white">
+                    {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Role */}
+              <div>
+                <label className={LABEL}>Role *</label>
+                {roles.length === 0 ? (
+                  <div className="text-xs text-muted py-2">Đang tải danh sách role…</div>
+                ) : (
+                  <select
+                    value={form.role}
+                    onChange={e => set('role', e.target.value)}
+                    className={INPUT}
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="">-- Chọn role --</option>
+                    {roles.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Conditional: Jockey / Referee only */}
+              {NEEDS_LICENSE.includes(form.role) && (
+                <>
+                  <div>
+                    <label className={LABEL}>Số giấy phép (License Number)</label>
+                    <input value={form.licenseNumber} onChange={e => set('licenseNumber', e.target.value)} placeholder="VD: LIC-2024-001" className={INPUT} />
+                  </div>
+                  <div>
+                    <label className={LABEL}>Số năm kinh nghiệm</label>
+                    <input value={form.experienceYears} onChange={e => set('experienceYears', e.target.value)} type="number" min="0" placeholder="VD: 5" className={INPUT} />
+                  </div>
+                </>
+              )}
+
+              {/* Error / Success */}
+              {error && (
+                <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>
+              )}
+              {success && (
+                <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{success}</div>
+              )}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">
+                Hủy
+              </button>
+              <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
+                {loading ? 'Đang tạo…' : 'Tạo tài khoản'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

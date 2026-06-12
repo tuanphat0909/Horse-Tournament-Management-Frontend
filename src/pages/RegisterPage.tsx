@@ -3,14 +3,8 @@ import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-const roles = [
-  { id: 'owner', label: 'Horse\nOwner', emoji: '🐎' },
-  { id: 'jockey', label: 'Jockey', emoji: '🏇' },
-  { id: 'referee', label: 'Referee', emoji: '⚖️' },
-  { id: 'spectator', label: 'Spectator', emoji: '👁️' },
-  { id: 'admin', label: 'Admin', emoji: '🛡️' },
-];
+import { register, parseApiError } from '../api/authService';
+import { getDashboardPath } from '../utils/roleRoutes';
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -34,7 +28,30 @@ function CornerOrnament() {
 export function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleRegister() {
+    setError('');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const user = await register(fullName, email, password, confirmPassword);
+      navigate(getDashboardPath(user.role), { replace: true });
+    } catch (err: unknown) {
+      setError(parseApiError(err as Error));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div
@@ -47,7 +64,7 @@ export function RegisterPage() {
         color: '#e2e8f0',
       }}
     >
-      {/* Subtle background wave lines — same as Login */}
+      {/* Background wave lines */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
         preserveAspectRatio="none"
@@ -97,8 +114,8 @@ export function RegisterPage() {
           </svg>
           <div style={{ width: '1px', flex: 1, background: 'linear-gradient(to bottom, rgba(212,175,55,0.35), transparent)' }} />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center w-full">
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center w-full">
           {/* Left: Branding */}
           <motion.section
             className="hidden lg:flex flex-col items-center justify-center text-center px-8"
@@ -132,7 +149,6 @@ export function RegisterPage() {
 
           {/* Right: Register form */}
           <section className="w-full flex justify-center">
-            {/* Gradient border wrapper */}
             <div className="w-full max-w-md" style={{
               padding: '1px',
               borderRadius: '16px',
@@ -180,6 +196,8 @@ export function RegisterPage() {
                     style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
                     type="text"
                     placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
                     onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
                   />
@@ -195,6 +213,8 @@ export function RegisterPage() {
                     style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
                     type="email"
                     placeholder="champion@equestria.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
                     onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
                   />
@@ -210,7 +230,9 @@ export function RegisterPage() {
                       className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
                       style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
+                      placeholder="••••••••  (min. 6 characters)"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
                       onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
                     />
@@ -225,60 +247,60 @@ export function RegisterPage() {
                   </div>
                 </motion.div>
 
-                {/* Role selector */}
+                {/* Confirm Password */}
                 <motion.div variants={fadeUp}>
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Select Your Role
+                    Confirm Password
                   </label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {roles.map((role) => (
-                      <button
-                        key={role.id}
-                        type="button"
-                        onClick={() => setSelectedRole(role.id)}
-                        className="flex flex-col items-center justify-center p-2 rounded-lg gap-1.5 transition-all duration-300"
-                        style={{
-                          border: selectedRole === role.id ? '1px solid #d4af37' : '1px solid rgba(148,163,184,0.2)',
-                          background: selectedRole === role.id ? 'rgba(212,175,55,0.1)' : 'transparent',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedRole !== role.id) (e.currentTarget.style.borderColor = 'rgba(212,175,55,0.5)');
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedRole !== role.id) (e.currentTarget.style.borderColor = 'rgba(148,163,184,0.2)');
-                        }}
-                      >
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center"
-                          style={{ background: 'rgba(30,41,59,0.4)' }}
-                        >
-                          <span className="text-sm">{role.emoji}</span>
-                        </div>
-                        <span
-                          className="text-[9px] text-center leading-tight"
-                          style={{ color: selectedRole === role.id ? '#e2e8f0' : '#94a3b8' }}
-                        >
-                          {role.label.split('\n').map((line, i, arr) => (
-                            <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
-                          ))}
-                        </span>
-                      </button>
-                    ))}
+                  <div className="relative">
+                    <input
+                      className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
+                      style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
+                      type={showConfirm ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+                      onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
+                      onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
+                    />
+                    <button
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                      style={{ color: '#94a3b8' }}
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                    >
+                      {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </motion.div>
+
+                {/* Error message */}
+                {error && (
+                  <motion.div
+                    variants={fadeUp}
+                    className="rounded-md px-4 py-3 text-sm"
+                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+                  >
+                    {error}
+                  </motion.div>
+                )}
 
                 {/* Submit */}
                 <motion.div variants={fadeUp}>
                   <button
-                    className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                    className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
                     style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: '#0b101e' }}
                     type="button"
-                    onClick={() => navigate('/login')}
+                    onClick={handleRegister}
+                    disabled={loading}
                   >
-                    Register
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                    </svg>
+                    {loading ? 'Creating account…' : 'Register'}
+                    {!loading && (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                      </svg>
+                    )}
                   </button>
                 </motion.div>
 
@@ -290,7 +312,7 @@ export function RegisterPage() {
                   <div className="relative flex justify-center">
                     <span
                       className="px-3 text-xs uppercase tracking-wider font-semibold"
-                      style={{ color: '#94a3b8' }}
+                      style={{ background: 'rgba(15,23,42,0.5)', color: '#94a3b8' }}
                     >
                       or
                     </span>
