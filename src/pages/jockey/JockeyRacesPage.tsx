@@ -8,10 +8,16 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getContracts } from '../../api/jockeyService';
 import { parseApiError } from '../../api/authService';
 
-const STATUS_CONFIG = {
-  upcoming:  { label: 'Sắp diễn ra', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  pending:   { label: 'Chờ phản hồi', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+  waiting:   { label: 'Chờ phản hồi', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+  active:    { label: 'Đang hoạt động', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  accepted:  { label: 'Đã chấp nhận', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  rejected:  { label: 'Đã từ chối', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+  declined:  { label: 'Đã từ chối', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
   completed: { label: 'Đã kết thúc', color: 'text-muted bg-white/5 border-glass-border' },
-  racing:    { label: 'Đang đua', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  racing:    { label: 'Đang đua', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  upcoming:  { label: 'Sắp diễn ra', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
 };
 
 export function JockeyRacesPage() {

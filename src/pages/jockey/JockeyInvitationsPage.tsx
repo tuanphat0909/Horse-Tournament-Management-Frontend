@@ -5,7 +5,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getContracts } from '../../api/jockeyService';
+import { getContracts, respondContract } from '../../api/jockeyService';
 import { parseApiError } from '../../api/authService';
 
 type Tab = 'pending' | 'accepted' | 'rejected';
@@ -23,6 +23,7 @@ export function JockeyInvitationsPage() {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [respondingId, setRespondingId] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -36,6 +37,18 @@ export function JockeyInvitationsPage() {
       }
     })();
   }, []);
+
+  async function handleRespond(id: number, status: 'Active' | 'Rejected') {
+    setRespondingId(id);
+    try {
+      await respondContract(id, status);
+      setInvitations(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+    } catch (err: unknown) {
+      alert(parseApiError(err as Error));
+    } finally {
+      setRespondingId(null);
+    }
+  }
 
   const filtered = invitations.filter(i => bucketOf(i.status) === tab);
 
@@ -102,10 +115,16 @@ export function JockeyInvitationsPage() {
                         )}
                         {bucket === 'pending' && (
                           <div className="flex items-center gap-3">
-                            <button className="px-5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-bold transition-colors flex items-center gap-2">
+                            <button
+                              disabled={respondingId === inv.id}
+                              onClick={() => handleRespond(inv.id, 'Active')}
+                              className="px-5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-50">
                               <CheckCircle size={15} /> Nhận lời mời
                             </button>
-                            <button className="px-5 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm font-bold transition-colors flex items-center gap-2">
+                            <button
+                              disabled={respondingId === inv.id}
+                              onClick={() => handleRespond(inv.id, 'Rejected')}
+                              className="px-5 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-50">
                               <XCircle size={15} /> Từ chối
                             </button>
                           </div>
