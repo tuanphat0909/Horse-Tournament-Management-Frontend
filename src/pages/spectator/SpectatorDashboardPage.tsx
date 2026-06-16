@@ -8,7 +8,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../api/authService';
 import { getBalance, getMyBets } from '../../api/spectatorService';
-import { getNotifications, getRaceSchedule } from '../../api/publicService';
+import { getNotifications, getRaceSchedule, getTournaments } from '../../api/publicService';
 
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
@@ -20,6 +20,7 @@ export function SpectatorDashboardPage() {
   const [bets, setBets] = useState<any[]>([]);
   const [notifCount, setNotifCount] = useState(0);
   const [upcoming, setUpcoming] = useState<any[]>([]);
+  const [tournaments, setTournaments] = useState<any[]>([]);
 
   useEffect(() => {
     getBalance().then(d => {
@@ -32,6 +33,7 @@ export function SpectatorDashboardPage() {
       setNotifCount(list.filter((n: any) => !(n.isRead ?? n.read)).length);
     }).catch(() => setNotifCount(0));
     getRaceSchedule().then(d => setUpcoming(d?.result ?? (Array.isArray(d) ? d : []))).catch(() => setUpcoming([]));
+    getTournaments().then(d => setTournaments(d?.result ?? (Array.isArray(d) ? d : []))).catch(() => setTournaments([]));
   }, []);
 
   const pendingBets = bets.filter(b => { const s = (b.status ?? '').toLowerCase(); return s !== 'win' && s !== 'won' && s !== 'lose' && s !== 'lost' && s !== 'correct' && s !== 'incorrect'; }).length;
@@ -72,7 +74,7 @@ export function SpectatorDashboardPage() {
             {[
               { title: 'Số dư', value: balance.toLocaleString(), trend: `≈ $${(balance / 100).toFixed(2)}`, icon: Wallet, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/spectator/wallet' },
               { title: 'Đang diễn ra', value: '—', trend: 'Live ngay', icon: Activity, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', path: '/spectator/live' },
-              { title: 'Giải đấu', value: String(upcoming.length), trend: 'Đang theo dõi', icon: Trophy, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/spectator/tournaments' },
+              { title: 'Giải đấu', value: String(tournaments.length), trend: 'Đang theo dõi', icon: Trophy, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/spectator/tournaments' },
               { title: 'Dự đoán', value: String(bets.length), trend: `${pendingBets} chờ kết quả`, icon: BarChart3, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/spectator/predictions' },
               { title: 'Thông báo', value: String(notifCount), trend: 'Chưa đọc', icon: Bell, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/spectator/notifications' },
             ].map((m, i) => (

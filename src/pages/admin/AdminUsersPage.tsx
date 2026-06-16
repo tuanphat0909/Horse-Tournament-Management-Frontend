@@ -5,7 +5,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getRoles, createAccount } from '../../api/adminService';
+import { getRoles, createAccount, getAccounts } from '../../api/adminService';
 import { parseApiError } from '../../api/authService';
 
 type RoleFilter = 'all' | 'owner' | 'jockey' | 'referee' | 'spectator' | 'admin';
@@ -19,9 +19,20 @@ const INIT_FORM = { fullName: '', email: '', password: '', role: '', licenseNumb
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
+const ROLE_BADGE: Record<string, string> = {
+  owner: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  jockey: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+  referee: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+  spectator: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  admin: 'text-gold bg-gold/10 border-gold/20',
+};
+
 export function AdminUsersPage() {
   const [filter, setFilter] = useState<RoleFilter>('all');
   const [search, setSearch] = useState('');
+
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
 
   const [showModal, setShowModal] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
@@ -30,6 +41,13 @@ export function AdminUsersPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getAccounts()
+      .then((d: any) => setAccounts(d?.result ?? (Array.isArray(d) ? d : [])))
+      .catch(() => setAccounts([]))
+      .finally(() => setAccountsLoading(false));
+  }, []);
 
   useEffect(() => {
     if (!showModal) return;
@@ -69,6 +87,10 @@ export function AdminUsersPage() {
       const newId = data?.result?.id ?? data?.result?.accountId ?? data?.result?.user?.id;
       setSuccess(newId != null ? `Đã tạo tài khoản thành công! ID = ${newId}` : 'Tạo tài khoản thành công!');
       setForm(INIT_FORM);
+      // refresh list sau khi tạo thành công
+      getAccounts()
+        .then((d: any) => setAccounts(d?.result ?? (Array.isArray(d) ? d : [])))
+        .catch(() => {});
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
@@ -81,6 +103,23 @@ export function AdminUsersPage() {
     setError(''); setSuccess('');
     setForm(INIT_FORM);
   }
+
+  const roleCounts: Record<RoleFilter, number> = {
+    all: accounts.length,
+    owner: accounts.filter(a => (a.roleName ?? '').toLowerCase() === 'owner').length,
+    jockey: accounts.filter(a => (a.roleName ?? '').toLowerCase() === 'jockey').length,
+    referee: accounts.filter(a => (a.roleName ?? '').toLowerCase() === 'referee').length,
+    spectator: accounts.filter(a => (a.roleName ?? '').toLowerCase() === 'spectator').length,
+    admin: accounts.filter(a => (a.roleName ?? '').toLowerCase() === 'admin').length,
+  };
+
+  const filtered = accounts
+    .filter(a => filter === 'all' || (a.roleName ?? '').toLowerCase() === filter)
+    .filter(a => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (a.fullName ?? '').toLowerCase().includes(q) || (a.email ?? '').toLowerCase().includes(q);
+    });
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -103,7 +142,6 @@ export function AdminUsersPage() {
           />
 
           {/* Role Stats */}
-          {/* TODO: BE chưa có API danh sách người dùng — số lượng theo role hiển thị 0 */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {(['all', 'owner', 'jockey', 'referee', 'spectator'] as RoleFilter[]).map((r) => (
               <button
@@ -120,7 +158,7 @@ export function AdminUsersPage() {
                   </span>
                 </div>
                 <div className="relative z-10 text-xl font-serif font-bold text-white">
-                  0
+                  {accountsLoading ? '…' : roleCounts[r]}
                 </div>
               </button>
             ))}
@@ -140,15 +178,45 @@ export function AdminUsersPage() {
                   className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
                 />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-muted"><span className="text-champagne font-semibold">0</span> kết quả</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-muted">
+                <span className="text-champagne font-semibold">{accountsLoading ? '…' : filtered.length}</span> kết quả
+              </span>
             </div>
 
-            {/* TODO: BE chưa có API danh sách người dùng */}
-            <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-              <div className="text-4xl opacity-40 mb-3">👥</div>
-              <div className="text-muted text-sm">Chưa có dữ liệu</div>
-            </div>
+            {accountsLoading ? (
+              <div className="p-12 text-center">
+                <div className="text-muted text-sm">Đang tải...</div>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="text-4xl opacity-40 mb-3">👥</div>
+                <div className="text-muted text-sm">{search ? 'Không tìm thấy kết quả' : 'Chưa có dữ liệu'}</div>
+              </div>
+            ) : (
+              <div className="divide-y divide-glass-border relative z-10">
+                {filtered.map((a, i) => {
+                  const rk = (a.roleName ?? '').toLowerCase();
+                  const roleCls = ROLE_BADGE[rk] ?? 'text-muted bg-white/[0.04] border-glass-border';
+                  const sk = (a.status ?? '').toLowerCase();
+                  const statusCls = sk === 'active' ? 'text-emerald-400' : (sk === 'inactive' || sk === 'banned') ? 'text-red-400' : 'text-yellow-400';
+                  const createdAt = a.createdAt
+                    ? (() => { try { return new Date(a.createdAt).toLocaleDateString('vi-VN'); } catch { return a.createdAt; } })()
+                    : '—';
+                  return (
+                    <div key={a.userId ?? i} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.02] transition-colors group">
+                      <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-sm font-serif font-bold text-champagne shrink-0">{i + 1}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">{a.fullName ?? '—'}</div>
+                        <div className="text-xs text-muted truncate">{a.email ?? '—'}</div>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${roleCls}`}>{a.roleName ?? '—'}</span>
+                      <span className={`text-xs font-medium shrink-0 hidden sm:block w-16 text-right ${statusCls}`}>{a.status ?? '—'}</span>
+                      <span className="text-xs text-muted shrink-0 hidden md:block w-24 text-right">{createdAt}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
 
         </main>
@@ -172,19 +240,14 @@ export function AdminUsersPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Full Name */}
               <div>
                 <label className={LABEL}>Họ và tên *</label>
                 <input value={form.fullName} onChange={e => set('fullName', e.target.value)} placeholder="Nguyễn Văn A" className={INPUT} />
               </div>
-
-              {/* Email */}
               <div>
                 <label className={LABEL}>Email *</label>
                 <input value={form.email} onChange={e => set('email', e.target.value)} type="email" placeholder="example@email.com" className={INPUT} />
               </div>
-
-              {/* Password */}
               <div>
                 <label className={LABEL}>Mật khẩu *</label>
                 <div className="relative">
@@ -200,28 +263,17 @@ export function AdminUsersPage() {
                   </button>
                 </div>
               </div>
-
-              {/* Role */}
               <div>
                 <label className={LABEL}>Role *</label>
                 {roles.length === 0 ? (
                   <div className="text-xs text-muted py-2">Đang tải danh sách role…</div>
                 ) : (
-                  <select
-                    value={form.role}
-                    onChange={e => set('role', e.target.value)}
-                    className={INPUT}
-                    style={{ colorScheme: 'dark' }}
-                  >
+                  <select value={form.role} onChange={e => set('role', e.target.value)} className={INPUT} style={{ colorScheme: 'dark' }}>
                     <option value="">-- Chọn role --</option>
-                    {roles.map(r => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
+                    {roles.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 )}
               </div>
-
-              {/* Conditional: Jockey / Referee only */}
               {NEEDS_LICENSE.includes(form.role) && (
                 <>
                   <div>
@@ -234,20 +286,12 @@ export function AdminUsersPage() {
                   </div>
                 </>
               )}
-
-              {/* Error / Success */}
-              {error && (
-                <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>
-              )}
-              {success && (
-                <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{success}</div>
-              )}
+              {error && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>}
+              {success && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{success}</div>}
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">
-                Hủy
-              </button>
+              <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
               <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
                 {loading ? 'Đang tạo…' : 'Tạo tài khoản'}
               </button>

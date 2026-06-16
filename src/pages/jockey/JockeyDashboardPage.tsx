@@ -10,6 +10,16 @@ import { getContracts, respondContract } from '../../api/jockeyService';
 import { getCurrentUser, parseApiError } from '../../api/authService';
 import { getRaceSchedule } from '../../api/publicService';
 
+function isFuture(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return d >= today;
+  } catch { return false; }
+}
+
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
@@ -52,6 +62,8 @@ export function JockeyDashboardPage() {
     }
   }
 
+  const upcomingRaces = schedule.filter(r => isFuture(r.raceDate));
+
   const pending = contracts.filter(c => {
     const s = (c.status ?? '').toLowerCase();
     return s === 'pending' || s === 'waiting';
@@ -92,7 +104,7 @@ export function JockeyDashboardPage() {
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
               { title: 'Lời mời mới',    value: String(pending.length),    trend: 'Chờ phản hồi', icon: Bell,     color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/jockey/invitations' },
-              { title: 'Cuộc đua sắp tới', value: schedule.length > 0 ? String(schedule.length) : '—', trend: '7 ngày tới', icon: Calendar, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/jockey/schedule' },
+              { title: 'Cuộc đua sắp tới', value: String(upcomingRaces.length), trend: '7 ngày tới', icon: Calendar, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/jockey/schedule' },
               { title: 'Số lần thắng',   value: '—',                      trend: 'Mùa 2026',     icon: Trophy,   color: 'text-gold',       bg: 'from-gold/15 to-amber-900/20',      path: '/jockey/stats' },
               { title: 'Tổng hợp đồng',  value: String(contracts.length), trend: 'Mùa giải 2026',icon: Flag,     color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20',path: '/jockey/races' },
             ].map((m, i) => (

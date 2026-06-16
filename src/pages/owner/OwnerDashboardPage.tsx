@@ -13,6 +13,16 @@ import { getCurrentUser, parseApiError } from '../../api/authService';
 import { getMyHorses } from '../../api/ownerService';
 import { getRaceSchedule } from '../../api/publicService';
 
+function isFuture(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return d >= today;
+  } catch { return false; }
+}
+
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
@@ -44,6 +54,8 @@ export function OwnerDashboardPage() {
       .catch((err: Error) => { console.error(parseApiError(err)); setSchedule([]); })
       .finally(() => setScheduleLoading(false));
   }, []);
+
+  const upcomingRaces = schedule.filter(r => isFuture(r.raceDate));
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -83,7 +95,7 @@ export function OwnerDashboardPage() {
             {[
               { title: 'Ngựa của tôi', value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0] },
               { title: 'Đang thi đấu', value: '—', trend: '+1', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1] },
-              { title: 'Sắp thi đấu', value: scheduleLoading ? '…' : String(schedule.length), trend: '3 ngày nữa', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2] },
+              { title: 'Sắp thi đấu', value: scheduleLoading ? '…' : String(upcomingRaces.length), trend: '3 ngày nữa', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2] },
               { title: 'Tiền thưởng', value: '—', trend: '+18%', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3] },
             ].map((m, i) => (
               <motion.div key={i} variants={child} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-default" style={{ height: '140px' }}>
@@ -179,13 +191,13 @@ export function OwnerDashboardPage() {
               <div className="relative z-10 flex-1 space-y-3">
                 {scheduleLoading ? (
                   <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
-                ) : schedule.length === 0 ? (
+                ) : upcomingRaces.length === 0 ? (
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">📅</div>
                     <div className="text-muted text-sm">Chưa có dữ liệu</div>
                   </div>
-                ) : schedule.map((r, i) => (
+                ) : upcomingRaces.map((r, i) => (
                   <div key={r.id ?? i} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
                     <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-gradient-to-b from-gold/60 to-transparent" />
                     <div className="flex items-center justify-between mb-2">

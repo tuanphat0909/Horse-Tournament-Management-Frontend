@@ -10,7 +10,8 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser } from '../../api/authService';
-import { getRaceSchedule } from '../../api/publicService';
+import { getRaceSchedule, getTournaments } from '../../api/publicService';
+import { getAccounts } from '../../api/adminService';
 import { useNavigate } from 'react-router-dom';
 
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -20,11 +21,19 @@ export function AdminDashboardPage() {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const [schedule, setSchedule] = useState<any[]>([]);
+  const [userCount, setUserCount] = useState<string>('…');
+  const [tournamentCount, setTournamentCount] = useState<string>('…');
 
   useEffect(() => {
     getRaceSchedule()
       .then((d: any) => setSchedule(d?.result ?? (Array.isArray(d) ? d : [])))
       .catch(() => setSchedule([]));
+    getAccounts()
+      .then((d: any) => { const list = d?.result ?? (Array.isArray(d) ? d : []); setUserCount(String(list.length)); })
+      .catch(() => setUserCount('—'));
+    getTournaments()
+      .then((d: any) => { const list = d?.result ?? (Array.isArray(d) ? d : []); setTournamentCount(String(list.length)); })
+      .catch(() => setTournamentCount('—'));
   }, []);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -65,8 +74,8 @@ export function AdminDashboardPage() {
           {/* STATS */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { title: 'Người dùng', value: '—', trend: '—', icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
-              { title: 'Giải đấu', value: '—', trend: '—', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
+              { title: 'Người dùng', value: userCount, trend: '—', icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
+              { title: 'Giải đấu', value: tournamentCount, trend: '—', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
               { title: 'Chờ duyệt', value: '—', trend: '—', icon: ClipboardList, color: 'text-orange-400', bg: 'from-orange-500/15 to-orange-900/20', path: '/admin/registrations' },
               { title: 'Cuộc đua hôm nay', value: todayRaces > 0 ? String(todayRaces) : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} sắp tới` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
             ].map((m, i) => (

@@ -19,3 +19,5 @@ export const removeReferee = (raceId, refereeId) => api.delete(`/admin/races/${r
 export const createPrizes = (data) => api.post('/admin/payouts/prizes', data);
 
 export const triggerPayout = (raceId) => api.post(`/admin/payouts/trigger/${raceId}`);
+
+export const getAccounts = () => api.get('/admin/accounts');
