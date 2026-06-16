@@ -1,10 +1,27 @@
+import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
+import { getJockeyViolations } from '../../api/jockeyService';
+
+function fmtDate(s?: string) {
+  if (!s) return '—';
+  try { return new Date(s).toLocaleDateString('vi-VN'); } catch { return s; }
+}
 
 export function JockeyViolationsPage() {
+  const [violations, setViolations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getJockeyViolations()
+      .then((d: any) => setViolations(d?.result ?? (Array.isArray(d) ? d : [])))
+      .catch(() => setViolations([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
       <Sidebar />
@@ -31,11 +48,42 @@ export function JockeyViolationsPage() {
             </div>
           </div>
 
-          {/* TODO: BE chưa có API vi phạm jockey */}
-          <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+          {/* List */}
+          <div className="glass-panel rounded-xl overflow-hidden relative">
             <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-            <div className="text-4xl opacity-40 mb-3">⚠️</div>
-            <div className="text-muted text-sm">Chưa có dữ liệu</div>
+            {loading ? (
+              <div className="p-12 text-center text-muted text-sm">Đang tải...</div>
+            ) : violations.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="text-4xl opacity-40 mb-3">⚠️</div>
+                <div className="text-muted text-sm">Chưa có vi phạm nào</div>
+              </div>
+            ) : (
+              <div className="divide-y divide-glass-border relative z-10">
+                {violations.map((v, i) => {
+                  const sk = (v.status ?? '').toLowerCase();
+                  const statusCls = ['confirmed', 'upheld'].includes(sk) ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                    : ['dismissed', 'rejected', 'overturned'].includes(sk) ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                    : 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
+                  return (
+                    <div key={v.id ?? v.violationId ?? i} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.02] transition-colors group">
+                      <div className="w-7 h-7 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-xs font-serif font-bold text-champagne shrink-0">{i + 1}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">
+                          {v.type ?? v.violationType ?? 'Vi phạm'}
+                        </div>
+                        <div className="text-xs text-muted truncate">
+                          {v.description ?? ''}
+                          {(v.raceName ?? v.race?.name) ? ` • ${v.raceName ?? v.race?.name}` : ''}
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${statusCls}`}>{v.status ?? '—'}</span>
+                      <span className="text-xs text-muted shrink-0 hidden md:block">{fmtDate(v.createdAt ?? v.reportedAt)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
         </main>

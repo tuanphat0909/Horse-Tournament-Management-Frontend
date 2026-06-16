@@ -10,7 +10,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser, parseApiError } from '../../api/authService';
-import { getMyHorses } from '../../api/ownerService';
+import { getMyHorses, getOwnerResults } from '../../api/ownerService';
 import { getRaceSchedule } from '../../api/publicService';
 
 function isFuture(dateStr: string | null | undefined): boolean {
@@ -40,6 +40,13 @@ export function OwnerDashboardPage() {
   const [horsesLoading, setHorsesLoading] = useState(true);
   const [schedule, setSchedule] = useState<any[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [results, setResults] = useState<any[]>([]);
+
+  useEffect(() => {
+    getOwnerResults()
+      .then((d: any) => setResults(d?.result ?? (Array.isArray(d) ? d : [])))
+      .catch(() => setResults([]));
+  }, []);
 
   useEffect(() => {
     getMyHorses()
@@ -228,13 +235,30 @@ export function OwnerDashboardPage() {
                 <h2 className="text-lg font-serif text-white whitespace-nowrap">Thành tích mùa giải</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
-              {/* TODO: BE chưa có API */}
-              <div className="relative z-10">
-                <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                  <div className="text-4xl opacity-40 mb-3">📊</div>
-                  <div className="text-muted text-sm">Chưa có dữ liệu</div>
-                </div>
+              <div className="relative z-10 space-y-2">
+                {results.length === 0 ? (
+                  <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    <div className="text-4xl opacity-40 mb-3">📊</div>
+                    <div className="text-muted text-sm">Chưa có dữ liệu</div>
+                  </div>
+                ) : results.slice(0, 5).map((r: any, i: number) => {
+                  const pos = r.position ?? r.finalPosition ?? r.rank;
+                  const posCls = pos === 1 ? 'bg-gold/20 text-gold border-gold/30'
+                    : pos === 2 ? 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+                    : pos === 3 ? 'bg-amber-700/20 text-amber-400 border-amber-700/30'
+                    : 'bg-white/[0.04] text-muted border-glass-border';
+                  return (
+                    <div key={r.id ?? i} className="flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group">
+                      <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-serif font-bold shrink-0 ${posCls}`}>{pos ?? '—'}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">{r.raceName ?? r.race?.name ?? '—'}</div>
+                        <div className="text-xs text-muted truncate">{r.horseName ?? r.horse?.name ?? '—'}{r.tournamentName ? ` • ${r.tournamentName}` : ''}</div>
+                      </div>
+                      {r.prize != null && <div className="text-xs font-bold text-gold shrink-0">{Number(r.prize).toLocaleString('vi-VN')} ₫</div>}
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
 

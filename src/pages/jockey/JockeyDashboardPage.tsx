@@ -6,7 +6,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { PageHero } from '../../components/layout/PageHero';
 import { useNavigate } from 'react-router-dom';
-import { getContracts, respondContract } from '../../api/jockeyService';
+import { getContracts, respondContract, getJockeyStats } from '../../api/jockeyService';
 import { getCurrentUser, parseApiError } from '../../api/authService';
 import { getRaceSchedule } from '../../api/publicService';
 
@@ -31,6 +31,7 @@ export function JockeyDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [respondingId, setRespondingId] = useState<number | null>(null);
   const [schedule, setSchedule] = useState<any[]>([]);
+  const [jockeyWins, setJockeyWins] = useState<string>('—');
 
   async function loadContracts() {
     try {
@@ -48,6 +49,9 @@ export function JockeyDashboardPage() {
     getRaceSchedule()
       .then((d: any) => setSchedule(d?.result ?? (Array.isArray(d) ? d : [])))
       .catch(() => setSchedule([]));
+    getJockeyStats()
+      .then((d: any) => { const s = d?.result ?? d ?? {}; setJockeyWins(String(s.winCount ?? s.wins ?? '—')); })
+      .catch(() => setJockeyWins('—'));
   }, []);
 
   async function handleRespond(id: number, status: 'Active' | 'Rejected') {
@@ -100,12 +104,11 @@ export function JockeyDashboardPage() {
             }
           />
 
-          {/* Stats — TODO: backend chưa có API cho win count và upcoming races */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
               { title: 'Lời mời mới',    value: String(pending.length),    trend: 'Chờ phản hồi', icon: Bell,     color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/jockey/invitations' },
               { title: 'Cuộc đua sắp tới', value: String(upcomingRaces.length), trend: '7 ngày tới', icon: Calendar, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/jockey/schedule' },
-              { title: 'Số lần thắng',   value: '—',                      trend: 'Mùa 2026',     icon: Trophy,   color: 'text-gold',       bg: 'from-gold/15 to-amber-900/20',      path: '/jockey/stats' },
+              { title: 'Số lần thắng',   value: jockeyWins,               trend: 'Mùa 2026',     icon: Trophy,   color: 'text-gold',       bg: 'from-gold/15 to-amber-900/20',      path: '/jockey/stats' },
               { title: 'Tổng hợp đồng',  value: String(contracts.length), trend: 'Mùa giải 2026',icon: Flag,     color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20',path: '/jockey/races' },
             ].map((m, i) => (
               <motion.div key={i} variants={child} onClick={() => navigate(m.path)}

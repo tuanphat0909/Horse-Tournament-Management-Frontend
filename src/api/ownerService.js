@@ -11,3 +11,5 @@ export const getMyRegistrations = () => api.get('/registrations/my-registrations
 
 export const createJockeyContract = (data) => api.post('/jockey-contracts', data);
 export const getMyProposals = () => api.get('/jockey-contracts/my-proposals');
+
+export const getOwnerResults = () => api.get('/owner/results');

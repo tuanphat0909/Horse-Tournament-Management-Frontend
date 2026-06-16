@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Flag, FileText, ClipboardList, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -6,13 +7,35 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser } from '../../api/authService';
 import { useNavigate } from 'react-router-dom';
+import { getRefereeDashboard } from '../../api/refereeService';
 
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
+function fmtDate(s?: string) {
+  if (!s) return '—';
+  try { return new Date(s).toLocaleDateString('vi-VN'); } catch { return s; }
+}
+
 export function RefereeDashboardPage() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getRefereeDashboard()
+      .then((d: any) => setDashboard(d?.result ?? d ?? null))
+      .catch(() => setDashboard(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const todayRaces: any[] = dashboard?.todayRaces ?? dashboard?.races ?? [];
+  const todayCount        = loading ? '…' : String(dashboard?.todayRacesCount ?? todayRaces.length);
+  const horseChecks       = loading ? '…' : String(dashboard?.pendingHorseChecks ?? dashboard?.horseChecks ?? '—');
+  const pendingViolations = loading ? '…' : String(dashboard?.pendingViolations ?? dashboard?.violations ?? '—');
+  const reportsCount      = loading ? '…' : String(dashboard?.reportsCount ?? dashboard?.reportsSent ?? '—');
+
   return (
     <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
       <Sidebar />
@@ -44,13 +67,12 @@ export function RefereeDashboardPage() {
           />
 
           {/* Stats */}
-          {/* TODO: BE chưa có API thống kê dashboard trọng tài — hiển thị '—' */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
-              { title: 'Cuộc đua hôm nay', value: '—', trend: 'Cần giám sát', icon: Flag, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/referee/confirm-results' },
-              { title: 'Ngựa cần kiểm tra', value: '—', trend: 'Chờ phê duyệt', icon: ShieldCheck, color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/referee/horse-check' },
-              { title: 'Vi phạm chờ xử lý', value: '—', trend: 'Cần xem xét', icon: AlertTriangle, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', path: '/referee/violations' },
-              { title: 'Báo cáo đã gửi', value: '—', trend: 'Mùa giải 2026', icon: FileText, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/referee/reports' },
+              { title: 'Cuộc đua hôm nay',  value: todayCount,        trend: 'Cần giám sát',  icon: Flag,          color: 'text-blue-400',    bg: 'from-blue-500/15 to-blue-900/20',        path: '/referee/confirm-results' },
+              { title: 'Ngựa cần kiểm tra', value: horseChecks,       trend: 'Chờ phê duyệt', icon: ShieldCheck,   color: 'text-yellow-400',  bg: 'from-yellow-500/15 to-yellow-900/20',    path: '/referee/horse-check' },
+              { title: 'Vi phạm chờ xử lý', value: pendingViolations, trend: 'Cần xem xét',   icon: AlertTriangle, color: 'text-red-400',     bg: 'from-red-500/15 to-red-900/20',          path: '/referee/violations' },
+              { title: 'Báo cáo đã gửi',    value: reportsCount,      trend: 'Mùa giải 2026', icon: FileText,      color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20',  path: '/referee/reports' },
             ].map((m, i) => (
               <motion.div key={i} variants={child} onClick={() => navigate(m.path)}
                 className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer" style={{ height: '130px' }}>
@@ -78,14 +100,34 @@ export function RefereeDashboardPage() {
                   <h2 className="text-lg font-serif text-white">Cuộc đua hôm nay</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
-                <button onClick={() => navigate('/referee/confirm-results')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0 ml-3">Xem tất cả <ChevronRight size={14} /></button>
+                <button onClick={() => navigate('/referee/confirm-results')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0 ml-3">
+                  Xem tất cả <ChevronRight size={14} />
+                </button>
               </div>
-              {/* TODO: BE chưa có API danh sách cuộc đua hôm nay của trọng tài */}
-              <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-                <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                <div className="text-4xl opacity-40 mb-3">🏁</div>
-                <div className="text-muted text-sm">Chưa có dữ liệu</div>
-              </div>
+              {loading ? (
+                <div className="p-8 text-center text-muted text-sm">Đang tải...</div>
+              ) : todayRaces.length === 0 ? (
+                <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                  <div className="text-4xl opacity-40 mb-3">🏁</div>
+                  <div className="text-muted text-sm">Không có cuộc đua hôm nay</div>
+                </div>
+              ) : (
+                <div className="space-y-3 relative z-10">
+                  {todayRaces.map((r: any, i: number) => (
+                    <div key={r.raceId ?? r.id ?? i} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
+                      <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-gradient-to-b from-gold/60 to-transparent" />
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">{r.name ?? r.raceName ?? `Cuộc đua #${r.raceId ?? i}`}</h3>
+                          <div className="text-xs text-muted">{fmtDate(r.raceDate)}{r.distanceMeter ? ` • ${r.distanceMeter}m` : ''}</div>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne shrink-0 ml-2">{r.status ?? 'Sắp tới'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-panel rounded-xl p-6 relative overflow-hidden">
