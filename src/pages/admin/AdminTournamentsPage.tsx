@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trophy, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -6,6 +6,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { createTournament } from '../../api/adminService';
+import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
 type StatusFilter = 'all' | 'upcoming' | 'active' | 'completed';
@@ -31,6 +32,27 @@ export function AdminTournamentsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [loadingTournaments, setLoadingTournaments] = useState(true);
+
+  async function loadTournaments() {
+    setLoadingTournaments(true);
+    try {
+      const data: any = await getTournaments();
+      setTournaments(data?.result ?? (Array.isArray(data) ? data : []));
+    } catch (err) {
+      console.error(err);
+      setTournaments([]);
+    } finally {
+      setLoadingTournaments(false);
+    }
+  }
+
+  useEffect(() => {
+    loadTournaments();
+  }, []);
+
+
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
@@ -49,11 +71,12 @@ export function AdminTournamentsPage() {
         endDate: form.endDate,
         numberOfRounds: Number(form.numberOfRounds),
       });
-      const newId = data?.result?.id ?? data?.result?.tournamentId;
+      const newId = data?.tournamentId ?? data?.result?.tournamentId ?? data?.result?.id;
       setSuccess(newId != null
         ? `Đã tạo giải đấu thành công! ID = ${newId} — dùng ID này cho bước tạo giải thưởng / đăng ký thi đấu.`
         : 'Tạo giải đấu thành công!');
       setForm(INIT_FORM);
+      loadTournaments();
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
@@ -67,7 +90,25 @@ export function AdminTournamentsPage() {
     setForm(INIT_FORM);
   }
 
+  const statsCounts: Record<StatusFilter, number> = {
+    all: tournaments.length,
+    active: tournaments.filter(t => t.status?.toLowerCase() === 'active').length,
+    upcoming: tournaments.filter(t => t.status?.toLowerCase() === 'upcoming').length,
+    completed: tournaments.filter(t => t.status?.toLowerCase() === 'completed').length,
+  };
+
+  const filteredTournaments = tournaments.filter(t => {
+    const matchesSearch = (t.name ?? '').toLowerCase().includes(search.toLowerCase());
+    const statusLower = t.status?.toLowerCase();
+    if (filter === 'all') return matchesSearch;
+    if (filter === 'active') return matchesSearch && statusLower === 'active';
+    if (filter === 'upcoming') return matchesSearch && statusLower === 'upcoming';
+    if (filter === 'completed') return matchesSearch && statusLower === 'completed';
+    return matchesSearch;
+  });
+
   return (
+
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
@@ -98,9 +139,8 @@ export function AdminTournamentsPage() {
                 }`}
               >
                 {s === 'all' ? 'Tất cả' : STATUS_CONFIG[s].label}
-                {/* TODO: BE chưa có API danh sách giải đấu — số đếm hiển thị 0 */}
                 <span className="ml-2 text-[11px] font-bold text-current opacity-60">
-                  0
+                  {statsCounts[s] ?? 0}
                 </span>
               </button>
             ))}
@@ -111,12 +151,55 @@ export function AdminTournamentsPage() {
           </div>
 
           {/* Tournament Cards */}
-          {/* TODO: BE chưa có API danh sách giải đấu */}
-          <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-            <div className="text-4xl opacity-40 mb-3">🏆</div>
-            <div className="text-muted text-sm">Chưa có dữ liệu</div>
-          </div>
+          {loadingTournaments ? (
+            <div className="text-center py-12 text-muted text-sm">Đang tải danh sách giải đấu...</div>
+          ) : filteredTournaments.length === 0 ? (
+            <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="text-4xl opacity-40 mb-3">🏆</div>
+              <div className="text-muted text-sm">Chưa có dữ liệu</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filteredTournaments.map((t, i) => {
+                const s = t.status?.toLowerCase() ?? 'upcoming';
+                const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
+                return (
+                  <motion.div
+                    key={t.tournamentId ?? i}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left"
+                  >
+                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    <div className="flex justify-between items-start mb-3">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {config.label}
+                      </span>
+                      <span className="text-xs text-muted font-medium">ID: {t.tournamentId}</span>
+                    </div>
+                    <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-3 line-clamp-1">{t.name}</h3>
+                    <div className="space-y-1.5 text-xs text-muted pt-3 border-t border-glass-border/40">
+                      <div className="flex justify-between">
+                        <span>Ngày bắt đầu:</span>
+                        <span className="text-white font-medium">{t.startDate ? new Date(t.startDate).toLocaleString() : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Ngày kết thúc:</span>
+                        <span className="text-white font-medium">{t.endDate ? new Date(t.endDate).toLocaleString() : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Số vòng đấu:</span>
+                        <span className="text-gold font-bold">{t.rounds?.length ?? t.numberOfRounds ?? '—'}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
 
         </main>
       </div>
