@@ -1,9 +1,9 @@
-import { Bell, Search } from 'lucide-react';
+﻿import { Bell, Search } from 'lucide-react';
 
 export function Topbar() {
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-glass-border bg-[#0B1628]/90 backdrop-blur-xl flex items-center px-8 justify-between">
-      <div className="flex items-center gap-3 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-80">
+      <div className="flex items-center gap-3 bg-white/4 border border-glass-border rounded-lg px-3 py-2 w-80">
         <Search size={16} className="text-muted" />
         <input
           type="text"

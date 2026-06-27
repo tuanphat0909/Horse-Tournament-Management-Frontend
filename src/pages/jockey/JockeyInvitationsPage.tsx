@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Calendar, User } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -64,7 +64,7 @@ export function JockeyInvitationsPage() {
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="blue" />
         <Topbar />
-        <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
+        <main className="relative z-10 max-w-400 mx-auto px-8 py-6 space-y-6">
 
           <PageHero
             title="Lời mời thi đấu"
@@ -86,7 +86,7 @@ export function JockeyInvitationsPage() {
             <div className="text-center py-12 text-muted text-sm">Đang tải...</div>
           ) : error ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="text-4xl opacity-40 mb-3">⚠️</div>
               <div className="text-red-400 text-sm">{error}</div>
             </div>
@@ -96,11 +96,11 @@ export function JockeyInvitationsPage() {
                 const bucket = bucketOf(inv.status);
                 return (
                   <motion.div key={inv.id ?? i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                    className="glass-panel rounded-2xl p-6 border border-glass-border hover:border-gold/30 hover:bg-gold/[0.02] transition-all relative overflow-hidden group">
-                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/10 to-transparent blur-[40px] pointer-events-none" />
+                    className="glass-panel rounded-2xl p-6 border border-glass-border hover:border-gold/30 hover:bg-gold/2 transition-all relative overflow-hidden group">
+                    <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-blue-500/10 to-transparent blur-2xl pointer-events-none" />
                     <div className="relative z-10 flex items-start gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 ring-1 ring-gold/20 flex items-center justify-center text-3xl shrink-0">🐴</div>
+                      <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-gold/20 to-gold/5 border border-gold/20 ring-1 ring-gold/20 flex items-center justify-center text-3xl shrink-0">🐴</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap mb-1">
                           <h3 className="text-lg font-serif text-white group-hover:text-champagne transition-colors">{inv.horseName ?? `Ngựa #${inv.horseId}`}</h3>
@@ -110,7 +110,7 @@ export function JockeyInvitationsPage() {
                         </div>
                         {(inv.startDate || inv.endDate) && (
                           <div className="flex flex-wrap gap-2.5 text-xs text-muted mb-4">
-                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border"><Calendar size={11} className="text-gold/60" /> <span className="text-champagne font-semibold">{inv.startDate ?? '—'}{inv.endDate ? ` → ${inv.endDate}` : ''}</span></span>
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/4 border border-glass-border"><Calendar size={11} className="text-gold/60" /> <span className="text-champagne font-semibold">{inv.startDate ?? '—'}{inv.endDate ? ` → ${inv.endDate}` : ''}</span></span>
                           </div>
                         )}
                         {bucket === 'pending' && (
@@ -142,7 +142,7 @@ export function JockeyInvitationsPage() {
               })}
               {filtered.length === 0 && (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                  <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">✉️</div>
                   <div className="text-muted text-sm">Chưa có dữ liệu</div>
                 </div>

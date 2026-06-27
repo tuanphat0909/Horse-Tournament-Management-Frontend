@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 
 const logos = [
   "Jockey Club", "Royal Ascot", "Meydan", "Equestrian Fed", "Breeder's Cup", "Churchill Downs"
@@ -7,7 +7,7 @@ const logos = [
 export const TrustSection = () => {
   return (
     <section className="py-12 border-y border-glass-border bg-navy-light/30 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-navy via-transparent to-navy z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-r from-navy via-transparent to-navy z-10 pointer-events-none" />
       
       <div className="max-w-7xl mx-auto px-6 relative z-0 flex items-center overflow-hidden">
         <motion.div 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
@@ -91,7 +91,7 @@ export function RegisterPage() {
       </header>
 
       {/* Main */}
-      <main className="flex-grow flex items-center justify-center relative z-10 px-6 py-12 lg:px-16 w-full max-w-[1600px] mx-auto">
+      <main className="flex-grow flex items-center justify-center relative z-10 px-6 py-12 lg:px-16 w-full max-w-400 mx-auto">
         {/* Vertical divider */}
         <div
           className="absolute hidden lg:flex flex-col items-center pointer-events-none z-0"

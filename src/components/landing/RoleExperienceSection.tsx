@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const roles = [
@@ -12,7 +12,7 @@ const roles = [
 
 const OwnerPreview = () => (
   <div className="p-4 flex-1 flex flex-col gap-2.5 overflow-hidden">
-    <div className="rounded-lg bg-gradient-to-r from-gold/10 to-transparent border border-gold/15 p-2.5">
+    <div className="rounded-lg bg-linear-to-r from-gold/10 to-transparent border border-gold/15 p-2.5">
       <div className="flex items-center gap-1.5 mb-1">
         <div className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
         <span className="text-[9px] text-gold font-bold uppercase tracking-widest">Mùa giải 2026</span>
@@ -26,7 +26,7 @@ const OwnerPreview = () => (
         { value: '₫1.2B', label: 'Giải thưởng', color: 'text-emerald-400' },
         { value: '#3', label: 'Hạng mùa', color: 'text-blue-400' },
       ].map((s, i) => (
-        <div key={i} className="bg-white/[0.04] border border-white/[0.06] rounded-lg p-2 text-center">
+        <div key={i} className="bg-white/4 border border-white/6 rounded-lg p-2 text-center">
           <div className={`text-base font-bold font-serif ${s.color}`}>{s.value}</div>
           <div className="text-[9px] text-white/40">{s.label}</div>
         </div>
@@ -40,7 +40,7 @@ const OwnerPreview = () => (
         { name: 'Desert Wind', breed: 'Arabian', status: 'Thi đấu', sc: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
         { name: 'Silver Arrow', breed: 'Warmblood', status: 'Nghỉ ngơi', sc: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
       ].map((h, i) => (
-        <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+        <div key={i} className="flex items-center gap-2 p-1.5 rounded-lg bg-white/3 border border-white/5">
           <span className="text-sm">🐴</span>
           <div className="flex-1 min-w-0">
             <div className="text-[11px] text-white font-medium truncate">{h.name}</div>
@@ -59,7 +59,7 @@ const OwnerPreview = () => (
 
 const JockeyPreview = () => (
   <div className="p-4 flex-1 flex flex-col gap-2.5 overflow-hidden">
-    <div className="rounded-lg bg-gradient-to-r from-blue-500/10 to-transparent border border-blue-500/15 p-2.5">
+    <div className="rounded-lg bg-linear-to-r from-blue-500/10 to-transparent border border-blue-500/15 p-2.5">
       <div className="flex items-center gap-1.5 mb-1">
         <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
         <span className="text-[9px] text-blue-400 font-bold uppercase tracking-widest">3 lời mời chờ phản hồi</span>
@@ -73,7 +73,7 @@ const JockeyPreview = () => (
         { value: '68', label: 'Cuộc đua', color: 'text-purple-400' },
         { value: '66%', label: 'Tỉ lệ thắng', color: 'text-emerald-400' },
       ].map((s, i) => (
-        <div key={i} className="bg-white/[0.04] border border-white/[0.06] rounded-lg p-2 text-center">
+        <div key={i} className="bg-white/4 border border-white/6 rounded-lg p-2 text-center">
           <div className={`text-base font-bold font-serif ${s.color}`}>{s.value}</div>
           <div className="text-[9px] text-white/40">{s.label}</div>
         </div>
@@ -86,7 +86,7 @@ const JockeyPreview = () => (
         { horse: 'Storm Rider', round: 'Chung Kết — Giải Xuân', owner: 'Lê Thị Hoa' },
         { horse: 'Dark Knight', round: 'Vòng Loại — Cúp Quốc Gia', owner: 'Vũ Minh Tuấn' },
       ].map((inv, i) => (
-        <div key={i} className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+        <div key={i} className="p-2 rounded-lg bg-white/3 border border-white/5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="text-[11px] text-white font-medium truncate">{inv.horse}</div>
@@ -111,7 +111,7 @@ const JockeyPreview = () => (
 
 const RefereePreview = () => (
   <div className="p-4 flex-1 flex flex-col gap-2.5 overflow-hidden">
-    <div className="rounded-lg bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/15 p-2.5">
+    <div className="rounded-lg bg-linear-to-r from-emerald-500/10 to-transparent border border-emerald-500/15 p-2.5">
       <div className="flex items-center gap-1.5 mb-1">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
         <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest">2 cuộc đua hôm nay</span>
@@ -125,7 +125,7 @@ const RefereePreview = () => (
         { value: '5', label: 'Kiểm tra ngựa', color: 'text-yellow-400' },
         { value: '1', label: 'Vi phạm', color: 'text-red-400' },
       ].map((s, i) => (
-        <div key={i} className="bg-white/[0.04] border border-white/[0.06] rounded-lg p-2 text-center">
+        <div key={i} className="bg-white/4 border border-white/6 rounded-lg p-2 text-center">
           <div className={`text-base font-bold font-serif ${s.color}`}>{s.value}</div>
           <div className="text-[9px] text-white/40">{s.label}</div>
         </div>
@@ -151,21 +151,21 @@ const RefereePreview = () => (
             <span className="text-yellow-400 font-bold">Còn 12 phút</span>
           </div>
           <div className="h-1.5 rounded-full bg-white/10">
-            <div className="h-full w-[35%] rounded-full bg-gradient-to-r from-yellow-500 to-orange-500" />
+            <div className="h-full w-[35%] rounded-full bg-linear-to-r from-yellow-500 to-orange-500" />
           </div>
         </div>
         <div className="flex gap-1.5">
           <div className="flex-1 h-5 rounded bg-red-500/20 border border-red-500/25 flex items-center justify-center">
             <span className="text-[9px] text-red-400 font-bold">Xác nhận vi phạm</span>
           </div>
-          <div className="flex-1 h-5 rounded bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+          <div className="flex-1 h-5 rounded bg-white/4 border border-white/8 flex items-center justify-center">
             <span className="text-[9px] text-white/50 font-bold">Bác bỏ</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+    <div className="p-2 rounded-lg bg-white/3 border border-white/5">
       <div className="flex justify-between items-center mb-1">
         <span className="text-[9px] text-white/40">Kiểm tra ngựa</span>
         <span className="text-[9px] text-emerald-400 font-bold">3 / 5 hoàn thành</span>
@@ -179,7 +179,7 @@ const RefereePreview = () => (
 
 const SpectatorPreview = () => (
   <div className="p-4 flex-1 flex flex-col gap-2.5 overflow-hidden">
-    <div className="rounded-lg bg-gradient-to-r from-red-500/10 to-transparent border border-red-500/15 p-2.5">
+    <div className="rounded-lg bg-linear-to-r from-red-500/10 to-transparent border border-red-500/15 p-2.5">
       <div className="flex items-center gap-1.5 mb-1">
         <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
         <span className="text-[9px] text-red-400 font-bold uppercase tracking-widest">Live — 1 cuộc đua đang diễn ra</span>
@@ -202,7 +202,7 @@ const SpectatorPreview = () => (
           <span className="text-[10px] text-white w-[72px] truncate">{h.name}</span>
           <div className="flex-1 h-1.5 rounded-full bg-white/10">
             <div
-              className={`h-full rounded-full ${i === 0 ? 'bg-gradient-to-r from-[#c9a84c] to-yellow-600' : 'bg-white/25'}`}
+              className={`h-full rounded-full ${i === 0 ? 'bg-linear-to-r from-[#c9a84c] to-yellow-600' : 'bg-white/25'}`}
               style={{ width: h.bar }}
             />
           </div>
@@ -218,7 +218,7 @@ const SpectatorPreview = () => (
         { horse: 'Desert Wind', pred: 'Hạng 1', correct: true, reward: '₫600k' },
         { horse: 'Storm Rider', pred: 'Hạng 2', correct: null, reward: '—' },
       ].map((p, i) => (
-        <div key={i} className="flex items-center gap-2 py-1 px-1.5 rounded-lg hover:bg-white/[0.02] mb-0.5">
+        <div key={i} className="flex items-center gap-2 py-1 px-1.5 rounded-lg hover:bg-white/2 mb-0.5">
           <span className={`text-[10px] w-3 ${p.correct === true ? 'text-emerald-400' : 'text-white/25'}`}>
             {p.correct === true ? '✓' : '⏳'}
           </span>
@@ -316,7 +316,7 @@ export const RoleExperienceSection = () => {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
         >
-          <div className="absolute inset-0 bg-gradient-to-tr from-navy via-navy to-navy-light opacity-90 z-0" />
+          <div className="absolute inset-0 bg-linear-to-tr from-navy via-navy to-navy-light opacity-90 z-0" />
 
           <AnimatePresence mode="wait">
             <motion.div
@@ -325,10 +325,10 @@ export const RoleExperienceSection = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ duration: 0.35 }}
-              className="relative z-10 w-full h-full border border-white/[0.08] rounded-xl bg-[#0d1b2e]/90 shadow-2xl flex flex-col overflow-hidden"
+              className="relative z-10 w-full h-full border border-white/8 rounded-xl bg-[#0d1b2e]/90 shadow-2xl flex flex-col overflow-hidden"
             >
               {/* Mock Browser Bar */}
-              <div className="h-9 border-b border-white/[0.06] flex items-center px-3 gap-2 bg-black/20 shrink-0">
+              <div className="h-9 border-b border-white/6 flex items-center px-3 gap-2 bg-black/20 shrink-0">
                 <div className="w-2 h-2 rounded-full bg-red-500/50" />
                 <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
                 <div className="w-2 h-2 rounded-full bg-green-500/50" />

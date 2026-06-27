@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Trophy, Activity, CheckCircle, Sparkles, Info } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -69,7 +69,7 @@ export function SpectatorNotificationsPage() {
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="purple" />
         <Topbar />
-        <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-6 relative z-10">
+        <main className="max-w-400 mx-auto px-8 py-6 space-y-6 relative z-10">
 
           <PageHero
             title="Thông báo"
@@ -99,9 +99,9 @@ export function SpectatorNotificationsPage() {
                 return (
                   <motion.div key={n.id ?? i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                     onClick={() => !isRead && handleMarkRead(n.id)}
-                    className={`glass-panel rounded-xl p-5 border transition-all cursor-pointer group relative overflow-hidden ${isRead ? 'border-glass-border hover:border-gold/30 hover:bg-gold/[0.04]' : 'border-gold/25 bg-gold/[0.02] hover:border-gold/35 hover:bg-gold/[0.05]'}`}>
-                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                    {!isRead && <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-[40px] pointer-events-none" />}
+                    className={`glass-panel rounded-xl p-5 border transition-all cursor-pointer group relative overflow-hidden ${isRead ? 'border-glass-border hover:border-gold/30 hover:bg-gold/4' : 'border-gold/25 bg-gold/2 hover:border-gold/35 hover:bg-gold/5'}`}>
+                    <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    {!isRead && <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-purple-500/10 to-transparent blur-2xl pointer-events-none" />}
                     <div className="relative z-10 flex items-start gap-4">
                       <div className={`w-10 h-10 rounded-xl ${cfg.bg} border flex items-center justify-center shrink-0`}>
                         <Icon size={18} className={cfg.color} />
@@ -120,11 +120,11 @@ export function SpectatorNotificationsPage() {
               })}
               {notifications.length === 0 && (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                  <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-[40px] pointer-events-none" />
+                  <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                  <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-purple-500/10 to-transparent blur-2xl pointer-events-none" />
                   <Bell size={36} className="mx-auto mb-3 text-gold opacity-40" />
                   <div className="text-muted text-sm">Không có thông báo nào</div>
-                  <div className="mx-auto mt-4 w-24 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+                  <div className="mx-auto mt-4 w-24 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent" />
                 </div>
               )}
             </div>

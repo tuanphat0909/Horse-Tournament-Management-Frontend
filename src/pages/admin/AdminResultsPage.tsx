@@ -1,11 +1,12 @@
-import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Megaphone, CheckCircle, DollarSign, Zap } from 'lucide-react';
+import { Megaphone, DollarSign, Zap, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { createPrizes, triggerPayout } from '../../api/adminService';
+import { createPrizes, triggerPayout, getAdminRaceResults, publishResult } from '../../api/adminService';
+import { getRaceSchedule, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
@@ -26,6 +27,61 @@ export function AdminResultsPage() {
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutError, setPayoutError] = useState('');
   const [payoutSuccess, setPayoutSuccess] = useState('');
+
+  // Race results lookup + publish
+  const [resultRaceId, setResultRaceId] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [resultsLoaded, setResultsLoaded] = useState(false);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsError, setResultsError] = useState('');
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [publishError, setPublishError] = useState('');
+  const [publishSuccess, setPublishSuccess] = useState('');
+
+  // Dropdown data
+  const [races, setRaces] = useState<any[]>([]);
+  const [tournaments, setTournaments] = useState<any[]>([]);
+
+  useEffect(() => {
+    getRaceSchedule()
+      .then((d: any) => setRaces(d?.result ?? (Array.isArray(d) ? d : [])))
+      .catch(() => setRaces([]));
+    getTournaments()
+      .then((d: any) => setTournaments(d?.result ?? (Array.isArray(d) ? d : [])))
+      .catch(() => setTournaments([]));
+  }, []);
+
+  async function handleLoadResults() {
+    setResultsError(''); setPublishError(''); setPublishSuccess('');
+    if (!resultRaceId) { setResultsError('Vui lòng chọn cuộc đua.'); return; }
+    setResultsLoading(true);
+    setResultsLoaded(false);
+    try {
+      const data: any = await getAdminRaceResults(Number(resultRaceId));
+      const list = data?.result ?? (Array.isArray(data) ? data : []);
+      setResults(list);
+      setResultsLoaded(true);
+    } catch (err: unknown) {
+      setResults([]);
+      setResultsError(parseApiError(err as Error));
+    } finally {
+      setResultsLoading(false);
+    }
+  }
+
+  async function handlePublish() {
+    setPublishError(''); setPublishSuccess('');
+    if (!resultRaceId) { setPublishError('Vui lòng chọn cuộc đua.'); return; }
+    setPublishLoading(true);
+    try {
+      await publishResult(Number(resultRaceId));
+      setPublishSuccess(`Đã công bố kết quả cho Race #${resultRaceId}!`);
+    } catch (err: unknown) {
+      setPublishError(parseApiError(err as Error));
+    } finally {
+      setPublishLoading(false);
+    }
+  }
 
   function setP(field: string, value: string) {
     setPrizes(prev => ({ ...prev, [field]: value }));
@@ -63,7 +119,7 @@ export function AdminResultsPage() {
 
   async function handleTriggerPayout() {
     setPayoutError(''); setPayoutSuccess('');
-    if (!payoutRaceId) { setPayoutError('Vui lòng nhập Race ID.'); return; }
+    if (!payoutRaceId) { setPayoutError('Vui lòng chọn cuộc đua.'); return; }
     setPayoutLoading(true);
     try {
       await triggerPayout(Number(payoutRaceId));
@@ -82,7 +138,7 @@ export function AdminResultsPage() {
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="gold" />
         <Topbar />
-        <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-6 relative z-10">
+        <main className="max-w-400 mx-auto px-8 py-6 space-y-6 relative z-10">
 
           <PageHero
             title="Kết quả & Công bố"
@@ -95,8 +151,8 @@ export function AdminResultsPage() {
           <div className="grid grid-cols-2 gap-4">
             {/* Prizes Setup */}
             <div className="glass-panel rounded-xl p-6 border border-glass-border hover:border-gold/30 transition-all relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none" />
               <div className="relative z-10 flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
                   <DollarSign size={18} className="text-gold" />
@@ -116,28 +172,30 @@ export function AdminResultsPage() {
 
             {/* Trigger Payout */}
             <div className="glass-panel rounded-xl p-6 border border-glass-border hover:border-emerald-500/30 transition-all relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-emerald-400/40 to-transparent pointer-events-none" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-emerald-500/10 to-transparent blur-2xl pointer-events-none" />
               <div className="relative z-10 flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                   <Zap size={18} className="text-emerald-400" />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-white">Kích hoạt chi trả</div>
-                  {/* TODO: cần BE bổ sung GET danh sách race đã kết thúc để thay ô nhập tay bằng dropdown */}
-                  <div className="text-xs text-muted">Nhập Race ID (BE chưa có API danh sách race đã kết thúc)</div>
+                  <div className="text-xs text-muted">Chọn cuộc đua để kích hoạt chi trả</div>
                 </div>
               </div>
               <div className="relative z-10 flex gap-2">
-                <input
+                <select
                   value={payoutRaceId}
                   onChange={e => { setPayoutRaceId(e.target.value); setPayoutError(''); setPayoutSuccess(''); }}
-                  type="number"
-                  min="1"
-                  placeholder="Race ID"
                   className="flex-1 bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors"
-                  onKeyDown={e => e.key === 'Enter' && handleTriggerPayout()}
-                />
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="">-- Chọn cuộc đua --</option>
+                  {races.map((r, i) => {
+                    const id = r.id ?? r.raceId;
+                    return <option key={id ?? i} value={id}>{`${r.name}${r.raceDate ? ' — ' + r.raceDate : ''}`}</option>;
+                  })}
+                </select>
                 <button
                   onClick={handleTriggerPayout}
                   disabled={payoutLoading}
@@ -151,38 +209,86 @@ export function AdminResultsPage() {
             </div>
           </div>
 
-          {/* Pending Publication */}
+          {/* Race Results + Publish */}
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
                 <Megaphone size={15} className="text-yellow-400" />
               </div>
-              <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-              <h2 className="text-base font-medium font-serif text-white">Chờ công bố</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-yellow-400/30 via-glass-border to-transparent" />
+              <h2 className="text-base font-medium font-serif text-white">Kết quả cuộc đua & Công bố</h2>
+              <div className="flex-1 h-px bg-linear-to-r from-yellow-400/30 via-glass-border to-transparent" />
             </div>
-            {/* TODO: BE chưa có API danh sách kết quả chờ công bố */}
-            <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-              <div className="text-4xl opacity-40 mb-3">📋</div>
-              <div className="text-muted text-sm">Chưa có dữ liệu</div>
-            </div>
-          </div>
 
-          {/* Published */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                <CheckCircle size={14} className="text-emerald-400" />
+            <div className="glass-panel rounded-xl p-6 border border-glass-border relative overflow-hidden space-y-4">
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+
+              <div className="relative z-10 flex flex-wrap items-end gap-3">
+                <div className="flex items-center gap-2 bg-white/4 border border-glass-border rounded-lg px-3 py-2 w-56">
+                  <Search size={14} className="text-muted shrink-0" />
+                  <select
+                    value={resultRaceId}
+                    onChange={e => { setResultRaceId(e.target.value); }}
+                    className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    <option value="">-- Chọn cuộc đua --</option>
+                    {races.map((r, i) => {
+                      const id = r.id ?? r.raceId;
+                      return <option key={id ?? i} value={id}>{`${r.name}${r.raceDate ? ' — ' + r.raceDate : ''}`}</option>;
+                    })}
+                  </select>
+                </div>
+                <button
+                  onClick={handleLoadResults}
+                  disabled={resultsLoading}
+                  className="px-4 py-2 rounded-lg bg-white/6 text-white border border-glass-border hover:border-gold/40 text-sm font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {resultsLoading ? '…' : 'Xem kết quả'}
+                </button>
+                <button
+                  onClick={handlePublish}
+                  disabled={publishLoading}
+                  className="px-4 py-2 rounded-lg bg-gold/15 text-gold border border-gold/25 hover:bg-gold/25 text-sm font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  <Megaphone size={14} /> {publishLoading ? '…' : 'Công bố kết quả'}
+                </button>
               </div>
-              <h2 className="text-base font-medium font-serif text-white">Đã công bố</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-emerald-400/30 via-glass-border to-transparent" />
-            </div>
-            {/* TODO: BE chưa có API danh sách kết quả đã công bố */}
-            <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-              <div className="text-4xl opacity-40 mb-3">📋</div>
-              <div className="text-muted text-sm">Chưa có dữ liệu</div>
+
+              {resultsError && <div className="relative z-10 text-xs px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{resultsError}</div>}
+              {publishError && <div className="relative z-10 text-xs px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{publishError}</div>}
+              {publishSuccess && <div className="relative z-10 text-xs px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{publishSuccess}</div>}
+
+              {resultsLoading ? (
+                <div className="relative z-10 text-center py-10 text-muted text-sm">Đang tải...</div>
+              ) : resultsLoaded && results.length === 0 ? (
+                <div className="relative z-10 text-center py-10">
+                  <div className="text-4xl opacity-40 mb-3">📋</div>
+                  <div className="text-muted text-sm">Chưa có dữ liệu</div>
+                </div>
+              ) : results.length > 0 ? (
+                <div className="relative z-10 overflow-hidden rounded-lg border border-glass-border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-[11px] uppercase tracking-wider text-muted border-b border-glass-border">
+                        <th className="px-4 py-2.5 font-bold">Hạng</th>
+                        <th className="px-4 py-2.5 font-bold">Ngựa</th>
+                        <th className="px-4 py-2.5 font-bold">Nài</th>
+                        <th className="px-4 py-2.5 font-bold">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.map((r, i) => (
+                        <tr key={r.id ?? r.raceEntryId ?? i} className="border-b border-glass-border/40 hover:bg-white/2 transition-colors">
+                          <td className="px-4 py-2.5 text-gold font-bold">{r.winner ?? '—'}</td>
+                          <td className="px-4 py-2.5 text-white font-medium">{r.horseName ?? '—'}</td>
+                          <td className="px-4 py-2.5 text-body">{r.jockeyName ?? '—'}</td>
+                          <td className="px-4 py-2.5 text-body">{r.status ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -193,21 +299,26 @@ export function AdminResultsPage() {
       {showPrizesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20 relative overflow-hidden">
-            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
+            <div className="absolute top-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none" />
             <div className="relative flex items-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                 <DollarSign size={15} className="text-gold" />
               </div>
               <h2 className="text-xl font-serif text-white">Thiết lập giải thưởng</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+              <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
 
             <div className="space-y-4">
-              {/* TODO: cần BE bổ sung GET danh sách tournaments để thay ô nhập tay bằng dropdown */}
               <div>
-                <label className={LABEL}>Tournament ID * <span className="text-muted/50 normal-case font-normal">— nhập ID (BE chưa có API danh sách giải đấu)</span></label>
-                <input value={prizes.tournamentId} onChange={e => setP('tournamentId', e.target.value)} type="number" min="1" placeholder="ID giải đấu vừa tạo ở trang Giải đấu" className={INPUT} />
+                <label className={LABEL}>Giải đấu *</label>
+                <select value={prizes.tournamentId} onChange={e => setP('tournamentId', e.target.value)} className={INPUT} style={{ colorScheme: 'dark' }}>
+                  <option value="">-- Chọn giải đấu --</option>
+                  {tournaments.map((t, i) => {
+                    const id = t.tournamentId ?? t.id;
+                    return <option key={id ?? i} value={id}>{t.name}</option>;
+                  })}
+                </select>
               </div>
               <div>
                 <label className={LABEL}>Giải nhất (VNĐ) *</label>

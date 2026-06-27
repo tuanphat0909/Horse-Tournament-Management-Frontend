@@ -1,11 +1,12 @@
-import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trophy, Search } from 'lucide-react';
+import { Plus, Trophy, Search, Pencil, Zap, Star } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { createTournament } from '../../api/adminService';
+import { createTournament, updateTournament, generateRacesForTournament, generateFinalRace } from '../../api/adminService';
+import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
 type StatusFilter = 'all' | 'upcoming' | 'active' | 'completed';
@@ -31,6 +32,68 @@ export function AdminTournamentsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [loadingTournaments, setLoadingTournaments] = useState(true);
+
+  // Generate races
+  const [genLoading, setGenLoading] = useState<number | null>(null);
+  const [genMsg, setGenMsg] = useState<{ id: number; msg: string; ok: boolean } | null>(null);
+
+  async function handleGenerateRaces(id: number) {
+    setGenLoading(id);
+    setGenMsg(null);
+    try {
+      await generateRacesForTournament(id);
+      setGenMsg({ id, msg: 'Tạo races thành công!', ok: true });
+    } catch (err: unknown) {
+      setGenMsg({ id, msg: parseApiError(err as Error), ok: false });
+    } finally {
+      setGenLoading(null);
+    }
+  }
+
+  // Generate final race
+  const [finalLoading, setFinalLoading] = useState<number | null>(null);
+  const [finalMsg, setFinalMsg] = useState<{ id: number; msg: string; ok: boolean } | null>(null);
+
+  async function handleGenerateFinal(id: number) {
+    setFinalLoading(id);
+    setFinalMsg(null);
+    try {
+      await generateFinalRace(id);
+      setFinalMsg({ id, msg: 'Tạo trận chung kết thành công!', ok: true });
+    } catch (err: unknown) {
+      setFinalMsg({ id, msg: parseApiError(err as Error), ok: false });
+    } finally {
+      setFinalLoading(null);
+    }
+  }
+
+  // Edit tournament
+  const [editTarget, setEditTarget] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', startDate: '', endDate: '', numberOfRounds: '', status: 'Upcoming' });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState('');
+
+  async function loadTournaments() {
+    setLoadingTournaments(true);
+    try {
+      const data: any = await getTournaments();
+      setTournaments(data?.result ?? (Array.isArray(data) ? data : []));
+    } catch (err) {
+      console.error(err);
+      setTournaments([]);
+    } finally {
+      setLoadingTournaments(false);
+    }
+  }
+
+  useEffect(() => {
+    loadTournaments();
+  }, []);
+
+
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
@@ -49,11 +112,12 @@ export function AdminTournamentsPage() {
         endDate: form.endDate,
         numberOfRounds: Number(form.numberOfRounds),
       });
-      const newId = data?.result?.id ?? data?.result?.tournamentId;
+      const newId = data?.tournamentId ?? data?.result?.tournamentId ?? data?.result?.id;
       setSuccess(newId != null
         ? `Đã tạo giải đấu thành công! ID = ${newId} — dùng ID này cho bước tạo giải thưởng / đăng ký thi đấu.`
         : 'Tạo giải đấu thành công!');
       setForm(INIT_FORM);
+      loadTournaments();
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
@@ -67,13 +131,88 @@ export function AdminTournamentsPage() {
     setForm(INIT_FORM);
   }
 
+  // Convert an ISO/date string to the value a datetime-local input expects.
+  function toLocalInput(v: any): string {
+    if (!v) return '';
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function openEdit(t: any) {
+    setEditError(''); setEditSuccess('');
+    setEditTarget(t);
+    setEditForm({
+      name: t.name ?? '',
+      startDate: toLocalInput(t.startDate),
+      endDate: toLocalInput(t.endDate),
+      numberOfRounds: String(t.rounds?.length ?? t.numberOfRounds ?? ''),
+      status: t.status ?? 'Upcoming',
+    });
+  }
+
+  function setEdit(field: string, value: string) {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  }
+
+  function closeEdit() {
+    setEditTarget(null);
+    setEditError(''); setEditSuccess('');
+  }
+
+  async function handleUpdate() {
+    if (!editTarget) return;
+    setEditError(''); setEditSuccess('');
+    if (!editForm.name || !editForm.startDate || !editForm.endDate || !editForm.numberOfRounds) {
+      setEditError('Vui lòng điền đầy đủ tất cả các trường.');
+      return;
+    }
+    const id = editTarget.tournamentId ?? editTarget.id;
+    setEditLoading(true);
+    try {
+      await updateTournament(id, {
+        name: editForm.name,
+        startDate: editForm.startDate,
+        endDate: editForm.endDate,
+        numberOfRounds: Number(editForm.numberOfRounds),
+        status: editForm.status,
+      });
+      setEditSuccess('Cập nhật giải đấu thành công!');
+      await loadTournaments();
+      closeEdit();
+    } catch (err: unknown) {
+      setEditError(parseApiError(err as Error));
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
+  const statsCounts: Record<StatusFilter, number> = {
+    all: tournaments.length,
+    active: tournaments.filter(t => t.status?.toLowerCase() === 'active').length,
+    upcoming: tournaments.filter(t => t.status?.toLowerCase() === 'upcoming').length,
+    completed: tournaments.filter(t => t.status?.toLowerCase() === 'completed').length,
+  };
+
+  const filteredTournaments = tournaments.filter(t => {
+    const matchesSearch = (t.name ?? '').toLowerCase().includes(search.toLowerCase());
+    const statusLower = t.status?.toLowerCase();
+    if (filter === 'all') return matchesSearch;
+    if (filter === 'active') return matchesSearch && statusLower === 'active';
+    if (filter === 'upcoming') return matchesSearch && statusLower === 'upcoming';
+    if (filter === 'completed') return matchesSearch && statusLower === 'completed';
+    return matchesSearch;
+  });
+
   return (
+
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="gold" />
         <Topbar />
-        <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
+        <main className="relative z-10 max-w-400 mx-auto px-8 py-6 space-y-6">
 
           <PageHero
             title="Quản lý giải đấu"
@@ -94,29 +233,105 @@ export function AdminTournamentsPage() {
                 key={s}
                 onClick={() => setFilter(s)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-                  filter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
+                  filter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/4'
                 }`}
               >
                 {s === 'all' ? 'Tất cả' : STATUS_CONFIG[s].label}
-                {/* TODO: BE chưa có API danh sách giải đấu — số đếm hiển thị 0 */}
                 <span className="ml-2 text-[11px] font-bold text-current opacity-60">
-                  0
+                  {statsCounts[s] ?? 0}
                 </span>
               </button>
             ))}
-            <div className="ml-auto flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-64">
+            <div className="ml-auto flex items-center gap-2 bg-white/4 border border-glass-border rounded-lg px-3 py-2 w-64">
               <Search size={14} className="text-muted shrink-0" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm giải đấu..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
             </div>
           </div>
 
           {/* Tournament Cards */}
-          {/* TODO: BE chưa có API danh sách giải đấu */}
-          <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-            <div className="text-4xl opacity-40 mb-3">🏆</div>
-            <div className="text-muted text-sm">Chưa có dữ liệu</div>
-          </div>
+          {loadingTournaments ? (
+            <div className="text-center py-12 text-muted text-sm">Đang tải danh sách giải đấu...</div>
+          ) : filteredTournaments.length === 0 ? (
+            <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="text-4xl opacity-40 mb-3">🏆</div>
+              <div className="text-muted text-sm">Chưa có dữ liệu</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filteredTournaments.map((t, i) => {
+                const s = t.status?.toLowerCase() ?? 'upcoming';
+                const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
+                return (
+                  <motion.div
+                    key={t.tournamentId ?? i}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left"
+                  >
+                    <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    <div className="flex justify-between items-start mb-3">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {config.label}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted font-medium">ID: {t.tournamentId ?? t.id}</span>
+                        <button
+                          onClick={() => openEdit(t)}
+                          className="px-2 py-1 rounded-lg border border-glass-border text-muted hover:text-gold hover:border-gold/40 text-[11px] font-bold flex items-center gap-1 transition-colors"
+                        >
+                          <Pencil size={11} /> Sửa
+                        </button>
+                        <button
+                          onClick={() => handleGenerateRaces(t.tournamentId ?? t.id)}
+                          disabled={genLoading === (t.tournamentId ?? t.id)}
+                          title="Tạo races cho tournament này"
+                          className="px-2 py-1 rounded-lg border border-glass-border text-muted hover:text-emerald-400 hover:border-emerald-500/40 text-[11px] font-bold flex items-center gap-1 transition-colors disabled:opacity-50"
+                        >
+                          <Zap size={11} /> {genLoading === (t.tournamentId ?? t.id) ? '…' : 'Races'}
+                        </button>
+                        <button
+                          onClick={() => handleGenerateFinal(t.tournamentId ?? t.id)}
+                          disabled={finalLoading === (t.tournamentId ?? t.id)}
+                          title="Tạo trận chung kết"
+                          className="px-2 py-1 rounded-lg border border-glass-border text-muted hover:text-gold hover:border-gold/40 text-[11px] font-bold flex items-center gap-1 transition-colors disabled:opacity-50"
+                        >
+                          <Star size={11} /> {finalLoading === (t.tournamentId ?? t.id) ? '…' : 'Final'}
+                        </button>
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-3 line-clamp-1">{t.name}</h3>
+                    <div className="space-y-1.5 text-xs text-muted pt-3 border-t border-glass-border/40">
+                      <div className="flex justify-between">
+                        <span>Ngày bắt đầu:</span>
+                        <span className="text-white font-medium">{t.startDate ? new Date(t.startDate).toLocaleString() : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Ngày kết thúc:</span>
+                        <span className="text-white font-medium">{t.endDate ? new Date(t.endDate).toLocaleString() : '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Số vòng đấu:</span>
+                        <span className="text-gold font-bold">{t.rounds?.length ?? t.numberOfRounds ?? '—'}</span>
+                      </div>
+                    </div>
+                    {genMsg?.id === (t.tournamentId ?? t.id) && (
+                      <div className={`mt-2 text-[11px] px-3 py-2 rounded-lg border ${genMsg.ok ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>
+                        {genMsg.msg}
+                      </div>
+                    )}
+                    {finalMsg?.id === (t.tournamentId ?? t.id) && (
+                      <div className={`mt-2 text-[11px] px-3 py-2 rounded-lg border ${finalMsg.ok ? 'text-gold bg-gold/10 border-gold/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>
+                        {finalMsg.msg}
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
 
         </main>
       </div>
@@ -129,14 +344,14 @@ export function AdminTournamentsPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20 relative overflow-hidden"
           >
-            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
+            <div className="absolute top-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none" />
             <div className="relative flex items-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                 <Trophy size={15} className="text-gold" />
               </div>
               <h2 className="text-xl font-serif text-white">Tạo giải đấu mới</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+              <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
 
             <div className="space-y-4">
@@ -188,6 +403,70 @@ export function AdminTournamentsPage() {
               <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
               <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
                 {loading ? 'Đang tạo…' : 'Tạo giải đấu'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Tournament Modal */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20 relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none" />
+            <div className="relative flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                <Pencil size={15} className="text-gold" />
+              </div>
+              <h2 className="text-xl font-serif text-white">Sửa giải đấu</h2>
+              <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={LABEL}>Tên giải đấu *</label>
+                <input value={editForm.name} onChange={e => setEdit('name', e.target.value)} placeholder="Tên giải đấu" className={INPUT} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LABEL}>Ngày bắt đầu *</label>
+                  <input type="datetime-local" value={editForm.startDate} onChange={e => setEdit('startDate', e.target.value)} className={INPUT} style={{ colorScheme: 'dark' }} />
+                </div>
+                <div>
+                  <label className={LABEL}>Ngày kết thúc *</label>
+                  <input type="datetime-local" value={editForm.endDate} onChange={e => setEdit('endDate', e.target.value)} className={INPUT} style={{ colorScheme: 'dark' }} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LABEL}>Số vòng đua *</label>
+                  <input value={editForm.numberOfRounds} onChange={e => setEdit('numberOfRounds', e.target.value)} type="number" min="1" placeholder="VD: 5" className={INPUT} />
+                </div>
+                <div>
+                  <label className={LABEL}>Trạng thái</label>
+                  <select value={editForm.status} onChange={e => setEdit('status', e.target.value)} className={INPUT} style={{ colorScheme: 'dark' }}>
+                    <option value="Upcoming">Sắp diễn ra</option>
+                    <option value="Active">Đang diễn ra</option>
+                    <option value="Completed">Đã kết thúc</option>
+                  </select>
+                </div>
+              </div>
+
+              {editError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{editError}</div>}
+              {editSuccess && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{editSuccess}</div>}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={closeEdit} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
+              <button onClick={handleUpdate} disabled={editLoading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
+                {editLoading ? 'Đang lưu…' : 'Lưu thay đổi'}
               </button>
             </div>
           </motion.div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Plus, Users, Eye, EyeOff } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -127,7 +127,7 @@ export function AdminUsersPage() {
       <div className="relative flex-1 min-w-0 overflow-y-auto">
         <PageAmbience accent="gold" />
         <Topbar />
-        <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
+        <main className="relative z-10 max-w-400 mx-auto px-8 py-6 space-y-6">
 
           <PageHero
             title="Quản lý người dùng"
@@ -147,10 +147,10 @@ export function AdminUsersPage() {
               <button
                 key={r}
                 onClick={() => setFilter(r)}
-                className={`glass-panel rounded-xl p-4 text-left border transition-all relative overflow-hidden group ${filter === r ? 'border-gold/40 bg-gold/5' : 'border-glass-border hover:border-gold/30 hover:bg-gold/[0.03]'}`}
+                className={`glass-panel rounded-xl p-4 text-left border transition-all relative overflow-hidden group ${filter === r ? 'border-gold/40 bg-gold/5' : 'border-glass-border hover:border-gold/30 hover:bg-gold/3'}`}
               >
-                <div className="absolute top-0 left-3 right-3 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[30px] pointer-events-none" />
+                <div className="absolute top-0 left-3 right-3 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-[30px] pointer-events-none" />
                 <div className="relative z-10 flex items-center gap-2 mb-1">
                   <Users size={14} className={filter === r ? 'text-gold' : 'text-muted'} />
                   <span className="text-[10px] uppercase tracking-wider text-muted font-bold">
@@ -166,10 +166,10 @@ export function AdminUsersPage() {
 
           {/* Search + Table */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-panel rounded-xl overflow-hidden relative">
-            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
+            <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none" />
             <div className="relative p-5 border-b border-glass-border flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 flex-1 max-w-xs">
+              <div className="flex items-center gap-2 bg-white/4 border border-glass-border rounded-lg px-3 py-2 flex-1 max-w-xs">
                 <Search size={15} className="text-muted shrink-0" />
                 <input
                   value={search}
@@ -178,7 +178,7 @@ export function AdminUsersPage() {
                   className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
                 />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-muted">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/4 border border-glass-border text-muted">
                 <span className="text-champagne font-semibold">{accountsLoading ? '…' : filtered.length}</span> kết quả
               </span>
             </div>
@@ -196,14 +196,14 @@ export function AdminUsersPage() {
               <div className="divide-y divide-glass-border relative z-10">
                 {filtered.map((a, i) => {
                   const rk = (a.roleName ?? '').toLowerCase();
-                  const roleCls = ROLE_BADGE[rk] ?? 'text-muted bg-white/[0.04] border-glass-border';
+                  const roleCls = ROLE_BADGE[rk] ?? 'text-muted bg-white/4 border-glass-border';
                   const sk = (a.status ?? '').toLowerCase();
                   const statusCls = sk === 'active' ? 'text-emerald-400' : (sk === 'inactive' || sk === 'banned') ? 'text-red-400' : 'text-yellow-400';
                   const createdAt = a.createdAt
                     ? (() => { try { return new Date(a.createdAt).toLocaleDateString('vi-VN'); } catch { return a.createdAt; } })()
                     : '—';
                   return (
-                    <div key={a.userId ?? i} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.02] transition-colors group">
+                    <div key={a.userId ?? i} className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/2 transition-colors group">
                       <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-sm font-serif font-bold text-champagne shrink-0">{i + 1}</div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">{a.fullName ?? '—'}</div>
@@ -230,13 +230,13 @@ export function AdminUsersPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20 max-h-[90vh] overflow-y-auto relative"
           >
-            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                 <Plus size={15} className="text-gold" />
               </div>
               <h2 className="text-xl font-serif text-white">Tạo tài khoản mới</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+              <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
 
             <div className="space-y-4">

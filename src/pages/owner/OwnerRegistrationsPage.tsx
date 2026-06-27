@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, CheckCircle, XCircle, Calendar, Trophy } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -6,6 +6,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { createRegistration, getMyRegistrations, getMyHorses } from '../../api/ownerService';
+import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
 type Tab = 'pending' | 'approved' | 'rejected';
@@ -26,6 +27,7 @@ const STATUS_CONFIG = {
 export function OwnerRegistrationsPage() {
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
+  const [tournaments, setTournaments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<Tab>('pending');
@@ -38,9 +40,14 @@ export function OwnerRegistrationsPage() {
   async function load() {
     setLoading(true); setError('');
     try {
-      const [regData, horseData] = await Promise.all([getMyRegistrations(), getMyHorses()]);
+      const [regData, horseData, tournamentData] = await Promise.all([
+        getMyRegistrations(),
+        getMyHorses(),
+        getTournaments()
+      ]);
       setRegistrations(regData?.result ?? (Array.isArray(regData) ? regData : []));
       setHorses(horseData?.result ?? (Array.isArray(horseData) ? horseData : []));
+      setTournaments(tournamentData?.result ?? (Array.isArray(tournamentData) ? tournamentData : []));
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
@@ -53,7 +60,7 @@ export function OwnerRegistrationsPage() {
   async function handleSubmit() {
     setSubmitError(''); setSubmitSuccess('');
     if (!form.horseId || !form.tournamentId) {
-      setSubmitError('Vui lòng chọn ngựa và nhập ID giải đấu.');
+      setSubmitError('Vui lòng chọn ngựa và giải đấu.');
       return;
     }
     setSubmitLoading(true);
@@ -88,7 +95,7 @@ export function OwnerRegistrationsPage() {
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="emerald" />
         <Topbar />
-        <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-6 relative z-10">
+        <main className="max-w-400 mx-auto px-8 py-6 space-y-6 relative z-10">
 
           <PageHero
             title="Đăng ký thi đấu"
@@ -125,16 +132,16 @@ export function OwnerRegistrationsPage() {
                 const cfg = STATUS_CONFIG[statusKey];
                 return (
                   <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                    className="glass-panel rounded-xl p-5 flex items-center gap-5 border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group relative overflow-hidden">
-                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
+                    className="glass-panel rounded-xl p-5 flex items-center gap-5 border border-glass-border hover:border-gold/30 hover:bg-gold/4 transition-all group relative overflow-hidden">
+                    <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-emerald-500/10 to-transparent blur-2xl pointer-events-none" />
                     <div className="relative z-10 w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center font-serif font-bold text-champagne text-sm shrink-0">{i + 1}</div>
-                    <div className="relative z-10 w-11 h-11 rounded-xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 ring-1 ring-gold/30 flex items-center justify-center text-xl shrink-0">🐴</div>
+                    <div className="relative z-10 w-11 h-11 rounded-xl bg-linear-to-br from-gold/20 to-gold/5 border border-gold/20 ring-1 ring-gold/30 flex items-center justify-center text-xl shrink-0">🐴</div>
                     <div className="relative z-10 flex-1 min-w-0">
                       <div className="text-base font-serif text-white group-hover:text-champagne transition-colors">{r.horseName ?? `Ngựa #${r.horseId}`}</div>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted mt-1">
-                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne"><Trophy size={10} className="text-gold/60" /> {r.tournamentName ?? `Giải đấu #${r.tournamentId}`}</span>
-                        {r.createdAt && <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted"><Calendar size={10} className="text-gold/60" /> {r.createdAt}</span>}
+                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-champagne"><Trophy size={10} className="text-gold/60" /> {r.tournamentName ?? `Giải đấu #${r.tournamentId}`}</span>
+                        {(r.registeredAt ?? r.createdAt) && <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-muted"><Calendar size={10} className="text-gold/60" /> {r.registeredAt ?? r.createdAt}</span>}
                       </div>
                     </div>
                     <span className={`relative z-10 text-[11px] font-bold px-3 py-1 rounded-full border shrink-0 ${cfg.color}`}>{cfg.label}</span>
@@ -153,12 +160,12 @@ export function OwnerRegistrationsPage() {
               })}
               {filtered.length === 0 && (
                 <div className="glass-panel rounded-xl p-12 text-center text-muted text-sm relative overflow-hidden">
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-                  <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
+                  <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent" />
+                  <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-emerald-500/10 to-transparent blur-2xl pointer-events-none" />
                   <div className="relative z-10">
                     <div className="text-4xl opacity-40 mb-3">🐴</div>
                     Không có đăng ký nào
-                    <div className="mx-auto mt-4 w-24 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+                    <div className="mx-auto mt-4 w-24 h-px bg-linear-to-r from-transparent via-gold/30 to-transparent" />
                   </div>
                 </div>
               )}
@@ -181,11 +188,17 @@ export function OwnerRegistrationsPage() {
                   {horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                 </select>
               </div>
-              {/* TODO: cần BE bổ sung GET danh sách giải đấu để thay ô nhập tay bằng dropdown */}
               <div>
-                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">ID Giải đấu * <span className="text-muted/50 normal-case font-normal">— nhập ID (BE chưa có API danh sách giải đấu)</span></label>
-                <input type="number" min="1" value={form.tournamentId} onChange={e => setForm(p => ({...p, tournamentId: e.target.value}))}
-                  placeholder="Nhập ID giải đấu" className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors" />
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Chọn Giải đấu *</label>
+                <select value={form.tournamentId} onChange={e => setForm(p => ({...p, tournamentId: e.target.value}))}
+                  className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors" style={{colorScheme:'dark'}}>
+                  <option value="">-- Chọn giải đấu --</option>
+                  {tournaments.map(t => (
+                    <option key={t.tournamentId ?? t.id} value={t.tournamentId ?? t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               {submitError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{submitError}</div>}
               {submitSuccess && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{submitSuccess}</div>}

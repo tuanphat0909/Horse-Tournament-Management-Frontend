@@ -5,3 +5,4 @@ export const respondContract = (id, status) => api.put(`/jockeys/contracts/${id}
 
 export const getJockeyStats = () => api.get('/jockeys/stats');
 export const getJockeyViolations = () => api.get('/jockeys/violations');
+export const getAssignedHorses = () => api.get('/jockeys/assigned-horses');

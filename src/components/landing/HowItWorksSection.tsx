@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 
 const steps = [
   { title: "Onboard", desc: "Create your profile as an owner, jockey, or spectator with bank-grade security." },
@@ -10,7 +10,7 @@ const steps = [
 export const HowItWorksSection = () => {
   return (
     <section className="py-32 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-surface/30 via-navy to-navy" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-surface/30 via-navy to-navy" />
       
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <motion.div 
@@ -25,7 +25,7 @@ export const HowItWorksSection = () => {
 
         <div className="relative">
           {/* Connector Line */}
-          <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+          <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-px bg-linear-to-r from-transparent via-gold/30 to-transparent" />
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
             {steps.map((step, i) => (

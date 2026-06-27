@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+﻿import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Flag, Trophy, Calendar, BarChart3,
   Bell, LogOut, Users, ClipboardList,
@@ -108,7 +108,7 @@ export function Sidebar() {
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium mb-0.5 transition-all duration-200 ${
                 isActive
                   ? 'bg-gold/10 text-champagne border border-gold/20'
-                  : 'text-muted hover:text-white hover:bg-white/[0.04] border border-transparent'
+                  : 'text-muted hover:text-white hover:bg-white/4 border border-transparent'
               }`}
             >
               <item.icon size={18} className={isActive ? 'text-gold' : ''} />
@@ -121,7 +121,7 @@ export function Sidebar() {
       {/* User Profile */}
       <div className="px-4 py-4 border-t border-glass-border shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-gold/30 to-gold/10 border border-gold/30 flex items-center justify-center font-serif text-base font-bold text-champagne">
+          <div className="w-9 h-9 rounded-lg bg-linear-to-br from-gold/30 to-gold/10 border border-gold/30 flex items-center justify-center font-serif text-base font-bold text-champagne">
             {user?.fullName?.[0] ?? 'U'}
           </div>
           <div className="flex-1 min-w-0">

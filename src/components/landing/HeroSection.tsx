@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
+﻿import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -133,7 +133,7 @@ export const HeroSection = () => {
             className="absolute -left-4 bottom-32 w-64 glass-panel rounded-2xl p-5 z-20 animate-[float_8s_ease-in-out_infinite_reverse]"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold to-yellow-700 p-px">
+              <div className="w-12 h-12 rounded-full bg-linear-to-br from-gold to-yellow-700 p-px">
                 <div className="w-full h-full bg-navy rounded-full flex items-center justify-center font-serif text-lg font-bold text-white">#1</div>
               </div>
               <div>

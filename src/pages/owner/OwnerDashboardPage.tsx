@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -10,7 +10,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser, parseApiError } from '../../api/authService';
-import { getMyHorses, getOwnerResults } from '../../api/ownerService';
+import { getMyHorses, getOwnerResults, getOwnerDashboard, getMyRegistrations } from '../../api/ownerService';
 import { getRaceSchedule } from '../../api/publicService';
 
 function isFuture(dateStr: string | null | undefined): boolean {
@@ -40,15 +40,12 @@ export function OwnerDashboardPage() {
   const [horsesLoading, setHorsesLoading] = useState(true);
   const [schedule, setSchedule] = useState<any[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(true);
-  const [results, setResults] = useState<any[]>([]);
-  const [resultsLoading, setResultsLoading] = useState(true);
-
-  useEffect(() => {
-    getOwnerResults()
-      .then((d: any) => setResults(d?.result ?? (Array.isArray(d) ? d : [])))
-      .catch(() => setResults([]))
-      .finally(() => setResultsLoading(false));
-  }, []);
+  const [totalPrize, setTotalPrize] = useState<string>('—');
+  const [ownerResults, setOwnerResults] = useState<any[]>([]);
+  const [ownerDashboard, setOwnerDashboard] = useState<any>({});
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [registrationsLoading, setRegistrationsLoading] = useState(true);
 
   useEffect(() => {
     getMyHorses()
@@ -64,15 +61,28 @@ export function OwnerDashboardPage() {
       .finally(() => setScheduleLoading(false));
   }, []);
 
-  const upcomingRaces = schedule.filter(r => isFuture(r.raceDate));
+  useEffect(() => {
+    getOwnerResults()
+      .then((d: any) => {
+        const results: any[] = d?.result ?? (Array.isArray(d) ? d : []);
+        setOwnerResults(results);
+        const sum = results.reduce((acc, r) => acc + (Number(r.prizeAmount) || 0), 0);
+        setTotalPrize(sum.toLocaleString());
+      })
+      .catch(() => setTotalPrize('—'));
 
-  const totalPrize = results.reduce((sum, r) => sum + Number(r.prize ?? r.prizeAmount ?? 0), 0);
-  const fmtPrize = (v: number) => {
-    if (v === 0) return '0 ₫';
-    if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}tỷ ₫`;
-    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}tr ₫`;
-    return v.toLocaleString('vi-VN') + ' ₫';
-  };
+    getOwnerDashboard()
+      .then((d: any) => setOwnerDashboard(d?.result ?? d ?? {}))
+      .catch(() => setOwnerDashboard({}))
+      .finally(() => setDashboardLoading(false));
+
+    getMyRegistrations()
+      .then((d: any) => setRegistrations(d?.result ?? (Array.isArray(d) ? d : [])))
+      .catch(() => setRegistrations([]))
+      .finally(() => setRegistrationsLoading(false));
+  }, []);
+
+  const upcomingRaces = schedule.filter(r => isFuture(r.raceDate));
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -82,7 +92,7 @@ export function OwnerDashboardPage() {
         <PageAmbience accent="emerald" />
         <Topbar />
 
-        <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
+        <main className="relative z-10 max-w-400 mx-auto px-8 py-6 space-y-6">
 
           {/* ROW 1: HERO */}
           <PageHero
@@ -110,16 +120,15 @@ export function OwnerDashboardPage() {
           {/* ROW 2: STATS */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
-              { title: 'Ngựa của tôi', value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0] },
-              // TODO: BE chưa có API race đang diễn ra của owner
-              { title: 'Đang thi đấu', value: '—', trend: '+1', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1] },
-              { title: 'Sắp thi đấu', value: scheduleLoading ? '…' : String(upcomingRaces.length), trend: '3 ngày nữa', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2] },
-              { title: 'Tiền thưởng', value: resultsLoading ? '…' : fmtPrize(totalPrize), trend: '+18%', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3] },
+              { title: 'Ngựa của tôi', value: String(horses.length), trend: 'Trong chuồng', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0] },
+              { title: 'Đăng ký', value: registrationsLoading ? '…' : String(registrations.length), trend: 'Tổng đăng ký', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1] },
+              { title: 'Sắp thi đấu', value: scheduleLoading ? '…' : String(upcomingRaces.length), trend: 'Cuộc đua sắp tới', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2] },
+              { title: 'Tiền thưởng', value: totalPrize, trend: 'Mùa 2026', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3] },
             ].map((m, i) => (
               <motion.div key={i} variants={child} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-default" style={{ height: '140px' }}>
-                <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-linear-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
                 <div className="relative z-10 flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.bg} border border-white/[0.08] flex items-center justify-center ${m.color}`}>
+                  <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${m.bg} border border-white/8 flex items-center justify-center ${m.color}`}>
                     <m.icon size={18} />
                   </div>
                   <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
@@ -147,15 +156,15 @@ export function OwnerDashboardPage() {
           {/* ROW 3: HORSES + RACES */}
           <div className="grid grid-cols-[1fr_380px] gap-6" style={{ minHeight: '420px' }}>
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.4 }} className="glass-panel rounded-xl p-6 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-emerald-500/10 to-transparent blur-2xl pointer-events-none" />
               <div className="relative z-10 flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3 flex-1 min-w-0 mr-4">
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                     <Star size={15} className="text-gold" />
                   </div>
                   <h2 className="text-lg font-serif text-white whitespace-nowrap">Ngựa của tôi</h2>
-                  <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+                  <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
                 <button className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">
                   Xem tất cả <ChevronRight size={14} />
@@ -167,13 +176,13 @@ export function OwnerDashboardPage() {
                 ) : horses.length === 0 ? (
                   <div className="text-center py-10"><div className="text-4xl opacity-40 mb-3">🐴</div><div className="text-muted text-sm">Chưa có ngựa nào trong chuồng</div></div>
                 ) : horses.map((h, i) => (
-                  <div key={h.id ?? i} className="flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
+                  <div key={h.id ?? i} className="flex items-center gap-4 p-3.5 rounded-xl bg-white/2 border border-glass-border hover:border-gold/30 hover:bg-gold/4 transition-all group cursor-pointer">
                     <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center font-serif font-bold text-champagne text-sm shrink-0">{i + 1}</div>
-                    <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-gold/15 to-navy/60 border border-glass-border ring-1 ring-gold/30 flex items-center justify-center shrink-0 text-xl">🐴</div>
+                    <div className="w-11 h-11 rounded-lg bg-linear-to-br from-gold/15 to-navy/60 border border-glass-border ring-1 ring-gold/30 flex items-center justify-center shrink-0 text-xl">🐴</div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">{h.name}</div>
                       <div className="text-[11px] text-muted flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted">{h.breed}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-muted">{h.breed}</span>
                         <span>{h.age} tuổi</span>
                       </div>
                     </div>
@@ -193,8 +202,8 @@ export function OwnerDashboardPage() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }} className="glass-panel rounded-xl p-6 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-emerald-500/10 to-transparent blur-2xl pointer-events-none" />
               <div className="relative z-10 flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3 flex-1 min-w-0 mr-4">
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
@@ -211,13 +220,13 @@ export function OwnerDashboardPage() {
                   <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
                 ) : upcomingRaces.length === 0 ? (
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">📅</div>
                     <div className="text-muted text-sm">Chưa có dữ liệu</div>
                   </div>
                 ) : upcomingRaces.map((r, i) => (
-                  <div key={r.id ?? i} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
-                    <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-gradient-to-b from-gold/60 to-transparent" />
+                  <div key={r.id ?? i} className="relative overflow-hidden p-4 rounded-xl bg-white/2 border border-glass-border hover:border-gold/30 hover:bg-gold/4 transition-all group cursor-pointer">
+                    <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-linear-to-b from-gold/60 to-transparent" />
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-sm font-semibold text-white group-hover:text-champagne transition-colors">{r.name}</h3>
                       {r.tournamentName && (
@@ -237,59 +246,85 @@ export function OwnerDashboardPage() {
           {/* ROW 4: PERFORMANCE + ACTIVITY */}
           <div className="grid grid-cols-2 gap-6">
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }} className="glass-panel rounded-xl p-6 relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-emerald-500/10 to-transparent blur-2xl pointer-events-none" />
               <div className="relative z-10 flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                   <TrendingUp size={15} className="text-gold" />
                 </div>
                 <h2 className="text-lg font-serif text-white whitespace-nowrap">Thành tích mùa giải</h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+                <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
-              <div className="relative z-10 space-y-2">
-                {results.length === 0 ? (
-                  <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="relative z-10">
+                {ownerResults.length === 0 ? (
+                  <div className="rounded-xl p-10 text-center bg-white/2 border border-glass-border">
                     <div className="text-4xl opacity-40 mb-3">📊</div>
-                    <div className="text-muted text-sm">Chưa có dữ liệu</div>
+                    <div className="text-muted text-sm">Chưa có kết quả nào trong mùa giải</div>
                   </div>
-                ) : results.slice(0, 5).map((r: any, i: number) => {
-                  const pos = r.position ?? r.finalPosition ?? r.rank;
-                  const posCls = pos === 1 ? 'bg-gold/20 text-gold border-gold/30'
-                    : pos === 2 ? 'bg-slate-500/20 text-slate-300 border-slate-500/30'
-                    : pos === 3 ? 'bg-amber-700/20 text-amber-400 border-amber-700/30'
-                    : 'bg-white/[0.04] text-muted border-glass-border';
-                  return (
-                    <div key={r.id ?? i} className="flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group">
-                      <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-serif font-bold shrink-0 ${posCls}`}>{pos ?? '—'}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">{r.raceName ?? r.race?.name ?? '—'}</div>
-                        <div className="text-xs text-muted truncate">{r.horseName ?? r.horse?.name ?? '—'}{r.tournamentName ? ` • ${r.tournamentName}` : ''}</div>
+                ) : (
+                  <div className="space-y-2">
+                    {ownerResults.slice(0, 5).map((r: any, i: number) => (
+                      <div key={r.id ?? r.raceEntryId ?? i} className="flex items-center gap-3 p-3 rounded-xl bg-white/2 border border-glass-border hover:border-gold/25 transition-all">
+                        <div className="w-7 h-7 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-[11px] font-bold text-champagne shrink-0">{i + 1}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-white truncate">🐴 {r.horseName ?? `Ngựa #${r.horseId}`}</div>
+                          <div className="text-xs text-muted flex items-center gap-2 mt-0.5">
+                            {r.raceName && <span>{r.raceName}</span>}
+                            {r.raceDate && <span className="flex items-center gap-1"><Clock size={9} /> {r.raceDate}</span>}
+                          </div>
+                        </div>
+                        {r.prizeAmount != null && Number(r.prizeAmount) > 0 && (
+                          <span className="text-xs font-bold text-gold shrink-0">+{Number(r.prizeAmount).toLocaleString()}đ</span>
+                        )}
+                        {(r.finishPosition ?? r.position) != null && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold/10 border border-gold/25 text-gold shrink-0">#{r.finishPosition ?? r.position}</span>
+                        )}
                       </div>
-                      {r.prize != null && <div className="text-xs font-bold text-gold shrink-0">{Number(r.prize).toLocaleString('vi-VN')} ₫</div>}
-                    </div>
-                  );
-                })}
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1, duration: 0.4 }} className="glass-panel rounded-xl p-6 relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-emerald-500/10 to-transparent blur-2xl pointer-events-none" />
               <div className="relative z-10 flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                   <Activity size={15} className="text-gold" />
                 </div>
-                <h2 className="text-lg font-serif text-white whitespace-nowrap">Hoạt động gần đây</h2>
-                <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+                <h2 className="text-lg font-serif text-white whitespace-nowrap">Đăng ký gần đây</h2>
+                <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
-              {/* TODO: BE chưa có API */}
               <div className="relative z-10">
-                <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                  <div className="text-4xl opacity-40 mb-3">🕑</div>
-                  <div className="text-muted text-sm">Chưa có dữ liệu</div>
-                </div>
+                {registrationsLoading ? (
+                  <div className="text-center py-10 text-muted text-sm">Đang tải...</div>
+                ) : registrations.length === 0 ? (
+                  <div className="rounded-xl p-10 text-center bg-white/2 border border-glass-border">
+                    <div className="text-4xl opacity-40 mb-3">📋</div>
+                    <div className="text-muted text-sm">Chưa có đăng ký nào</div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {registrations.slice(0, 6).map((r: any, i: number) => {
+                      const status = (r.status ?? '').toLowerCase();
+                      const statusColor = status === 'approved' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                        : status === 'rejected' ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                        : 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20';
+                      const statusLabel = status === 'approved' ? 'Đã duyệt' : status === 'rejected' ? 'Từ chối' : 'Chờ duyệt';
+                      return (
+                        <div key={r.id ?? r.registrationId ?? i} className="flex items-center gap-2.5 p-3 rounded-xl bg-white/2 border border-glass-border hover:border-gold/20 transition-all">
+                          <div className="text-lg shrink-0">🐴</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium text-white truncate">{r.horseName ?? `Ngựa #${r.horseId}`}</div>
+                            <div className="text-[10px] text-muted truncate">{r.tournamentName ?? `Giải đấu #${r.tournamentId}`}</div>
+                          </div>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${statusColor}`}>{statusLabel}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

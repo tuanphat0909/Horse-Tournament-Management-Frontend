@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Users, Trophy, ClipboardList, Calendar,
   TrendingUp, ChevronRight,
-  Activity, UserCheck, Megaphone,
+  Activity, UserCheck, Megaphone, Clock,
 } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser } from '../../api/authService';
-import { getRaceSchedule, getTournaments } from '../../api/publicService';
-import { getAccounts, getRegistrations } from '../../api/adminService';
+import { getAdminDashboard, getRegistrations, getActivityLog } from '../../api/adminService';
+import { getRaceSchedule } from '../../api/publicService';
 import { useNavigate } from 'react-router-dom';
 
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -21,28 +21,39 @@ export function AdminDashboardPage() {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const [schedule, setSchedule] = useState<any[]>([]);
-  const [userCount, setUserCount] = useState<string>('…');
-  const [tournamentCount, setTournamentCount] = useState<string>('…');
-  const [pendingCount, setPendingCount] = useState<string>('…');
+  const [dashStats, setDashStats] = useState<any>(null);
+  const [pendingList, setPendingList] = useState<any[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(true);
+  const [activityLog, setActivityLog] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   useEffect(() => {
     getRaceSchedule()
       .then((d: any) => setSchedule(d?.result ?? (Array.isArray(d) ? d : [])))
       .catch(() => setSchedule([]));
-    getAccounts()
-      .then((d: any) => { const list = d?.result ?? (Array.isArray(d) ? d : []); setUserCount(String(list.length)); })
-      .catch(() => setUserCount('—'));
-    getTournaments()
-      .then((d: any) => { const list = d?.result ?? (Array.isArray(d) ? d : []); setTournamentCount(String(list.length)); })
-      .catch(() => setTournamentCount('—'));
+
+    getAdminDashboard()
+      .then((d: any) => setDashStats(d?.result ?? d ?? null))
+      .catch(() => setDashStats(null));
+
     getRegistrations()
-      .then((d: any) => { const list = d?.result ?? (Array.isArray(d) ? d : []); setPendingCount(String(list.filter((r: any) => (r.status ?? '').toLowerCase() === 'pending').length)); })
-      .catch(() => setPendingCount('—'));
+      .then((d: any) => {
+        const list: any[] = d?.result ?? (Array.isArray(d) ? d : []);
+        setPendingList(list.filter(r => (r.status ?? '').toLowerCase() === 'pending'));
+      })
+      .catch(() => setPendingList([]))
+      .finally(() => setPendingLoading(false));
+
+    getActivityLog()
+      .then((d: any) => setActivityLog(d?.result ?? (Array.isArray(d) ? d : [])))
+      .catch(() => setActivityLog([]))
+      .finally(() => setActivityLoading(false));
   }, []);
 
   const today = new Date().toISOString().slice(0, 10);
   const todayRaces = schedule.filter(r => (r.raceDate ?? '').startsWith(today)).length;
   const upcomingRaces = schedule.length;
+  const showStat = (v: number | null | undefined) => (v == null ? '—' : String(v));
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
@@ -50,8 +61,7 @@ export function AdminDashboardPage() {
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="gold" />
         <Topbar />
-        <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
-          {/* TODO: BE chưa có API thống kê cho dashboard */}
+        <main className="relative z-10 max-w-400 mx-auto px-8 py-6 space-y-6">
 
           <PageHero
             title={<>Chào mừng, <span className="italic text-champagne">{user?.fullName ?? 'Admin'}</span></>}
@@ -78,9 +88,9 @@ export function AdminDashboardPage() {
           {/* STATS */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { title: 'Người dùng', value: userCount, trend: '—', icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
-              { title: 'Giải đấu', value: tournamentCount, trend: '—', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
-              { title: 'Chờ duyệt', value: pendingCount, trend: '—', icon: ClipboardList, color: 'text-orange-400', bg: 'from-orange-500/15 to-orange-900/20', path: '/admin/registrations' },
+              { title: 'Người dùng', value: showStat(dashStats?.totalUsers), trend: 'Tổng', icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
+              { title: 'Giải đấu', value: showStat(dashStats?.totalTournaments), trend: 'Tổng', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
+              { title: 'Chờ duyệt', value: pendingLoading ? '…' : String(pendingList.length), trend: 'Pending', icon: ClipboardList, color: 'text-orange-400', bg: 'from-orange-500/15 to-orange-900/20', path: '/admin/registrations' },
               { title: 'Cuộc đua hôm nay', value: todayRaces > 0 ? String(todayRaces) : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} sắp tới` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
             ].map((m, i) => (
               <motion.div
@@ -90,9 +100,9 @@ export function AdminDashboardPage() {
                 className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer"
                 style={{ height: '130px' }}
               >
-                <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
+                <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-linear-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
                 <div className="relative z-10 flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.bg} border border-white/[0.08] flex items-center justify-center ${m.color}`}>
+                  <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${m.bg} border border-white/8 flex items-center justify-center ${m.color}`}>
                     <m.icon size={18} />
                   </div>
                   <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
@@ -111,8 +121,8 @@ export function AdminDashboardPage() {
           <div className="grid grid-cols-[1fr_380px] gap-6">
             {/* Pending Registrations */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-panel rounded-xl p-6 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none" />
               <div className="relative z-10 flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
@@ -127,36 +137,64 @@ export function AdminDashboardPage() {
                   Xem tất cả <ChevronRight size={14} />
                 </button>
               </div>
-              {/* TODO: BE chưa có API danh sách đăng ký chờ duyệt */}
-              <div className="relative z-10 flex-1 flex items-center justify-center">
-                <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden w-full">
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                  <div className="text-4xl opacity-40 mb-3">📊</div>
-                  <div className="text-muted text-sm">Chưa có dữ liệu</div>
-                </div>
+              <div className="relative z-10 flex-1 space-y-2 overflow-y-auto">
+                {pendingLoading ? (
+                  <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+                ) : pendingList.length === 0 ? (
+                  <div className="text-center py-10">
+                    <div className="text-4xl opacity-40 mb-3">📋</div>
+                    <div className="text-muted text-sm">Không có đăng ký nào chờ duyệt</div>
+                  </div>
+                ) : pendingList.map((r, i) => {
+                  const id = r.registrationId ?? r.id;
+                  return (
+                    <div key={id ?? i} className="flex items-center gap-3 p-3.5 rounded-xl bg-white/2 border border-glass-border hover:border-gold/25 hover:bg-gold/3 transition-all group">
+                      <div className="w-7 h-7 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-[11px] font-bold text-orange-400 shrink-0">{i + 1}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-white group-hover:text-champagne transition-colors truncate">{r.horseName ?? `Ngựa #${r.horseId ?? '—'}`}</div>
+                        <div className="text-[11px] text-muted truncate">{r.tournamentName ?? '—'}{r.registeredAt ? ' • ' + new Date(r.registeredAt).toLocaleDateString('vi-VN') : ''}</div>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 shrink-0">Chờ duyệt</span>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
 
             {/* Recent Activity */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-panel rounded-xl p-6 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
-              <div className="relative z-10 flex items-center justify-between mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
-                    <Activity size={15} className="text-gold" />
-                  </div>
-                  <h2 className="text-lg font-serif text-white">Hoạt động gần đây</h2>
+              <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none" />
+              <div className="relative z-10 flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                  <Activity size={15} className="text-gold" />
                 </div>
-                <Activity size={16} className="text-muted" />
+                <h2 className="text-lg font-serif text-white">Hoạt động gần đây</h2>
               </div>
-              {/* TODO: BE chưa có API hoạt động gần đây */}
-              <div className="relative z-10 flex-1 flex items-center justify-center overflow-y-auto">
-                <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden w-full">
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                  <div className="text-4xl opacity-40 mb-3">📊</div>
-                  <div className="text-muted text-sm">Chưa có dữ liệu</div>
-                </div>
+              <div className="relative z-10 flex-1 space-y-2 overflow-y-auto">
+                {activityLoading ? (
+                  <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+                ) : activityLog.length === 0 ? (
+                  <div className="text-center py-10">
+                    <div className="text-4xl opacity-40 mb-3">📊</div>
+                    <div className="text-muted text-sm">Chưa có hoạt động nào</div>
+                  </div>
+                ) : activityLog.slice(0, 8).map((a, i) => (
+                  <div key={a.id ?? i} className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/2 transition-colors group">
+                    <div className="w-7 h-7 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <Clock size={12} className="text-gold" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-white/90 group-hover:text-white transition-colors leading-relaxed">{a.title ?? a.action ?? a.description ?? a.message ?? JSON.stringify(a)}</div>
+                      {a.description && a.description !== a.title && (
+                        <div className="text-[10px] text-muted/70 mt-0.5 leading-relaxed">{a.description}</div>
+                      )}
+                      {(a.createdAt ?? a.timestamp) && (
+                        <div className="text-[10px] text-muted/60 mt-0.5">{new Date(a.createdAt ?? a.timestamp).toLocaleString('vi-VN')}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </motion.div>
           </div>
@@ -173,11 +211,11 @@ export function AdminDashboardPage() {
                 key={i}
                 onClick={() => navigate(q.path)}
                 whileHover={{ scale: 1.02 }}
-                className="glass-panel rounded-xl p-5 text-left group hover:border-gold/30 hover:bg-gold/[0.03] border border-glass-border transition-all relative overflow-hidden"
+                className="glass-panel rounded-xl p-5 text-left group hover:border-gold/30 hover:bg-gold/3 border border-glass-border transition-all relative overflow-hidden"
               >
-                <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative z-10 w-10 h-10 rounded-lg bg-white/[0.04] border border-glass-border group-hover:border-gold/25 flex items-center justify-center mb-3 transition-colors">
+                <div className="absolute top-0 left-4 right-4 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-linear-to-br from-gold/10 to-transparent blur-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative z-10 w-10 h-10 rounded-lg bg-white/4 border border-glass-border group-hover:border-gold/25 flex items-center justify-center mb-3 transition-colors">
                   <q.icon size={20} className={q.color} />
                 </div>
                 <div className="relative z-10 text-sm font-semibold text-white group-hover:text-champagne transition-colors">{q.label}</div>
