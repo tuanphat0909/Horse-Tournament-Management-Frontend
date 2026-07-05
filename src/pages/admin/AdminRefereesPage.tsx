@@ -27,7 +27,7 @@ export function AdminRefereesPage() {
   // Backend field shape for referees is not specified, so we read every field
   // defensively (fullName/name/email/licenseNumber/experienceYears + id fallbacks).
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="gold" />

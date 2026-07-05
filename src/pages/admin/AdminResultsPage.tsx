@@ -6,7 +6,8 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { createPrizes, triggerPayout, getAdminRaceResults, publishResult } from '../../api/adminService';
-import { getRaceSchedule, getTournaments } from '../../api/publicService';
+import { getRaceSchedule, getTournaments, getRaceEntries } from '../../api/publicService';
+import { toast } from '../../components/ui/Toast';
 import { parseApiError } from '../../api/authService';
 
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
@@ -31,6 +32,8 @@ export function AdminResultsPage() {
   // Race results lookup + publish
   const [resultRaceId, setResultRaceId] = useState('');
   const [results, setResults] = useState<any[]>([]);
+  // Bảng xếp hạng đầy đủ của cuộc đua (mọi thứ hạng, lấy từ race entries)
+  const [standings, setStandings] = useState<any[]>([]);
   const [resultsLoaded, setResultsLoaded] = useState(false);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsError, setResultsError] = useState('');
@@ -57,12 +60,20 @@ export function AdminResultsPage() {
     setResultsLoading(true);
     setResultsLoaded(false);
     try {
-      const data: any = await getAdminRaceResults(Number(resultRaceId));
-      const list = data?.result ?? (Array.isArray(data) ? data : []);
-      setResults(list);
+      // Lấy song song: kết quả công bố + TOÀN BỘ thứ hạng từ race entries
+      const [data, entriesData] = await Promise.allSettled([
+        getAdminRaceResults(Number(resultRaceId)),
+        getRaceEntries(Number(resultRaceId)),
+      ]);
+      const list = data.status === 'fulfilled' ? ((data.value as any)?.result ?? []) : [];
+      const entries = entriesData.status === 'fulfilled' ? ((entriesData.value as any)?.result ?? []) : [];
+      setResults(Array.isArray(list) ? list : []);
+      // Xếp hạng: có finishPosition đứng trước (1→N), chưa có hạng xuống cuối
+      setStandings([...entries].sort((a: any, b: any) => (a.finishPosition ?? 999) - (b.finishPosition ?? 999)));
       setResultsLoaded(true);
+      if (data.status === 'rejected') setResultsError(parseApiError(data.reason as Error));
     } catch (err: unknown) {
-      setResults([]);
+      setResults([]); setStandings([]);
       setResultsError(parseApiError(err as Error));
     } finally {
       setResultsLoading(false);
@@ -75,6 +86,7 @@ export function AdminResultsPage() {
     setPublishLoading(true);
     try {
       await publishResult(Number(resultRaceId));
+      toast.success(`Đã công bố kết quả cho cuộc đua #${resultRaceId}! Chủ ngựa, jockey và khán giả sẽ thấy kết quả này.`);
       setPublishSuccess(`Đã công bố kết quả cho Race #${resultRaceId}!`);
     } catch (err: unknown) {
       setPublishError(parseApiError(err as Error));
@@ -133,7 +145,7 @@ export function AdminResultsPage() {
   }
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: 'var(--page-bg)' }}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="gold" />
@@ -260,33 +272,69 @@ export function AdminResultsPage() {
 
               {resultsLoading ? (
                 <div className="relative z-10 text-center py-10 text-muted text-sm">Đang tải...</div>
-              ) : resultsLoaded && results.length === 0 ? (
+              ) : resultsLoaded && results.length === 0 && standings.length === 0 ? (
                 <div className="relative z-10 text-center py-10">
                   <div className="text-4xl opacity-40 mb-3">📋</div>
                   <div className="text-muted text-sm">Chưa có dữ liệu</div>
                 </div>
-              ) : results.length > 0 ? (
-                <div className="relative z-10 overflow-hidden rounded-lg border border-glass-border">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-[11px] uppercase tracking-wider text-muted border-b border-glass-border">
-                        <th className="px-4 py-2.5 font-bold">Hạng</th>
-                        <th className="px-4 py-2.5 font-bold">Ngựa</th>
-                        <th className="px-4 py-2.5 font-bold">Nài</th>
-                        <th className="px-4 py-2.5 font-bold">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.map((r, i) => (
-                        <tr key={r.id ?? r.raceEntryId ?? i} className="border-b border-glass-border/40 hover:bg-white/2 transition-colors">
-                          <td className="px-4 py-2.5 text-gold font-bold">{r.winner ?? '—'}</td>
-                          <td className="px-4 py-2.5 text-white font-medium">{r.horseName ?? '—'}</td>
-                          <td className="px-4 py-2.5 text-body">{r.jockeyName ?? '—'}</td>
-                          <td className="px-4 py-2.5 text-body">{r.status ?? '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              ) : resultsLoaded ? (
+                <div className="relative z-10 space-y-4">
+                  {/* Bảng XẾP HẠNG ĐẦY ĐỦ của cuộc đua — tất cả thứ hạng */}
+                  {standings.length > 0 && (
+                    <div className="overflow-hidden rounded-lg border border-glass-border">
+                      <div className="px-4 py-2.5 bg-white/3 border-b border-glass-border text-[11px] font-bold uppercase tracking-wider text-champagne">
+                        Bảng xếp hạng đầy đủ ({standings.length} ngựa)
+                      </div>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-[11px] uppercase tracking-wider text-muted border-b border-glass-border">
+                            <th className="px-4 py-2.5 font-bold">Hạng</th>
+                            <th className="px-4 py-2.5 font-bold">Ngựa</th>
+                            <th className="px-4 py-2.5 font-bold">Jockey</th>
+                            <th className="px-4 py-2.5 font-bold">Làn</th>
+                            <th className="px-4 py-2.5 font-bold">Thời gian</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {standings.map((e: any, i: number) => {
+                            const pos = e.finishPosition;
+                            const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '';
+                            return (
+                              <tr key={e.raceEntryId ?? i} className={`border-b border-glass-border/40 hover:bg-white/2 transition-colors ${pos === 1 ? 'bg-gold/5' : ''}`}>
+                                <td className={`px-4 py-2.5 font-bold ${pos === 1 ? 'text-gold' : pos != null && pos <= 3 ? 'text-champagne' : 'text-muted'}`}>
+                                  {medal} {pos != null ? `#${pos}` : 'Chưa có'}
+                                </td>
+                                <td className="px-4 py-2.5 text-white font-medium">🐴 {e.horseName ?? `Ngựa #${e.horseId}`}</td>
+                                <td className="px-4 py-2.5 text-body">{e.jockeyName ?? '—'}</td>
+                                <td className="px-4 py-2.5 text-muted">Làn {e.laneNo ?? '—'}</td>
+                                <td className="px-4 py-2.5 text-muted">{e.finishTime ?? '—'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Kết quả đã công bố (RaceResult) */}
+                  {results.length > 0 && (
+                    <div className="overflow-hidden rounded-lg border border-glass-border">
+                      <div className="px-4 py-2.5 bg-white/3 border-b border-glass-border text-[11px] font-bold uppercase tracking-wider text-champagne">
+                        Kết quả đã công bố
+                      </div>
+                      <table className="w-full text-sm">
+                        <tbody>
+                          {results.map((r, i) => (
+                            <tr key={r.id ?? i} className="border-b border-glass-border/40">
+                              <td className="px-4 py-2.5 text-gold font-bold">🏆 Thắng: {r.winner ?? '—'}</td>
+                              <td className="px-4 py-2.5 text-body">{r.status ?? ''}</td>
+                              <td className="px-4 py-2.5 text-muted">{r.confirmedAt ? new Date(r.confirmedAt).toLocaleString('vi-VN') : ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>

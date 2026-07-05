@@ -7,6 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getContracts, respondContract } from '../../api/jockeyService';
 import { parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 import { Pager, paginate } from '../../components/ui/Pager';
 
 type Tab = 'pending' | 'accepted' | 'rejected';
@@ -44,8 +45,9 @@ export function JockeyInvitationsPage() {
     try {
       await respondContract(id, status);
       setInvitations(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+      toast.success(status === 'Active' ? 'Đã chấp nhận hợp đồng! Owner sẽ nhận được thông báo.' : 'Đã từ chối lời mời hợp đồng.');
     } catch (err: unknown) {
-      alert(parseApiError(err as Error));
+      toast.error(parseApiError(err as Error));
     } finally {
       setRespondingId(null);
     }
@@ -63,7 +65,7 @@ export function JockeyInvitationsPage() {
   };
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="blue" />

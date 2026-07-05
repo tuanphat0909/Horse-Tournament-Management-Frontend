@@ -9,6 +9,7 @@ import { getAssignedHorses } from '../../api/jockeyService';
 import { getRaceDetail, getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { Pager, paginate } from '../../components/ui/Pager';
+import { RaceTrack3D } from '../../components/ui/RaceTrack3D';
 import { X } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -70,7 +71,7 @@ export function JockeyRacesPage() {
   }
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="blue" />
@@ -170,12 +171,14 @@ export function JockeyRacesPage() {
               ))}
             </div>
 
-            <div className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Các làn trong cuộc đua</div>
+            <div className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Sơ đồ làn (3D)</div>
             {detailLoading ? (
               <div className="text-center py-6 text-muted text-sm">Đang tải…</div>
             ) : detailEntries.length === 0 ? (
               <div className="text-xs text-muted/60 italic">Chưa có dữ liệu làn cho cuộc đua này.</div>
-            ) : (
+            ) : (<>
+              <RaceTrack3D status={detail.status} maxLanes={Number(detail.maxLanes ?? 0) || detailEntries.length} entries={detailEntries} />
+              <div className="mt-3">
               <div className="space-y-1.5">
                 {[...detailEntries].sort((a: any, b: any) => (a.laneNo ?? 0) - (b.laneNo ?? 0)).map((e: any, i: number) => {
                   const mine = e.laneNo === detail.laneNo;
@@ -190,7 +193,8 @@ export function JockeyRacesPage() {
                   );
                 })}
               </div>
-            )}
+              </div>
+            </>)}
 
             <button onClick={() => setDetail(null)} className="w-full mt-6 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Đóng</button>
           </motion.div>

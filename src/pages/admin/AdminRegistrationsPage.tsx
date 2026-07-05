@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRegistrations, approveRegistration, rejectRegistration } from '../../api/adminService';
 import { parseApiError } from '../../api/authService';
 import { Pager, paginate } from '../../components/ui/Pager';
+import { toast } from '../../components/ui/Toast';
 
 type TabType = 'pending' | 'approved' | 'rejected';
 
@@ -44,13 +45,26 @@ export function AdminRegistrationsPage() {
 
   useEffect(() => { loadRegistrations(); }, []);
 
-  async function handleReview(id: number, status: 'Approved' | 'Rejected') {
+  async function handleReview(id: number, status: 'Approved' | 'Rejected', horseName?: string) {
+    // BE hiện CHƯA có API cho admin xem hợp đồng jockey của ngựa → không thể tự
+    // kiểm tra. Bắt buộc admin xác nhận thủ công trước khi duyệt (quy trình:
+    // ngựa phải có jockey ký hợp đồng trước khi được duyệt thi đấu).
+    if (status === 'Approved') {
+      const ok = window.confirm(
+        `Duyệt đơn cho ngựa "${horseName ?? '#' + id}"?\n\n` +
+        'LƯU Ý QUY TRÌNH: chỉ duyệt khi ngựa đã có jockey CHẤP NHẬN hợp đồng cho giải này.\n' +
+        '(Hệ thống phía Owner đã chặn nộp đơn khi chưa có jockey — nhưng backend chưa cho admin xem hợp đồng để kiểm tra tự động.)');
+      if (!ok) return;
+    }
     setReviewError('');
     setReviewingId(id);
     try {
       if (status === 'Approved') await approveRegistration(id);
       else await rejectRegistration(id);
       setRegistrations(prev => prev.map(r => ((r.registrationId ?? r.id) === id ? { ...r, status } : r)));
+      toast.success(status === 'Approved'
+        ? `Đã duyệt đơn đăng ký của ngựa "${horseName ?? '#' + id}"!`
+        : `Đã từ chối đơn đăng ký của ngựa "${horseName ?? '#' + id}".`);
       loadRegistrations();
     } catch (err: unknown) {
       setReviewError(parseApiError(err as Error));
@@ -77,7 +91,7 @@ export function AdminRegistrationsPage() {
   const { paged, totalPages, total, page: safePage } = paginate(filtered, page, 10);
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="gold" />
@@ -138,6 +152,8 @@ export function AdminRegistrationsPage() {
                 <thead>
                   <tr className="text-left text-[11px] uppercase tracking-wider text-muted border-b border-glass-border">
                     <th className="px-5 py-3 font-bold">Ngựa</th>
+                    <th className="px-5 py-3 font-bold">Chủ ngựa</th>
+                    <th className="px-5 py-3 font-bold">Jockey</th>
                     <th className="px-5 py-3 font-bold">Giải đấu</th>
                     <th className="px-5 py-3 font-bold">Trạng thái</th>
                     <th className="px-5 py-3 font-bold">Ngày đăng ký</th>
@@ -152,6 +168,13 @@ export function AdminRegistrationsPage() {
                     return (
                     <tr key={id ?? i} className="border-b border-glass-border/40 hover:bg-white/2 transition-colors">
                       <td className="px-5 py-3 text-white font-medium">{r.horseName ?? '—'}</td>
+                      <td className="px-5 py-3 text-body">{r.ownerName ?? '—'}</td>
+                      <td className="px-5 py-3">
+                        {/* BE chưa trả thông tin hợp đồng jockey cho admin — form sẵn chờ API */}
+                        {r.jockeyName
+                          ? <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">🏇 {r.jockeyName}</span>
+                          : <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-muted/60" title="Backend chưa cung cấp dữ liệu hợp đồng jockey cho admin — cần API GET /admin/jockey-contracts">Chưa có dữ liệu</span>}
+                      </td>
                       <td className="px-5 py-3 text-body">{r.tournamentName ?? '—'}</td>
                       <td className="px-5 py-3 text-body">{r.status ?? '—'}</td>
                       <td className="px-5 py-3 text-muted">{r.registeredAt ? new Date(r.registeredAt).toLocaleString() : '—'}</td>
@@ -159,14 +182,14 @@ export function AdminRegistrationsPage() {
                         {isPending ? (
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => id != null && handleReview(id, 'Approved')}
+                              onClick={() => id != null && handleReview(id, 'Approved', r.horseName)}
                               disabled={busy}
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Check size={13} /> Duyệt
                             </button>
                             <button
-                              onClick={() => id != null && handleReview(id, 'Rejected')}
+                              onClick={() => id != null && handleReview(id, 'Rejected', r.horseName)}
                               disabled={busy}
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >

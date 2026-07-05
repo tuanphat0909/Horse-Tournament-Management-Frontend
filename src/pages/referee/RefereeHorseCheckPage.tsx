@@ -7,6 +7,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getHorseChecks } from '../../api/refereeService';
 import { getRaceSchedule } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
+import { Pager, paginate } from '../../components/ui/Pager';
 
 type Tab = 'all' | 'pending' | 'approved' | 'rejected';
 
@@ -58,8 +59,11 @@ export function RefereeHorseCheckPage() {
     return title.toLowerCase().includes(search.trim().toLowerCase());
   });
 
+  const [pageNo, setPageNo] = useState(1);
+  const pgHC = paginate(filtered, pageNo, 10);
+
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="red" />
@@ -112,7 +116,7 @@ export function RefereeHorseCheckPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filtered.map((item: any, i: number) => {
+              {pgHC.paged.map((item: any, i: number) => {
                 const title = item.horseName ?? ('#' + item.horseId);
                 return (
                   <div key={item.raceEntryId ?? item.horseId ?? i} className="glass-panel rounded-xl p-5 border border-glass-border relative overflow-hidden">
@@ -132,6 +136,7 @@ export function RefereeHorseCheckPage() {
                   </div>
                 );
               })}
+                <Pager page={pgHC.page} totalPages={pgHC.totalPages} total={pgHC.total} onChange={setPageNo} />
             </div>
           )}
 

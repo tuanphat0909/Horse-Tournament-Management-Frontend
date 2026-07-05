@@ -6,6 +6,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRaceResults, submitResult } from '../../api/refereeService';
 import { getRaceSchedule } from '../../api/publicService';
 import { getCurrentUser, parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 
 const raceLabel = (r: any) =>
   `${r.name ?? ('Cuộc đua #' + (r.id ?? r.raceId))}${r.raceDate ? ' — ' + r.raceDate : ''}${r.tournamentName ? ' (' + r.tournamentName + ')' : ''}`;
@@ -58,6 +59,7 @@ export function RefereeConfirmResultsPage() {
     setSubmitting(true);
     submitResult({ raceId: Number(raceId), winner: winner.trim(), refereeId: myRefId })
       .then(() => {
+        toast.success('Đã xác nhận kết quả cuộc đua thành công!');
         setWinner('');
         loadList(raceId);
       })
@@ -66,7 +68,7 @@ export function RefereeConfirmResultsPage() {
   };
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="red" />

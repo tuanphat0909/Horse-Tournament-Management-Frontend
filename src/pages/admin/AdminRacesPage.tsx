@@ -6,6 +6,8 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { Pager, paginate } from '../../components/ui/Pager';
+import { RaceTrack3D } from '../../components/ui/RaceTrack3D';
+import { toast } from '../../components/ui/Toast';
 import { createRace, createRaceEntry, assignReferee, getRaceReferees, removeReferee, getAdminReferees, getRegistrations, deleteRace } from '../../api/adminService';
 import { getRaceSchedule, getTournaments, getTournamentDetail, getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
@@ -148,8 +150,9 @@ export function AdminRacesPage() {
         maxLanes: Number(raceForm.maxLanes),
       });
       const newId = data?.result?.id ?? data?.result?.raceId;
-      setRaceSuccess(newId != null ? `Đã tạo cuộc đua thành công! ID = ${newId}` : 'Tạo cuộc đua thành công!');
-      setRaceForm(INIT_RACE);
+      // Submit xong: đóng modal + toast
+      toast.success(newId != null ? `Đã tạo cuộc đua "${raceForm.name}" thành công! (ID = ${newId})` : `Đã tạo cuộc đua "${raceForm.name}" thành công!`);
+      closeModal();
       loadRaceList();
     } catch (err: unknown) {
       setRaceError(parseApiError(err as Error));
@@ -160,13 +163,12 @@ export function AdminRacesPage() {
 
   /* ═══════════ Ghép làn — form sinh dropdown theo số làn ═══════════ */
 
-  async function openLanes(raceId?: number) {
+  // Mở từ nút trên từng hàng — cuộc đua được KHÓA theo hàng đã bấm (không cho đổi)
+  async function openLanes(raceId: number) {
     setModal('lanes');
     setLaneMsg(null); setLaneSel({});
-    // nạp danh sách đơn đăng ký 1 lần
     getRegistrations().then((d: any) => setRegistrations(d?.result ?? [])).catch(() => setRegistrations([]));
-    if (raceId != null) await selectLaneRace(String(raceId));
-    else setLaneRaceId('');
+    await selectLaneRace(String(raceId));
   }
 
   async function selectLaneRace(rid: string) {
@@ -216,11 +218,18 @@ export function AdminRacesPage() {
       }
     }
     setLaneSaving(false);
-    setLaneSel({});
-    await selectLaneRace(laneRaceId); // tải lại trạng thái làn
-    setLaneMsg(errors.length === 0
-      ? { ok: true, text: `Đã ghép thành công ${okCount} làn!` }
-      : { ok: okCount > 0, text: `Ghép được ${okCount} làn. Lỗi: ${errors.join(' | ')}` });
+    if (errors.length === 0) {
+      // Thành công trọn vẹn: đóng modal + toast, quay về danh sách
+      toast.success(`Đã ghép thành công ${okCount} làn cho cuộc đua "${laneRace?.name ?? ''}"!`);
+      closeModal();
+      loadRaceList();
+    } else {
+      // Có lỗi: giữ modal để admin xử lý tiếp, hiện chi tiết lỗi
+      if (okCount > 0) toast.success(`Đã ghép được ${okCount} làn.`);
+      setLaneSel({});
+      await selectLaneRace(laneRaceId);
+      setLaneMsg({ ok: false, text: `Lỗi: ${errors.join(' | ')}` });
+    }
   }
 
   /* ═══════════ Chi tiết cuộc đua ═══════════ */
@@ -239,27 +248,28 @@ export function AdminRacesPage() {
 
   /* ═══════════ Trọng tài ═══════════ */
 
-  async function openReferee(raceId?: number) {
+  // Mở từ nút trên từng hàng — cuộc đua được KHÓA theo hàng đã bấm
+  async function openReferee(raceId: number) {
     setModal('referee');
     getAdminReferees().then((d: any) => setAllReferees(d?.result ?? [])).catch(() => setAllReferees([]));
-    if (raceId != null) {
-      setRefForm({ raceId: String(raceId), refereeId: '' });
-      await handleViewReferees(String(raceId));
-    }
+    setRefForm({ raceId: String(raceId), refereeId: '' });
+    await handleViewReferees(String(raceId));
   }
 
   async function handleAssignReferee() {
     setRefError(''); setRefSuccess('');
     if (!refForm.raceId || !refForm.refereeId) {
-      setRefError('Vui lòng chọn cuộc đua và trọng tài.');
+      setRefError('Vui lòng chọn trọng tài.');
       return;
     }
     setRefLoading(true);
     try {
       await assignReferee(Number(refForm.raceId), Number(refForm.refereeId));
-      setRefSuccess('Đã phân công trọng tài thành công!');
-      setRefForm(p => ({ ...p, refereeId: '' }));
-      await handleViewReferees(refForm.raceId);
+      const refName = allReferees.find(r => String(r.refereeId ?? r.id ?? r.userId) === refForm.refereeId)?.fullName;
+      const raceName = raceList.find(r => String(r.raceId ?? r.id) === refForm.raceId)?.name;
+      // Submit xong: đóng modal + toast
+      toast.success(`Đã phân công trọng tài ${refName ? `"${refName}" ` : ''}cho cuộc đua "${raceName ?? ''}"!`);
+      closeModal();
     } catch (err: unknown) {
       setRefError(parseApiError(err as Error));
     } finally {
@@ -302,7 +312,7 @@ export function AdminRacesPage() {
   /* ═══════════ RENDER ═══════════ */
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: 'var(--page-bg)' }}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="gold" />
@@ -315,14 +325,9 @@ export function AdminRacesPage() {
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             actions={
-              <div className="flex items-center gap-3">
-                <button onClick={() => setModal('race')} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
-                  <Plus size={16} /> Thêm cuộc đua
-                </button>
-                <button onClick={() => openLanes()} className="px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold text-blue-400 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-colors">
-                  <ListOrdered size={16} /> Ghép ngựa vào làn
-                </button>
-              </div>
+              <button onClick={() => setModal('race')} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
+                <Plus size={16} /> Thêm cuộc đua
+              </button>
             }
           />
 
@@ -513,15 +518,15 @@ export function AdminRacesPage() {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className={LABEL}>Cuộc đua *</label>
-                <select value={laneRaceId} onChange={e => selectLaneRace(e.target.value)} className={INPUT} style={{ colorScheme: 'dark' }}>
-                  <option value="">-- Chọn cuộc đua --</option>
-                  {raceList.map((r, i) => {
-                    const id = r.raceId ?? r.id;
-                    return <option key={id ?? i} value={id}>{`${r.name} — ${r.tournamentName ?? ''} (${r.maxLanes ?? '?'} làn)`}</option>;
-                  })}
-                </select>
+              {/* Cuộc đua đã được khóa theo hàng admin bấm — không cho đổi để tránh ghép nhầm giải */}
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                <Flag size={15} className="text-blue-400 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-white truncate">{laneRace?.name ?? '—'}</div>
+                  <div className="text-[11px] text-muted truncate">
+                    {laneRace?.tournamentName ?? ''}{laneRace?.roundName ? ` • ${laneRace.roundName}` : ''} • {maxLanes} làn • {fmtDate(laneRace?.raceDate)}
+                  </div>
+                </div>
               </div>
 
               {laneRaceId && (
@@ -570,6 +575,14 @@ export function AdminRacesPage() {
                       </div>
                     );
                   })}
+
+                  {/* Entry lỗi: laneNo vượt quá số làn (dữ liệu backend sai) */}
+                  {laneEntries.some((e: any) => (e.laneNo ?? 0) > maxLanes) && (
+                    <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-[11px] text-red-400">
+                      ⚠ Có {laneEntries.filter((e: any) => (e.laneNo ?? 0) > maxLanes).length} ngựa đã bị ghép <b>vượt quá {maxLanes} làn</b> (dữ liệu lỗi từ backend):{' '}
+                      {laneEntries.filter((e: any) => (e.laneNo ?? 0) > maxLanes).map((e: any) => `Làn ${e.laneNo} • ${e.horseName ?? 'Ngựa #' + e.horseId}`).join(', ')}
+                    </div>
+                  )}
 
                   {eligibleRegs.length === 0 && laneEntries.length < maxLanes && (
                     <p className="text-[11px] text-yellow-400/80 leading-relaxed px-1">
@@ -635,36 +648,48 @@ export function AdminRacesPage() {
               <div className="text-center py-10 text-muted text-sm">Đang tải chi tiết…</div>
             ) : (
               <>
-                {/* Sơ đồ làn */}
+                {/* Sơ đồ làn 3D — scheduled/live: ngựa trong làn; finished: bục trao giải theo hạng */}
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <ListOrdered size={14} className="text-blue-400" />
-                    <span className="text-xs font-bold text-muted uppercase tracking-wider">Sơ đồ làn</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-champagne">
-                      {detailEntries.length}/{detailRace.maxLanes ?? '?'} đã ghép
-                    </span>
-                  </div>
-                  <div className="space-y-1.5">
-                    {Array.from({ length: Number(detailRace.maxLanes ?? 0) || detailEntries.length }, (_, idx) => idx + 1).map(laneNo => {
-                      const e = detailEntries.find((x: any) => x.laneNo === laneNo);
-                      return e ? (
-                        <div key={laneNo} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                          <span className="w-14 shrink-0 text-xs font-bold text-emerald-400">Làn {laneNo}</span>
-                          <span className="text-sm text-white truncate">🐴 {e.horseName ?? `Ngựa #${e.horseId}`}</span>
-                          <span className="text-xs text-muted truncate">{e.jockeyName ? `• Jockey: ${e.jockeyName}` : '• Chưa có jockey'}</span>
-                          {e.finishPosition != null && <span className="ml-auto text-xs font-bold text-gold shrink-0">Hạng {e.finishPosition}</span>}
-                        </div>
-                      ) : (
-                        <div key={laneNo} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/2 border border-dashed border-glass-border">
-                          <span className="w-14 shrink-0 text-xs font-bold text-muted/60">Làn {laneNo}</span>
-                          <span className="text-xs text-muted/50 italic">Chưa ghép ngựa</span>
-                        </div>
+                    <span className="text-xs font-bold text-muted uppercase tracking-wider">Sơ đồ làn (3D)</span>
+                    {(() => {
+                      const maxL = Number(detailRace.maxLanes ?? 0);
+                      const valid = detailEntries.filter((e: any) => (e.laneNo ?? 0) <= maxL).length;
+                      const over = detailEntries.length - valid;
+                      return (
+                        <>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-champagne">
+                            {valid}/{maxL || '?'} đã ghép
+                          </span>
+                          {over > 0 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 font-bold">
+                              +{over} vượt làn (lỗi dữ liệu)
+                            </span>
+                          )}
+                        </>
                       );
-                    })}
-                    {(Number(detailRace.maxLanes ?? 0) === 0 && detailEntries.length === 0) && (
-                      <div className="text-center py-4 text-muted text-xs">Chưa có dữ liệu làn cho cuộc đua này</div>
-                    )}
+                    })()}
                   </div>
+                  <RaceTrack3D status={detailRace.status} maxLanes={Number(detailRace.maxLanes ?? 0)} entries={detailEntries} />
+
+                  {/* Chi tiết từng làn (tên ngựa / jockey) */}
+                  {detailEntries.length > 0 && (
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      {[...detailEntries].sort((a: any, b: any) => (a.laneNo ?? 0) - (b.laneNo ?? 0)).map((e: any, i: number) => {
+                        const isOver = (e.laneNo ?? 0) > Number(detailRace.maxLanes ?? 0);
+                        return (
+                          <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${isOver ? 'bg-red-500/10 border border-red-500/30' : 'bg-white/2 border border-glass-border'}`}>
+                            <span className={`font-bold shrink-0 w-11 ${isOver ? 'text-red-400' : 'text-emerald-400'}`}>Làn {e.laneNo}</span>
+                            <span className="text-white truncate">🐴 {e.horseName ?? `Ngựa #${e.horseId}`}</span>
+                            <span className="text-muted truncate">{e.jockeyName ? `• ${e.jockeyName}` : '• Chưa có jockey'}</span>
+                            {isOver && <span className="ml-auto font-bold text-red-400 shrink-0 text-[10px]">VƯỢT LÀN</span>}
+                            {!isOver && e.finishPosition != null && <span className="ml-auto font-bold text-gold shrink-0">#{e.finishPosition}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Trọng tài */}
@@ -713,30 +738,31 @@ export function AdminRacesPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={LABEL}>Cuộc đua *</label>
-                  <select value={refForm.raceId} onChange={e => { setRefForm(p => ({ ...p, raceId: e.target.value })); handleViewReferees(e.target.value); }} className={INPUT} style={{ colorScheme: 'dark' }}>
-                    <option value="">-- Chọn cuộc đua --</option>
-                    {raceList.map((r, i) => {
-                      const id = r.raceId ?? r.id;
-                      return <option key={id ?? i} value={id}>{r.name}</option>;
+              {/* Cuộc đua đã được khóa theo hàng admin bấm */}
+              {(() => {
+                const r = raceList.find(x => String(x.raceId ?? x.id) === refForm.raceId);
+                return (
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                    <Flag size={15} className="text-cyan-400 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-white truncate">{r?.name ?? '—'}</div>
+                      <div className="text-[11px] text-muted truncate">{r?.tournamentName ?? ''} • {fmtDate(r?.raceDate)}</div>
+                    </div>
+                  </div>
+                );
+              })()}
+              <div>
+                <label className={LABEL}>Trọng tài *</label>
+                <select value={refForm.refereeId} onChange={e => setRefForm(p => ({ ...p, refereeId: e.target.value }))} className={INPUT} style={{ colorScheme: 'dark' }}>
+                  <option value="">-- Chọn trọng tài --</option>
+                  {allReferees
+                    // Ẩn trọng tài đã được phân công vào cuộc đua này
+                    .filter(r => !referees.some(a => (a.refereeId ?? a.id) === (r.refereeId ?? r.id ?? r.userId)))
+                    .map((r, i) => {
+                      const id = r.refereeId ?? r.id ?? r.userId;
+                      return <option key={id ?? i} value={id}>{r.fullName ?? r.name ?? `Trọng tài #${id}`}</option>;
                     })}
-                  </select>
-                </div>
-                <div>
-                  <label className={LABEL}>Trọng tài *</label>
-                  <select value={refForm.refereeId} onChange={e => setRefForm(p => ({ ...p, refereeId: e.target.value }))} className={INPUT} style={{ colorScheme: 'dark' }}>
-                    <option value="">-- Chọn trọng tài --</option>
-                    {allReferees
-                      // Ẩn trọng tài đã được phân công vào cuộc đua này
-                      .filter(r => !referees.some(a => (a.refereeId ?? a.id) === (r.refereeId ?? r.id ?? r.userId)))
-                      .map((r, i) => {
-                        const id = r.refereeId ?? r.id ?? r.userId;
-                        return <option key={id ?? i} value={id}>{r.fullName ?? r.name ?? `Trọng tài #${id}`}</option>;
-                      })}
-                  </select>
-                </div>
+                </select>
               </div>
               {refError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{refError}</div>}
               {refSuccess && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{refSuccess}</div>}

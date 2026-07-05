@@ -1,5 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from './routes';
+import { Toaster } from './components/ui/Toast';
 
 function GlobalWave() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
     <BrowserRouter>
       <GlobalWave />
       <AppRoutes />
+      <Toaster />
     </BrowserRouter>
   );
 }

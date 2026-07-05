@@ -7,6 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getMyHorses, createHorse, getHorse, updateHorse, deleteHorse } from '../../api/ownerService';
 import { parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
@@ -78,6 +79,7 @@ export function OwnerHorsesPage() {
     try {
       // BE nhận `age` là ngày sinh (DateTime) — gửi chuỗi "yyyy-MM-dd"
       await createHorse({ name: createForm.name, breed: createForm.breed, age: createForm.age, gender: createForm.gender });
+      toast.success(`Đã thêm ngựa "${createForm.name}" thành công!`);
       setShowCreate(false);
       setCreateForm(INIT_CREATE);
       loadHorses();
@@ -101,6 +103,7 @@ export function OwnerHorsesPage() {
     try {
       // BE nhận `age` là ngày sinh (DateTime); healthStatus bắt buộc — mặc định "Healthy"
       await updateHorse(editHorse.id, { name: editForm.name, breed: editForm.breed, age: editForm.age, gender: editForm.gender, healthStatus: editForm.healthStatus || 'Healthy' });
+      toast.success(`Đã cập nhật thông tin ngựa "${editForm.name}"!`);
       setEditHorse(null);
       loadHorses();
     } catch (err: unknown) {
@@ -128,9 +131,10 @@ export function OwnerHorsesPage() {
     setDeletingId(id);
     try {
       await deleteHorse(id);
+      toast.success('Đã xóa ngựa thành công!');
       setHorses(prev => prev.filter(h => h.id !== id));
     } catch (err: unknown) {
-      alert(parseApiError(err as Error));
+      toast.error(parseApiError(err as Error));
     } finally {
       setDeletingId(null);
     }
@@ -139,7 +143,7 @@ export function OwnerHorsesPage() {
   const filtered = horses.filter(h => (h.name ?? '').toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="emerald" />

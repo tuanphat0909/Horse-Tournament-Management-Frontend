@@ -6,6 +6,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getTournaments } from '../../api/publicService';
+import { Pager, paginate } from '../../components/ui/Pager';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   active: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
@@ -33,8 +34,11 @@ export function OwnerTournamentsPage() {
 
   const filtered = tournaments.filter(t => (t.name ?? '').toLowerCase().includes(search.toLowerCase()));
 
+  const [pageNo, setPageNo] = useState(1);
+  const pgT = paginate(filtered, pageNo, 9);
+
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="emerald" />
@@ -63,7 +67,7 @@ export function OwnerTournamentsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {filtered.map((t, i) => {
+              {pgT.paged.map((t: any, i: number) => {
                 const s = t.status?.toLowerCase() ?? 'upcoming';
                 const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
                 return (
@@ -99,6 +103,7 @@ export function OwnerTournamentsPage() {
                   </motion.div>
                 );
               })}
+              <Pager page={pgT.page} totalPages={pgT.totalPages} total={pgT.total} onChange={setPageNo} />
             </div>
           )}
 

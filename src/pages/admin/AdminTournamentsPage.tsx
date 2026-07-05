@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { createTournament, updateTournament, generateFinalRace, closeRegistration } from '../../api/adminService';
 import { getTournaments, getTournamentDetail } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 
 type StatusFilter = 'all' | 'upcoming' | 'active' | 'completed';
 
@@ -64,7 +65,8 @@ export function AdminTournamentsPage() {
     setCloseRegLoading(true); setCloseRegMsg('');
     try {
       await closeRegistration(Number(detailT.tournamentId ?? detailT.id));
-      setCloseRegMsg('Đã đóng đăng ký thành công!');
+      toast.success(`Đã đóng đăng ký cho giải "${detailT.name}"!`);
+      setDetailT(null);
       loadTournaments();
     } catch (err: unknown) {
       setCloseRegMsg(parseApiError(err as Error));
@@ -73,18 +75,19 @@ export function AdminTournamentsPage() {
     }
   }
 
-  // Generate final race
+  // Generate final race — BE tự lấy các ngựa thắng vòng trước để tạo trận chung kết
   const [finalLoading, setFinalLoading] = useState<number | null>(null);
-  const [finalMsg, setFinalMsg] = useState<{ id: number; msg: string; ok: boolean } | null>(null);
 
-  async function handleGenerateFinal(id: number) {
+  async function handleGenerateFinal(id: number, name?: string) {
+    if (!window.confirm(`Tạo trận CHUNG KẾT cho giải "${name ?? '#' + id}"?\nYêu cầu: các cuộc đua vòng trước phải có kết quả.`)) return;
     setFinalLoading(id);
-    setFinalMsg(null);
     try {
-      await generateFinalRace(id);
-      setFinalMsg({ id, msg: 'Tạo trận chung kết thành công!', ok: true });
+      const d: any = await generateFinalRace(id);
+      const raceName = d?.result?.name;
+      toast.success(raceName ? `Đã tạo trận chung kết "${raceName}"! Xem ở trang Quản lý cuộc đua.` : 'Đã tạo trận chung kết thành công!');
+      loadTournaments();
     } catch (err: unknown) {
-      setFinalMsg({ id, msg: parseApiError(err as Error), ok: false });
+      toast.error(`Không tạo được chung kết: ${parseApiError(err as Error)}`);
     } finally {
       setFinalLoading(null);
     }
@@ -149,10 +152,9 @@ export function AdminTournamentsPage() {
         numberOfRounds: Number(form.numberOfRounds),
       });
       const newId = data?.tournamentId ?? data?.result?.tournamentId ?? data?.result?.id;
-      setSuccess(newId != null
-        ? `Đã tạo giải đấu thành công! ID = ${newId} — dùng ID này cho bước tạo giải thưởng / đăng ký thi đấu.`
-        : 'Tạo giải đấu thành công!');
-      setForm(INIT_FORM);
+      // Submit xong: đóng modal + toast thông báo thành công
+      toast.success(newId != null ? `Đã tạo giải đấu thành công! (ID = ${newId})` : 'Tạo giải đấu thành công!');
+      closeModal();
       loadTournaments();
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
@@ -230,7 +232,7 @@ export function AdminTournamentsPage() {
         numberOfRounds: Number(editForm.numberOfRounds),
         status: editForm.status,
       });
-      setEditSuccess('Cập nhật giải đấu thành công!');
+      toast.success(`Đã cập nhật giải đấu "${editForm.name}"!`);
       await loadTournaments();
       closeEdit();
     } catch (err: unknown) {
@@ -259,7 +261,7 @@ export function AdminTournamentsPage() {
 
   return (
 
-    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: 'var(--page-bg)' }}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="gold" />
@@ -323,35 +325,15 @@ export function AdminTournamentsPage() {
                     className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left"
                   >
                     <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                    <div className="flex justify-between items-start mb-3">
+                    {/* Hàng trên: badge trạng thái (mép trái) — ID (mép phải) */}
+                    <div className="flex justify-between items-center mb-3">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {config.label}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted font-medium">ID: {t.tournamentId ?? t.id}</span>
-                        <button
-                          onClick={() => openEdit(t)}
-                          className="px-2 py-1 rounded-lg border border-glass-border text-muted hover:text-gold hover:border-gold/40 text-[11px] font-bold flex items-center gap-1 transition-colors"
-                        >
-                          <Pencil size={11} /> Sửa
-                        </button>
-                        <button
-                          onClick={() => openDetail(t)}
-                          title="Xem chi tiết giải đấu"
-                          className="px-2 py-1 rounded-lg border border-glass-border text-muted hover:text-blue-400 hover:border-blue-500/40 text-[11px] font-bold flex items-center gap-1 transition-colors"
-                        >
-                          <Eye size={11} /> Chi tiết
-                        </button>
-                        <button
-                          onClick={() => handleGenerateFinal(t.tournamentId ?? t.id)}
-                          disabled={finalLoading === (t.tournamentId ?? t.id)}
-                          title="Tạo trận chung kết"
-                          className="px-2 py-1 rounded-lg border border-glass-border text-muted hover:text-gold hover:border-gold/40 text-[11px] font-bold flex items-center gap-1 transition-colors disabled:opacity-50"
-                        >
-                          <Star size={11} /> {finalLoading === (t.tournamentId ?? t.id) ? '…' : 'Final'}
-                        </button>
-                      </div>
+                      <span className="text-xs text-muted font-medium">ID: {t.tournamentId ?? t.id}</span>
                     </div>
+
+                    {/* Nội dung */}
                     <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-3 line-clamp-1">{t.name}</h3>
                     <div className="space-y-1.5 text-xs text-muted pt-3 border-t border-glass-border/40">
                       <div className="flex justify-between">
@@ -371,11 +353,31 @@ export function AdminTournamentsPage() {
                         <span className="text-gold font-bold">{t.rounds?.length ?? t.numberOfRounds ?? '—'}</span>
                       </div>
                     </div>
-                    {finalMsg && finalMsg.id === (t.tournamentId ?? t.id) && (
-                      <div className={`mt-2 text-[11px] px-3 py-2 rounded-lg border ${finalMsg.ok ? 'text-gold bg-gold/10 border-gold/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>
-                        {finalMsg.msg}
-                      </div>
-                    )}
+
+                    {/* Hàng dưới: 3 nút thao tác căn giữa */}
+                    <div className="flex justify-center gap-2 mt-4 pt-3 border-t border-glass-border/40">
+                      <button
+                        onClick={() => openEdit(t)}
+                        className="px-3 py-1.5 rounded-lg border border-glass-border text-muted hover:text-gold hover:border-gold/40 text-[11px] font-bold flex items-center gap-1.5 transition-colors"
+                      >
+                        <Pencil size={11} /> Sửa
+                      </button>
+                      <button
+                        onClick={() => openDetail(t)}
+                        title="Xem chi tiết giải đấu"
+                        className="px-3 py-1.5 rounded-lg border border-glass-border text-muted hover:text-blue-400 hover:border-blue-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-colors"
+                      >
+                        <Eye size={11} /> Chi tiết
+                      </button>
+                      <button
+                        onClick={() => handleGenerateFinal(t.tournamentId ?? t.id, t.name)}
+                        disabled={finalLoading === (t.tournamentId ?? t.id)}
+                        title="Tạo trận chung kết từ các ngựa thắng vòng trước"
+                        className="px-3 py-1.5 rounded-lg border border-glass-border text-muted hover:text-gold hover:border-gold/40 text-[11px] font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                      >
+                        <Star size={11} /> {finalLoading === (t.tournamentId ?? t.id) ? 'Đang tạo…' : 'Final'}
+                      </button>
+                    </div>
                   </motion.div>
                 );
               })}

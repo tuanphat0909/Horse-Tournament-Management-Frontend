@@ -35,7 +35,7 @@ export function JockeySchedulePage() {
   const DAY_GROUPS = Array.from(new Set(races.map(r => r.raceDate)));
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="blue" />

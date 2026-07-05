@@ -56,7 +56,7 @@ export function AdminDashboardPage() {
   const showStat = (v: number | null | undefined) => (v == null ? '—' : String(v));
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="gold" />

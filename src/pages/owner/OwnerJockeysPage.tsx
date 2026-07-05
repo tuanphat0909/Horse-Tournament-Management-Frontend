@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getMyProposals, createJockeyContract, getMyHorses, cancelJockeyContract } from '../../api/ownerService';
 import { getJockeyRankings, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 import { Pager, paginate } from '../../components/ui/Pager';
 
 const STATUS_CFG: Record<string, { label: string; color: string; Icon: typeof Clock }> = {
@@ -78,7 +79,8 @@ export function OwnerJockeysPage() {
         startDate: form.startDate,
         endDate: form.endDate,
       });
-      setSubmitSuccess('Gửi lời mời thành công!');
+      toast.success('Đã gửi lời mời hợp đồng cho jockey thành công!');
+      closeInvite();
       setForm(makeInitForm());
       load();
     } catch (err: unknown) {
@@ -121,7 +123,7 @@ export function OwnerJockeysPage() {
   const pgProposals = paginate(proposals, pageNo, 8);
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="emerald" />

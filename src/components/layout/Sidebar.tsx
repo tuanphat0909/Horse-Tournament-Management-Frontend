@@ -1,11 +1,22 @@
-﻿import { useNavigate, useLocation } from 'react-router-dom';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Flag, Trophy, Calendar, BarChart3,
   Bell, LogOut, Users, ClipboardList,
   ShieldCheck, FileText, Target, Star, Activity,
   Megaphone, UserCheck, AlertTriangle, Wallet,
+  Settings, Sun, Moon,
 } from 'lucide-react';
 import { getCurrentUser, logout } from '../../api/authService';
+
+// ── Theme sáng/tối: lưu localStorage, áp dụng qua data-theme trên <html> ──
+export function getTheme(): 'dark' | 'light' {
+  return (localStorage.getItem('theme') as 'dark' | 'light') ?? 'dark';
+}
+export function applyTheme(t: 'dark' | 'light') {
+  localStorage.setItem('theme', t);
+  document.documentElement.dataset.theme = t;
+}
 
 interface NavItem {
   icon: React.ElementType;
@@ -54,7 +65,6 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { icon: Trophy, label: 'Tournaments & Schedule', path: '/spectator/tournaments' },
     { icon: Activity, label: 'Live Results', path: '/spectator/live' },
     { icon: Target, label: 'My Predictions', path: '/spectator/predictions' },
-    { icon: Bell, label: 'Notifications', path: '/spectator/notifications' },
   ],
 };
 
@@ -79,13 +89,18 @@ export function Sidebar() {
   const roleKey = toRoleKey(user?.role);
   const navItems = NAV_BY_ROLE[roleKey] ?? NAV_BY_ROLE.spectator;
 
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>(getTheme());
+
+  useEffect(() => { applyTheme(theme); }, [theme]);
+
   function handleLogout() {
     logout();
     navigate('/login');
   }
 
   return (
-    <aside className="w-[280px] shrink-0 h-screen sticky top-0 border-r border-glass-border bg-[#0A1220] flex flex-col z-40">
+    <aside className="w-[280px] shrink-0 h-screen sticky top-0 border-r border-glass-border bg-(--sidebar-bg) flex flex-col z-40">
       {/* Logo */}
       <div className="px-6 h-16 flex items-center gap-2.5 border-b border-glass-border shrink-0">
         <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center border border-gold/30">
@@ -119,7 +134,31 @@ export function Sidebar() {
       </nav>
 
       {/* User Profile */}
-      <div className="px-4 py-4 border-t border-glass-border shrink-0">
+      <div className="px-4 py-4 border-t border-glass-border shrink-0 relative">
+        {/* Popover Settings: chuyển giao diện sáng/tối */}
+        {showSettings && (
+          <div className="absolute bottom-full left-4 right-4 mb-2 glass-panel-elevated rounded-xl p-4 z-50">
+            <div className="text-[10px] uppercase tracking-[0.15em] text-muted font-bold mb-2.5 flex items-center gap-1.5">
+              <Settings size={11} /> Cài đặt giao diện
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setTheme('dark')}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  theme === 'dark' ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/5'
+                }`}>
+                <Moon size={13} /> Tối
+              </button>
+              <button
+                onClick={() => setTheme('light')}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  theme === 'light' ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/5'
+                }`}>
+                <Sun size={13} /> Sáng
+              </button>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-linear-to-br from-gold/30 to-gold/10 border border-gold/30 flex items-center justify-center font-serif text-base font-bold text-champagne">
             {user?.fullName?.[0] ?? 'U'}
@@ -129,9 +168,16 @@ export function Sidebar() {
             <div className="text-[11px] text-gold font-medium">{ROLE_LABELS[roleKey] ?? user?.role}</div>
           </div>
           <button
+            onClick={() => setShowSettings(s => !s)}
+            className={`transition-colors p-1 ${showSettings ? 'text-gold' : 'text-muted hover:text-white'}`}
+            title="Cài đặt"
+          >
+            <Settings size={16} />
+          </button>
+          <button
             onClick={handleLogout}
             className="text-muted hover:text-white transition-colors p-1"
-            title="Sign Out"
+            title="Đăng xuất"
           >
             <LogOut size={16} />
           </button>

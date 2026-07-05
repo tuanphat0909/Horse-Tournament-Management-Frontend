@@ -10,6 +10,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { deposit, withdraw, getBalance, getWalletHistory } from '../../api/spectatorService';
 import { parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 import { Pager, paginate } from '../../components/ui/Pager';
 
 const COINS_PER_USD = 100;
@@ -79,7 +80,8 @@ export function SpectatorWalletPage() {
     setDepositLoading(true); setDepositErr(''); setDepositMsg('');
     try {
       await deposit(effectiveUsd);
-      setDepositMsg(`Nạp $${effectiveUsd} thành công!`);
+      toast.success(`Nạp $${effectiveUsd} thành công!`);
+      setDepositMsg('');
       setUsdInput(''); setQuickAmt(null);
       loadAll();
     } catch (err: unknown) {
@@ -96,7 +98,8 @@ export function SpectatorWalletPage() {
     setWithdrawLoading(true); setWithdrawErr(''); setWithdrawMsg('');
     try {
       await withdraw(amt);
-      setWithdrawMsg(`Rút $${amt} thành công!`);
+      toast.success(`Rút $${amt} thành công!`);
+      setWithdrawMsg('');
       setWithdrawInput('');
       loadAll();
     } catch (err: unknown) {
@@ -113,7 +116,7 @@ export function SpectatorWalletPage() {
   const { paged: pagedTx, totalPages: txTotalPages, total: txTotal, page: txSafePage } = paginate(filtered, txPage, 8);
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="relative flex-1 min-w-0 overflow-y-auto">
         <PageAmbience accent="purple" />

@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRaceReports, submitReport, getRefereeDashboard } from '../../api/refereeService';
 import { getRaceSchedule, getRaceEntries } from '../../api/publicService';
 import { getCurrentUser, parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 import { Pager, paginate } from '../../components/ui/Pager';
 
 const raceLabel = (r: any) =>
@@ -93,6 +94,7 @@ export function RefereeReportsPage() {
     setSubmitting(true);
     submitReport(body)
       .then(() => {
+        toast.success('Đã gửi báo cáo thành công!');
         setShowAdd(false);
         setFContent('');
         setFViolationNote('');
@@ -108,7 +110,7 @@ export function RefereeReportsPage() {
   const pgList = paginate(list, pageNo, 8);
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="red" />

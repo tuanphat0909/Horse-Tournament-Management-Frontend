@@ -72,7 +72,7 @@ export function LoginPage() {
     <div
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
-        backgroundColor: '#0b101e',
+        backgroundColor: 'var(--page-bg)',
         backgroundImage:
           'radial-gradient(ellipse at 0% 100%, rgba(212,175,55,0.15) 0%, transparent 50%), radial-gradient(ellipse at 100% 0%, rgba(212,175,55,0.1) 0%, transparent 40%)',
         fontFamily: '"Inter", sans-serif',
@@ -273,7 +273,7 @@ export function LoginPage() {
                 <motion.div variants={fadeUp}>
                   <button
                     className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: '#0b101e' }}
+                    style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: 'var(--page-bg)' }}
                     type="button"
                     onClick={handleSignIn}
                     disabled={loading}

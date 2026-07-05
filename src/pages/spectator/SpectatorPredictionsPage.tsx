@@ -6,8 +6,9 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getMyBets, placeBet, createPrediction, getMyPredictions } from '../../api/spectatorService';
-import { getRaceSchedule, getRaceEntries } from '../../api/publicService';
+import { getRaceSchedule, getRaceEntries, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 import { Pager, paginate } from '../../components/ui/Pager';
 
 function entryHorseId(e: any) { return e.horseId; }
@@ -39,6 +40,16 @@ type MainTab = 'bets' | 'predictions';
 export function SpectatorPredictionsPage() {
   const [mainTab, setMainTab] = useState<MainTab>('bets');
   const [bets, setBets] = useState<any[]>([]);
+
+  // ── Loại cược: 'win' = ngựa về NHẤT (BE hỗ trợ) • 'last' = ngựa về CHÓT •
+  //    'acc' = cược XUYÊN GIẢI (đúng hết mọi vòng ăn lớn, sai 1 trận mất sạch)
+  //    'last' và 'acc' BE CHƯA có API — form dựng sẵn, khóa nút xác nhận.
+  const [betType, setBetType] = useState<'win' | 'last' | 'acc'>('win');
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [accTournamentId, setAccTournamentId] = useState('');
+  const [accPicks, setAccPicks] = useState<Record<string, string>>({}); // raceId -> horseId
+  const [accEntries, setAccEntries] = useState<Record<string, any[]>>({}); // raceId -> entries
+  const [accAmount, setAccAmount] = useState('');
   const [races, setRaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -127,6 +138,33 @@ export function SpectatorPredictionsPage() {
     return () => { cancelled = true; };
   }, [predForm.raceId]);
 
+  useEffect(() => {
+    getTournaments().then((d: any) => setTournaments(d?.result ?? [])).catch(() => setTournaments([]));
+  }, []);
+
+  // Các cuộc đua thuộc giải đã chọn (cho cược xuyên giải), sắp theo vòng
+  const accRaces = accTournamentId
+    ? races.filter((r: any) => String(r.tournamentId) === accTournamentId)
+        .sort((a: any, b: any) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0))
+    : [];
+
+  useEffect(() => {
+    if (!accTournamentId) { setAccEntries({}); setAccPicks({}); return; }
+    let cancelled = false;
+    (async () => {
+      const map: Record<string, any[]> = {};
+      for (const r of accRaces) {
+        const rid = String(r.id ?? r.raceId);
+        try {
+          const d: any = await getRaceEntries(Number(rid));
+          map[rid] = d?.result ?? [];
+        } catch { map[rid] = []; }
+      }
+      if (!cancelled) setAccEntries(map);
+    })();
+    return () => { cancelled = true; };
+  }, [accTournamentId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function handlePlaceBet() {
     setSubmitError(''); setSubmitSuccess('');
     if (!form.raceId || !form.horseId || !form.amount) {
@@ -136,7 +174,8 @@ export function SpectatorPredictionsPage() {
     setSubmitLoading(true);
     try {
       await placeBet({ raceId: Number(form.raceId), horseId: Number(form.horseId), amount: Number(form.amount) });
-      setSubmitSuccess('Đặt cược thành công!');
+      toast.success('Đặt cược thành công!');
+      setShowAdd(false);
       setForm({ raceId: '', horseId: '', amount: '' });
       load();
     } catch (err: unknown) {
@@ -162,7 +201,8 @@ export function SpectatorPredictionsPage() {
     setPredSubmitLoading(true);
     try {
       await createPrediction({ raceId: Number(predForm.raceId), raceEntryId: Number(predForm.raceEntryId) });
-      setPredSubmitSuccess('Tạo dự đoán thành công!');
+      toast.success('Tạo dự đoán thành công!');
+      setShowAddPred(false);
       setPredForm({ raceId: '', raceEntryId: '' });
       loadPredictions();
     } catch (err: unknown) {
@@ -198,7 +238,7 @@ export function SpectatorPredictionsPage() {
   const accuracy = totalBets > 0 ? `${Math.round((counts.correct / totalBets) * 100)}%` : '—';
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="purple" />
@@ -383,42 +423,128 @@ export function SpectatorPredictionsPage() {
                   <div className="flex-1 h-px bg-linear-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
                 <div className="space-y-4">
+                  {/* ── Chọn LOẠI CƯỢC ── */}
                   <div>
-                    <label className="block text-xs text-muted font-medium mb-1.5">Cuộc đua *</label>
-                    <select value={form.raceId} onChange={e => setForm(p => ({...p, raceId: e.target.value}))} className={INPUT}>
-                      <option value="">-- Chọn cuộc đua --</option>
-                      {races.map(r => (
-                        <option key={r.id} value={r.id}>{(r.name ?? `Cuộc đua #${r.id}`)}{r.raceDate ? ` — ${r.raceDate}` : ''}</option>
+                    <label className="block text-xs text-muted font-medium mb-1.5">Loại cược *</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {([
+                        ['win', '🥇 Về NHẤT', 'Ngựa bạn chọn phải về nhất'],
+                        ['last', '🐢 Về CHÓT', 'Ngựa bạn chọn phải về cuối cùng'],
+                        ['acc', '🏆 Xuyên giải', 'Đoán đúng mọi vòng của giải — ăn lớn'],
+                      ] as ['win' | 'last' | 'acc', string, string][]).map(([k, label, desc]) => (
+                        <button key={k} onClick={() => setBetType(k)} title={desc}
+                          className={`px-2 py-2 rounded-lg text-[11px] font-bold border transition-all ${betType === k ? 'border-gold/50 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/5'}`}>
+                          {label}
+                        </button>
                       ))}
-                    </select>
-                    {races.length === 0 && <p className="text-[10px] text-muted/60 mt-1">Chưa có cuộc đua nào trong lịch.</p>}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs text-muted font-medium mb-1.5">Ngựa cược *</label>
-                    <select value={form.horseId} onChange={e => setForm(p => ({...p, horseId: e.target.value}))} className={INPUT} disabled={!form.raceId}>
-                      <option value="">{!form.raceId ? '-- Chọn cuộc đua trước --' : '-- Chọn ngựa --'}</option>
-                      {betEntries.map((e, ei) => (
-                        <option key={entryRaceEntryId(e) ?? ei} value={entryHorseId(e)}>{entryHorseName(e)}</option>
-                      ))}
-                    </select>
-                    {form.raceId && betEntries.length === 0 && (
-                      <p className="text-[10px] text-muted/60 mt-1">
-                        {betEntriesError ? 'Không tải được danh sách ngựa của cuộc đua này.' : 'Cuộc đua này chưa có ngựa đăng ký.'}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs text-muted font-medium mb-1.5">Số coins cược *</label>
-                    <input type="number" min="1" value={form.amount} onChange={e => setForm(p => ({...p, amount: e.target.value}))} placeholder="VD: 100" className={INPUT} />
-                  </div>
+
+                  {betType !== 'acc' ? (
+                    <>
+                      {betType === 'last' && (
+                        <div className="text-[11px] text-yellow-400/90 bg-yellow-500/8 border border-yellow-500/20 rounded-lg px-3 py-2">
+                          🐢 <b>Cược về chót:</b> ngựa bạn chọn phải về <b>CUỐI CÙNG</b> mới thắng. Backend chưa hỗ trợ loại cược này — form dựng sẵn chờ API.
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-xs text-muted font-medium mb-1.5">Cuộc đua *</label>
+                        <select value={form.raceId} onChange={e => setForm(p => ({...p, raceId: e.target.value}))} className={INPUT}>
+                          <option value="">-- Chọn cuộc đua --</option>
+                          {races.map(r => (
+                            <option key={r.id} value={r.id}>{(r.name ?? `Cuộc đua #${r.id}`)}{r.raceDate ? ` — ${r.raceDate}` : ''}</option>
+                          ))}
+                        </select>
+                        {races.length === 0 && <p className="text-[10px] text-muted/60 mt-1">Chưa có cuộc đua nào trong lịch.</p>}
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted font-medium mb-1.5">{betType === 'last' ? 'Ngựa cược về chót *' : 'Ngựa cược về nhất *'}</label>
+                        <select value={form.horseId} onChange={e => setForm(p => ({...p, horseId: e.target.value}))} className={INPUT} disabled={!form.raceId}>
+                          <option value="">{!form.raceId ? '-- Chọn cuộc đua trước --' : '-- Chọn ngựa --'}</option>
+                          {betEntries.map((e, ei) => (
+                            <option key={entryRaceEntryId(e) ?? ei} value={entryHorseId(e)}>{entryHorseName(e)}</option>
+                          ))}
+                        </select>
+                        {form.raceId && betEntries.length === 0 && (
+                          <p className="text-[10px] text-muted/60 mt-1">
+                            {betEntriesError ? 'Không tải được danh sách ngựa của cuộc đua này.' : 'Cuộc đua này chưa có ngựa đăng ký.'}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted font-medium mb-1.5">Số coins cược *</label>
+                        <input type="number" min="1" value={form.amount} onChange={e => setForm(p => ({...p, amount: e.target.value}))} placeholder="VD: 100" className={INPUT} />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* ── CƯỢC XUYÊN GIẢI: đoán ngựa thắng ở TỪNG vòng của giải ── */}
+                      <div className="text-[11px] text-champagne/90 bg-gold/8 border border-gold/20 rounded-lg px-3 py-2 leading-relaxed">
+                        🏆 <b>Cược xuyên giải:</b> chọn ngựa thắng cho <b>từng vòng</b> của giải. Đoán đúng <b>TẤT CẢ</b> → tiền thưởng nhân lũy tiến theo số vòng. Sai <b>dù chỉ 1 trận</b> ở bất kỳ thời điểm nào → <b>mất toàn bộ</b> tiền đã đặt. Backend chưa hỗ trợ — form dựng sẵn chờ API.
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted font-medium mb-1.5">Giải đấu *</label>
+                        <select value={accTournamentId} onChange={e => { setAccTournamentId(e.target.value); setAccPicks({}); }} className={INPUT}>
+                          <option value="">-- Chọn giải đấu --</option>
+                          {tournaments.map((t: any, i: number) => {
+                            const id = t.tournamentId ?? t.id;
+                            return <option key={id ?? i} value={id}>{t.name}</option>;
+                          })}
+                        </select>
+                      </div>
+                      {accTournamentId && (
+                        accRaces.length === 0 ? (
+                          <p className="text-[10px] text-muted/60">Giải này chưa có cuộc đua nào trong lịch.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {accRaces.map((r: any) => {
+                              const rid = String(r.id ?? r.raceId);
+                              const entries = accEntries[rid] ?? [];
+                              return (
+                                <div key={rid} className="flex items-center gap-2">
+                                  <span className="w-28 shrink-0 text-[11px] text-muted truncate" title={r.name}>
+                                    {r.roundName ?? (r.roundNumber != null ? `Vòng ${r.roundNumber}` : r.name)}
+                                  </span>
+                                  <select value={accPicks[rid] ?? ''} onChange={e => setAccPicks(p => ({ ...p, [rid]: e.target.value }))}
+                                    className="flex-1 bg-[#0B1628] border border-glass-border rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-gold/40">
+                                    <option value="">{entries.length === 0 ? '-- Chưa có ngựa --' : '-- Chọn ngựa thắng --'}</option>
+                                    {entries.map((e: any, ei: number) => (
+                                      <option key={entryRaceEntryId(e) ?? ei} value={entryHorseId(e)}>{entryHorseName(e)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )
+                      )}
+                      <div>
+                        <label className="block text-xs text-muted font-medium mb-1.5">Số coins cược *</label>
+                        <input type="number" min="1" value={accAmount} onChange={e => setAccAmount(e.target.value)} placeholder="VD: 100" className={INPUT} />
+                        {accAmount && accRaces.length > 0 && (
+                          <p className="text-[10px] text-gold mt-1">
+                            Thưởng dự kiến nếu đúng hết {accRaces.length} vòng: ≈ {(Number(accAmount) * Math.pow(2, accRaces.length)).toLocaleString()} coins (x{Math.pow(2, accRaces.length)}) — sai 1 trận mất {Number(accAmount).toLocaleString()} coins.
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
                   {submitError && <div className="text-xs text-red-400 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">{submitError}</div>}
                   {submitSuccess && <div className="text-xs text-emerald-400 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">{submitSuccess}</div>}
                 </div>
                 <div className="flex justify-end gap-3 mt-6">
                   <button onClick={closeModal} className="px-5 py-2 rounded-lg text-sm text-muted border border-glass-border hover:text-white transition-colors">Hủy</button>
-                  <button onClick={handlePlaceBet} disabled={submitLoading} className="btn-gold px-6 py-2 rounded-lg text-sm font-bold disabled:opacity-60">
-                    {submitLoading ? 'Đang đặt…' : 'Xác nhận cược'}
-                  </button>
+                  {betType === 'win' ? (
+                    <button onClick={handlePlaceBet} disabled={submitLoading} className="btn-gold px-6 py-2 rounded-lg text-sm font-bold disabled:opacity-60">
+                      {submitLoading ? 'Đang đặt…' : 'Xác nhận cược'}
+                    </button>
+                  ) : (
+                    <button disabled title="Backend chưa có API cho loại cược này"
+                      className="px-6 py-2 rounded-lg text-sm font-bold border border-glass-border text-muted/50 cursor-not-allowed">
+                      Chờ backend hỗ trợ
+                    </button>
+                  )}
                 </div>
               </motion.div>
             </div>

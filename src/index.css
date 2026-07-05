@@ -23,15 +23,62 @@
   --color-gold-border: rgba(201, 168, 76, 0.22);
 }
 
+:root {
+  /* Biến theme — đổi bằng data-theme trên <html> */
+  --page-bg: #0b101e;
+  --topbar-bg: rgba(11, 22, 40, 0.9);
+  --sidebar-bg: #0A1220;
+}
+
 body {
   background-color: var(--color-navy);
   color: var(--color-body);
   font-family: 'DM Sans', sans-serif;
   overflow-x: hidden;
-  background-image: 
+  background-image:
     radial-gradient(circle at top right, rgba(201,168,76,0.12), transparent 35%),
     radial-gradient(circle at bottom left, rgba(201,168,76,0.08), transparent 40%);
 }
+
+/* ═══════════ LIGHT THEME ═══════════
+   Bật bằng: document.documentElement.dataset.theme = 'light' (nút Settings ở Sidebar) */
+html[data-theme='light'] {
+  --page-bg: #eef1f6;
+  --topbar-bg: rgba(255, 255, 255, 0.88);
+  --sidebar-bg: #f7f8fb;
+  --color-navy: #eef1f6;
+  --color-body: #2a3550;
+  --color-muted: #5d6c8c;
+  --color-glass-border: rgba(20, 35, 70, 0.12);
+  --color-champagne: #8a6d1f;
+  --color-gold: #9a7b24;
+}
+html[data-theme='light'] body {
+  background-image:
+    radial-gradient(circle at top right, rgba(154,123,36,0.08), transparent 35%),
+    radial-gradient(circle at bottom left, rgba(154,123,36,0.05), transparent 40%);
+}
+html[data-theme='light'] .glass-panel,
+html[data-theme='light'] .glass-panel-elevated,
+html[data-theme='light'] .feature-card {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(154, 123, 36, 0.25);
+  box-shadow: 0 4px 20px rgba(30, 45, 80, 0.08);
+}
+html[data-theme='light'] .text-white { color: #1a2440 !important; }
+html[data-theme='light'] .text-white\/90 { color: #223052 !important; }
+html[data-theme='light'] .text-white\/80 { color: #2a3a60 !important; }
+html[data-theme='light'] .bg-navy\/50 { background-color: #ffffff !important; border-color: rgba(20,35,70,0.18) !important; }
+html[data-theme='light'] .bg-white\/2,
+html[data-theme='light'] .bg-white\/3,
+html[data-theme='light'] .bg-white\/4,
+html[data-theme='light'] .bg-white\/5 { background-color: rgba(20, 35, 70, 0.045) !important; }
+html[data-theme='light'] .hover\:bg-white\/5:hover,
+html[data-theme='light'] .hover\:bg-white\/4:hover,
+html[data-theme='light'] .hover\:bg-white\/10:hover { background-color: rgba(20, 35, 70, 0.08) !important; }
+html[data-theme='light'] .hover\:text-white:hover { color: #1a2440 !important; }
+html[data-theme='light'] input, html[data-theme='light'] select, html[data-theme='light'] textarea { color-scheme: light; }
+html[data-theme='light'] .bg-black\/60, html[data-theme='light'] .bg-black\/70 { background-color: rgba(40, 55, 90, 0.45) !important; }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;

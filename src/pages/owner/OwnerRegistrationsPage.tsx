@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { createRegistration, getMyRegistrations, getMyHorses, getMyProposals } from '../../api/ownerService';
 import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
+import { toast } from '../../components/ui/Toast';
 import { Pager, paginate } from '../../components/ui/Pager';
 
 type Tab = 'pending' | 'approved' | 'rejected';
@@ -71,6 +72,18 @@ export function OwnerRegistrationsPage() {
       (c.status ?? '').toLowerCase() === 'active');
   }
 
+  // Trạng thái jockey của 1 đơn đăng ký (hiển thị trên card):
+  // active = đã có jockey ký • pending = đã mời, chờ phản hồi • none = chưa mời ai
+  function jockeyStatusFor(r: any): { key: 'active' | 'pending' | 'none'; label: string; cls: string } {
+    const match = contracts.filter(c =>
+      Number(c.horseId) === Number(r.horseId) && Number(c.tournamentId) === Number(r.tournamentId));
+    const active = match.find(c => (c.status ?? '').toLowerCase() === 'active');
+    if (active) return { key: 'active', label: `Jockey: ${active.jockeyName ?? '#' + active.jockeyId}`, cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' };
+    const pending = match.find(c => (c.status ?? '').toLowerCase() === 'pending');
+    if (pending) return { key: 'pending', label: `Chờ jockey "${pending.jockeyName ?? '#' + pending.jockeyId}" phản hồi`, cls: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' };
+    return { key: 'none', label: 'Chưa có jockey', cls: 'text-red-400 bg-red-500/10 border-red-500/20' };
+  }
+
   async function handleSubmit() {
     setSubmitError(''); setSubmitSuccess('');
     if (!form.horseId || !form.tournamentId) {
@@ -86,8 +99,8 @@ export function OwnerRegistrationsPage() {
     setSubmitLoading(true);
     try {
       await createRegistration({ horseId: Number(form.horseId), tournamentId: Number(form.tournamentId) });
-      setSubmitSuccess('Đăng ký thành công!');
-      setForm({ horseId: '', tournamentId: '' });
+      toast.success('Đã nộp đơn đăng ký thi đấu thành công! Chờ Admin duyệt.');
+      closeModal();
       load();
     } catch (err: unknown) {
       setSubmitError(parseApiError(err as Error));
@@ -113,7 +126,7 @@ export function OwnerRegistrationsPage() {
   };
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: 'var(--page-bg)'}}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="emerald" />
@@ -165,11 +178,22 @@ export function OwnerRegistrationsPage() {
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted mt-1">
                         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-champagne"><Trophy size={10} className="text-gold/60" /> {r.tournamentName ?? `Giải đấu #${r.tournamentId}`}</span>
                         {(r.registeredAt ?? r.createdAt) && <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-muted"><Calendar size={10} className="text-gold/60" /> {r.registeredAt ?? r.createdAt}</span>}
+                        {/* Trạng thái jockey — Owner biết ngay đơn này đã có nài ngựa hay chưa */}
+                        {(() => {
+                          const js = jockeyStatusFor(r);
+                          return (
+                            <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${js.cls}`}>
+                              🏇 {js.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                     <span className={`relative z-10 text-[11px] font-bold px-3 py-1 rounded-full border shrink-0 ${cfg.color}`}>{cfg.label}</span>
                     {statusKey === 'pending' && (
-                      <button className="relative z-10 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors shrink-0" title="Hủy đăng ký">
+                      <button
+                        onClick={() => toast.info('Backend chưa hỗ trợ API hủy đơn đăng ký — hãy liên hệ Admin để từ chối đơn này.')}
+                        className="relative z-10 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors shrink-0" title="Hủy đăng ký (BE chưa hỗ trợ)">
                         <XCircle size={15} />
                       </button>
                     )}

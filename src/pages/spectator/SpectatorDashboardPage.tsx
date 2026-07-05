@@ -45,7 +45,7 @@ export function SpectatorDashboardPage() {
   const pendingBets = bets.filter(b => { const s = (b.status ?? '').toLowerCase(); return s !== 'win' && s !== 'won' && s !== 'lose' && s !== 'lost' && s !== 'correct' && s !== 'incorrect'; }).length;
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: 'var(--page-bg)' }}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="purple" />
