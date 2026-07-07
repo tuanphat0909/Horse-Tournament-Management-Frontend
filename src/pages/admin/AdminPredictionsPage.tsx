@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getPredictionStats, getPredictions } from '../../api/adminService';
 import { Pager, paginate } from '../../components/ui/Pager';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type TabType = 'all' | 'correct' | 'incorrect' | 'pending';
 
 interface Prediction {
@@ -170,9 +171,7 @@ export function AdminPredictionsPage() {
 
           {/* Table */}
           {loading ? (
-            <div className="glass-panel rounded-xl p-12 text-center text-muted">
-              Đang tải danh sách dự đoán...
-            </div>
+            <LoadingSkeleton />
           ) : filteredPredictions.length === 0 ? (
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

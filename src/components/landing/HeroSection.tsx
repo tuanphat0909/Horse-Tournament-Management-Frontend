@@ -1,9 +1,28 @@
+import { useEffect, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getHorseRankings, getTournaments, getLiveRaces } from '../../api/publicService';
 
 export const HeroSection = () => {
   const navigate = useNavigate();
+
+  // ── Dữ liệu THẬT cho hero: số ngựa/giải + top bảng xếp hạng + cuộc đua live ──
+  const [horseCount, setHorseCount] = useState<number | null>(null);
+  const [tournamentCount, setTournamentCount] = useState<number | null>(null);
+  const [topHorses, setTopHorses] = useState<any[]>([]);
+  const [liveRace, setLiveRace] = useState<any | null>(null);
+
+  useEffect(() => {
+    getHorseRankings().then((d: any) => {
+      const list = d?.result ?? [];
+      setHorseCount(list.length);
+      setTopHorses(list.slice(0, 3));
+    }).catch(() => {});
+    getTournaments().then((d: any) => setTournamentCount((d?.result ?? []).length)).catch(() => {});
+    getLiveRaces().then((d: any) => setLiveRace((d?.result ?? [])[0] ?? null)).catch(() => {});
+  }, []);
+
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 1000], [0, 200]);
   const y2 = useTransform(scrollY, [0, 1000], [0, -100]);
@@ -79,11 +98,11 @@ export const HeroSection = () => {
             transition={{ delay: 1.2 }}
           >
             <div className="flex items-center gap-2">
-              <span className="text-white">500+</span> Elite Horses
+              <span className="text-white tabular">{horseCount ?? '—'}</span> ngựa đua trên bảng xếp hạng
             </div>
             <div className="w-1 h-1 rounded-full bg-glass-border" />
             <div className="flex items-center gap-2">
-              <span className="text-white">12</span> Championships
+              <span className="text-white tabular">{tournamentCount ?? '—'}</span> giải đấu
             </div>
           </motion.div>
         </motion.div>
@@ -95,36 +114,38 @@ export const HeroSection = () => {
             className="absolute right-0 top-10 w-80 glass-panel-elevated rounded-2xl p-6 animate-[float_6s_ease-in-out_infinite]"
           >
             <div className="flex justify-between items-start mb-6">
-              <div>
-                <h3 className="font-serif text-xl text-white mb-1">Dubai World Cup</h3>
-                <p className="text-xs text-muted">Meydan Racecourse</p>
+              <div className="min-w-0">
+                <h3 className="font-serif text-xl text-white mb-1 truncate">{liveRace ? (liveRace.name ?? `Cuộc đua #${liveRace.raceId ?? liveRace.id}`) : 'Trường đua Equestria'}</h3>
+                <p className="text-xs text-muted truncate">{liveRace?.tournamentName ?? 'Lịch thi đấu cập nhật liên tục'}</p>
               </div>
-              <div className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] uppercase font-bold rounded flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Live
-              </div>
+              {liveRace ? (
+                <div className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] uppercase font-bold rounded flex items-center gap-1 shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Live
+                </div>
+              ) : (
+                <div className="px-2 py-1 bg-blue-500/15 text-blue-400 text-[10px] uppercase font-bold rounded shrink-0">Sắp diễn ra</div>
+              )}
             </div>
-            
+
             <div className="space-y-4 mb-6">
-              {[
-                { name: "Thunderstrike", pos: "1st", time: "1:58.4", diff: "-0.00" },
-                { name: "Desert Wind", pos: "2nd", time: "1:59.1", diff: "+0.70" },
-                { name: "Midnight Run", pos: "3rd", time: "2:00.3", diff: "+1.90" }
-              ].map((horse, i) => (
+              {topHorses.length > 0 ? topHorses.map((h: any, i: number) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-navy/50 border border-glass-border hover:border-gold/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-gold w-6">{horse.pos}</span>
-                    <span className="text-sm font-medium text-white">{horse.name}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="font-bold text-gold w-6 shrink-0">#{i + 1}</span>
+                    <span className="text-sm font-medium text-white truncate">{h.horseName ?? h.name ?? `Ngựa #${h.horseId}`}</span>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs font-mono text-white">{horse.time}</div>
-                    <div className="text-[10px] text-muted">{horse.diff}</div>
+                  <div className="text-right shrink-0">
+                    <div className="text-xs font-mono text-white tabular">{h.rankingPoint ?? h.totalWins ?? 0} pts</div>
+                    <div className="text-[10px] text-muted">{h.totalRaces != null ? `${h.totalRaces} trận` : ''}</div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                [0, 1, 2].map(i => <div key={i} className="skeleton h-11 rounded-lg" />)
+              )}
             </div>
-            
-            <button className="w-full py-3 rounded text-xs font-bold text-champagne bg-gold/10 hover:bg-gold/20 transition-colors border border-gold/30">
-              View Live Analytics
+
+            <button onClick={() => navigate('/login')} className="w-full py-3 rounded text-xs font-bold text-champagne bg-gold/10 hover:bg-gold/20 transition-colors border border-gold/30">
+              Xem kết quả trực tiếp
             </button>
           </motion.div>
 
@@ -142,15 +163,14 @@ export const HeroSection = () => {
               </div>
             </div>
             <div className="space-y-2">
-              {[
-                { name: "Thunderstrike", pts: "1,240 pts" },
-                { name: "Desert Wind", pts: "1,185 pts" },
-              ].map((h, i) => (
+              {topHorses.slice(0, 2).length > 0 ? topHorses.slice(0, 2).map((h: any, i: number) => (
                 <div key={i} className="flex justify-between items-center text-xs px-2 py-1.5 rounded bg-navy/60 border border-glass-border">
-                  <span className="text-white font-medium">{h.name}</span>
-                  <span className="text-gold font-bold">{h.pts}</span>
+                  <span className="text-white font-medium truncate">{h.horseName ?? h.name ?? `Ngựa #${h.horseId}`}</span>
+                  <span className="text-gold font-bold tabular shrink-0">{h.rankingPoint ?? h.totalWins ?? 0} pts</span>
                 </div>
-              ))}
+              )) : (
+                [0, 1].map(i => <div key={i} className="skeleton h-7 rounded" />)
+              )}
             </div>
           </motion.div>
         </div>

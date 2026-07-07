@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRefereeDashboard, getRaceReports, createReport, getHorseChecks } from '../../api/refereeService';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const INPUT = 'w-full bg-[#0B1628] border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
@@ -197,10 +198,7 @@ export function RefereeReportsPage() {
                 </h3>
 
                 {loadingReports ? (
-                  <div className="text-center py-12 text-muted text-sm flex items-center justify-center gap-2">
-                    <Loader size={16} className="animate-spin text-gold" />
-                    <span>Đang tải danh sách báo cáo...</span>
-                  </div>
+                  <LoadingSkeleton rows={4} />
                 ) : reports.length === 0 ? (
                   <div className="text-center py-12 relative overflow-hidden">
                     <div className="text-4xl opacity-40 mb-3">📋</div>

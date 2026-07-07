@@ -15,6 +15,7 @@ import { getDashboardStats, getRegistrations, getActivityLog } from '../../api/a
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
@@ -209,9 +210,7 @@ export function AdminDashboardPage() {
               </div>
               
               {regLoading ? (
-                <div className="relative z-10 flex-1 flex items-center justify-center text-xs text-muted">
-                  {t("Đang tải...")}
-                </div>
+                <div className="relative z-10 flex-1"><LoadingSkeleton rows={3} h="h-12" /></div>
               ) : pendingRegs.length === 0 ? (
                 <div className="relative z-10 flex-1 flex items-center justify-center">
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden w-full">
@@ -272,9 +271,7 @@ export function AdminDashboardPage() {
               </div>
               
               {activitiesLoading ? (
-                <div className="relative z-10 flex-1 flex items-center justify-center text-xs text-muted">
-                  {t("Đang tải...")}
-                </div>
+                <div className="relative z-10 flex-1"><LoadingSkeleton rows={3} h="h-12" /></div>
               ) : activities.length === 0 ? (
                 <div className="relative z-10 flex-1 flex items-center justify-center">
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden w-full">

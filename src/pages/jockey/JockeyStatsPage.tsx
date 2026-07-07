@@ -7,6 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getJockeyStats, getAssignedHorses } from '../../api/jockeyService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 interface JockeyStats {
   totalRaces: number;
   wins: number;
@@ -101,7 +102,7 @@ export function JockeyStatsPage() {
               </div>
               
               {loading ? (
-                <div className="text-center py-8 text-muted">Đang tải phân bố kết quả...</div>
+                <LoadingSkeleton />
               ) : totalRaces === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
@@ -158,7 +159,7 @@ export function JockeyStatsPage() {
             </div>
             <div className="p-6">
               {loading ? (
-                <div className="text-center py-6 text-muted">Đang tải lịch sử...</div>
+                <LoadingSkeleton />
               ) : totalRaces === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

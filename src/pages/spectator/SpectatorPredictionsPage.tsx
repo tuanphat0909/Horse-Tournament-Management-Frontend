@@ -9,6 +9,7 @@ import { getMyBets, placeBet, getMyPredictions, createPrediction } from '../../a
 import { getRaceSchedule, getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type BetStatus = 'correct' | 'incorrect' | 'pending';
 type Tab = BetStatus | 'all';
 
@@ -203,7 +204,7 @@ export function SpectatorPredictionsPage() {
 
           {/* List */}
           {loading ? (
-            <div className="text-center py-12 text-muted text-sm">Đang tải...</div>
+            <LoadingSkeleton />
           ) : (
             <div className="space-y-3">
               {filtered.map((b, i) => {

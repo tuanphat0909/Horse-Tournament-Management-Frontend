@@ -75,7 +75,7 @@ export function LoginPage() {
         backgroundColor: '#0b101e',
         backgroundImage:
           'radial-gradient(ellipse at 0% 100%, rgba(212,175,55,0.15) 0%, transparent 50%), radial-gradient(ellipse at 100% 0%, rgba(212,175,55,0.1) 0%, transparent 40%)',
-        fontFamily: '"Inter", sans-serif',
+        fontFamily: '"DM Sans", sans-serif',
         color: '#e2e8f0',
       }}
     >

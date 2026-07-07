@@ -9,6 +9,7 @@ import { getRaceDetail } from '../../api/publicService';
 import { getBalance, placeBet, getRaceBettingInfo } from '../../api/spectatorService';
 import { formatDateTime, formatWinProbability } from '../../utils/format';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   live: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   ongoing: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
@@ -98,8 +99,8 @@ export function SpectatorRaceDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted" style={{backgroundColor: '#0b101e'}}>
-        Đang tải thông tin...
+      <div className="min-h-screen px-8 py-16 max-w-4xl mx-auto" style={{backgroundColor: '#0b101e'}}>
+        <LoadingSkeleton rows={6} h="h-16" />
       </div>
     );
   }

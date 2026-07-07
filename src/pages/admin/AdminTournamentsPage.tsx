@@ -12,6 +12,7 @@ import { formatDateTime } from '../../utils/format';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type StatusFilter = 'all' | 'upcoming' | 'active' | 'completed';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
@@ -333,7 +334,7 @@ export function AdminTournamentsPage() {
 
           {/* Tournament Cards */}
           {loadingTournaments ? (
-            <div className="text-center py-12 text-muted text-sm">{t("Đang tải danh sách giải đấu...")}</div>
+            <LoadingSkeleton rows={4} h="h-24" />
           ) : filteredTournaments.length === 0 ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getAssignedHorses } from '../../api/jockeyService';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const getStatusConfig = (status: string) => {
   const s = (status ?? '').toLowerCase();
   if (s === 'scheduled' || s === 'upcoming' || s === 'pending') {
@@ -56,7 +57,7 @@ export function JockeyRacesPage() {
           />
 
           {loading ? (
-            <div className="text-center py-12 text-muted text-sm">Đang tải...</div>
+            <LoadingSkeleton />
           ) : error ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

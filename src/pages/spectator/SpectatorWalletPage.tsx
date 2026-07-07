@@ -11,6 +11,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { deposit, withdraw, getBalance, getWalletHistory } from '../../api/spectatorService';
 import { parseApiError, getCurrentUser } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const COINS_PER_USD = 100;
 const QUICK_AMTS = [5, 10, 20, 50];
 
@@ -156,7 +157,7 @@ export function SpectatorWalletPage() {
                   <div className="text-[10px] text-muted uppercase tracking-widest font-bold">Số dư khả dụng</div>
                 </div>
                 {pageLoading ? (
-                  <div className="text-muted text-sm py-4">Đang tải...</div>
+                  <LoadingSkeleton />
                 ) : (
                   <>
                     <div className="flex items-end gap-3 mb-1">
@@ -300,7 +301,7 @@ export function SpectatorWalletPage() {
               </div>
 
               {pageLoading ? (
-                <div className="text-center py-12 text-muted text-sm">Đang tải...</div>
+                <LoadingSkeleton />
               ) : (
                 <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
                   {filtered.map((tx, i) => {

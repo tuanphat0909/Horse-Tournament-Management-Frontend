@@ -18,6 +18,7 @@ import {
 import { useNotifications } from '../../context/NotificationContext';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type FilterType = 'all' | 'unread' | 'tournament' | 'race' | 'bet' | 'wallet' | 'system';
 
 export function SpectatorNotificationsPage() {
@@ -244,10 +245,7 @@ export function SpectatorNotificationsPage() {
 
           {/* List Section */}
           {loading ? (
-            <div className="text-center py-24 text-muted text-sm flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 rounded-full border-2 border-gold/20 border-t-gold animate-spin" />
-              Đang tải thông báo...
-            </div>
+            <LoadingSkeleton rows={5} />
           ) : (
             <div className="space-y-3">
               <AnimatePresence mode="popLayout">

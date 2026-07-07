@@ -9,6 +9,7 @@ import { createPrizes, triggerPayout, publishRaceResult } from '../../api/adminS
 import { getRaceSchedule, getTournaments, getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
@@ -271,7 +272,7 @@ export function AdminResultsPage() {
             </div>
             
             {loadingRaces ? (
-              <div className="text-sm text-muted py-6">Đang tải danh sách...</div>
+              <LoadingSkeleton />
             ) : (() => {
               const pendingRaces = races.filter(r => r.status === 'Completed' || r.status === 'PendingPublish');
               if (pendingRaces.length === 0) return (
@@ -311,7 +312,7 @@ export function AdminResultsPage() {
                               Kết quả ghi nhận từ hệ thống (Dùng để xác thực):
                             </div>
                             {loadingEntries ? (
-                              <div className="text-muted py-2">Đang tải kết quả...</div>
+                              <LoadingSkeleton />
                             ) : raceEntries.length === 0 ? (
                               <div className="text-muted/60 italic py-2">Không có dữ liệu lượt đua</div>
                             ) : (
@@ -365,7 +366,7 @@ export function AdminResultsPage() {
             </div>
             
             {loadingRaces ? (
-              <div className="text-sm text-muted py-6">Đang tải danh sách...</div>
+              <LoadingSkeleton />
             ) : (() => {
               const publishedRaces = races.filter(r => r.status === 'Published' || r.status === 'Finished');
               if (publishedRaces.length === 0) return (
@@ -405,7 +406,7 @@ export function AdminResultsPage() {
                               Kết quả chính thức:
                             </div>
                             {loadingEntries ? (
-                              <div className="text-muted py-2">Đang tải kết quả...</div>
+                              <LoadingSkeleton />
                             ) : raceEntries.length === 0 ? (
                               <div className="text-muted/60 italic py-2">Không có dữ liệu lượt đua</div>
                             ) : (

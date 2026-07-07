@@ -10,6 +10,7 @@ import { getRaceEntries } from '../../api/publicService';
 import { Pager, paginate } from '../../components/ui/Pager';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'active' | 'decided';
 
 const INIT_FORM = { raceId: '', description: '', type: 'warning', horseOrJockey: '' };
@@ -168,7 +169,7 @@ export function RefereeViolationsPage() {
           </div>
 
           {loading ? (
-            <div className="text-sm text-muted py-8 text-center">Đang tải danh sách...</div>
+            <LoadingSkeleton />
           ) : violations.length === 0 ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

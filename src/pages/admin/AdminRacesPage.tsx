@@ -13,6 +13,7 @@ import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
@@ -470,10 +471,7 @@ export function AdminRacesPage() {
           />
 
           {loadingData && (
-            <div className="flex items-center justify-center py-20 gap-3 text-gold">
-              <Loader className="animate-spin" size={24} />
-              <span>Đang tải danh sách giải đấu và cuộc đua...</span>
-            </div>
+            <LoadingSkeleton rows={4} h="h-24" />
           )}
 
           {fetchError && (
@@ -792,7 +790,7 @@ export function AdminRacesPage() {
               )}
 
               {laneLoading ? (
-                <div className="text-center py-10 text-muted text-sm">Đang tải sơ đồ làn…</div>
+                <LoadingSkeleton />
               ) : laneRaceId && maxLanes > 0 ? (
                 <div className="space-y-2">
                   {Array.from({ length: maxLanes }, (_, idx) => idx + 1).map(laneNo => {
@@ -899,7 +897,7 @@ export function AdminRacesPage() {
             </div>
 
             {detailLoading ? (
-              <div className="text-center py-10 text-muted text-sm">Đang tải chi tiết…</div>
+              <LoadingSkeleton />
             ) : (
               <>
                 {/* Sơ đồ làn 3D — scheduled/live: ngựa trong làn; finished: bục trao giải theo hạng */}

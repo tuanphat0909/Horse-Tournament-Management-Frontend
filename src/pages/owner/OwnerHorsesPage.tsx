@@ -10,6 +10,7 @@ import { parseApiError } from '../../api/authService';
 import { calculateAge, formatDateOnly } from '../../utils/format';
 import { useNotifications } from '../../context/NotificationContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
@@ -173,7 +174,7 @@ export function OwnerHorsesPage() {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm tên ngựa..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
           </div>
 
-          {loading && <div className="text-center py-16 text-muted text-sm">Đang tải...</div>}
+          {loading && <LoadingSkeleton />}
           {error && <div className="glass-panel rounded-xl p-5 text-red-400 text-sm border border-red-500/20">{error}</div>}
 
           {!loading && !error && (
@@ -330,7 +331,7 @@ export function OwnerHorsesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-xl border border-gold/20">
             {viewLoading ? (
-              <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+              <LoadingSkeleton />
             ) : (
               <>
                 <div className="text-center mb-6">
@@ -415,10 +416,7 @@ export function OwnerHorsesPage() {
                 ) : (
                   <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                     {loadingRaces ? (
-                      <div className="text-center py-12 text-muted text-sm">
-                        <div className="text-2xl animate-spin inline-block mb-2">⏳</div>
-                        <div>Đang tải lịch sử thi đấu...</div>
-                      </div>
+                      <LoadingSkeleton rows={4} h="h-10" />
                     ) : horseRaces.length === 0 ? (
                       <div className="text-center py-12 text-muted text-sm">
                         <div className="text-3xl opacity-40 mb-2">📋</div>

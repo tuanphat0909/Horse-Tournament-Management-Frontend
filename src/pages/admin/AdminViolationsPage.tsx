@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getViolations, updateViolationStatus } from '../../api/adminService';
 import { Pager, paginate } from '../../components/ui/Pager';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'pending' | 'confirmed' | 'rejected';
 
 interface Violation {
@@ -151,9 +152,7 @@ export function AdminViolationsPage() {
 
           {/* Loading */}
           {loading ? (
-            <div className="glass-panel rounded-xl p-12 text-center text-muted">
-              Đang tải danh sách vi phạm...
-            </div>
+            <LoadingSkeleton />
           ) : (
             <div>
               {tab === 'pending' && (

@@ -8,6 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRaceSchedule } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const STATUS_CONFIG = {
   upcoming: { label: 'Đã nhận', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
   pending:  { label: 'Chờ xác nhận', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
@@ -50,7 +51,7 @@ export function JockeySchedulePage() {
           />
 
           {loading ? (
-            <div className="text-center py-12 text-muted text-sm">Đang tải...</div>
+            <LoadingSkeleton />
           ) : error ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

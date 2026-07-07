@@ -9,6 +9,7 @@ import { getTournaments } from '../../api/publicService';
 import { formatDateTime } from '../../utils/format';
 import { useLanguage } from '../../context/LanguageContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   active: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   upcoming: { label: 'Sắp diễn ra', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
@@ -54,7 +55,7 @@ export function OwnerTournamentsPage() {
           </div>
 
           {loading ? (
-            <div className="text-center py-12 text-muted text-sm">{t("Đang tải danh sách giải đấu...")}</div>
+            <LoadingSkeleton rows={4} h="h-24" />
           ) : filtered.length === 0 ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

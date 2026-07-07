@@ -10,6 +10,7 @@ import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'pending' | 'approved' | 'rejected';
 
 function normalizeStatus(s: string): Tab {
@@ -149,7 +150,7 @@ export function OwnerRegistrationsPage() {
           </div>
 
           {loading ? (
-            <div className="text-center py-12 text-muted text-sm">Đang tải...</div>
+            <LoadingSkeleton />
           ) : (
             <div className="space-y-3">
               {filtered.map((r, i) => {

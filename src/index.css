@@ -471,3 +471,116 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
+
+/* ═══════════════════════════════════════════════════════════════
+   PREMIUM REFINEMENTS — nâng cấp hệ thống theo skill redesign +
+   high-end-visual-design. Áp dụng cho TOÀN BỘ trang (27 dashboard
+   + landing + auth) vì mọi trang dùng chung các pattern này.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Nhịp chuyển động vật lý — thay cho ease-in-out mặc định */
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 1. Điều hướng bàn phím: focus ring rõ ràng (a11y bắt buộc) */
+:focus-visible {
+  outline: 2px solid rgba(201, 168, 76, 0.75);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline-offset: 0;
+}
+
+/* 2. Phản hồi vật lý khi bấm: mọi nút "lún" nhẹ như bấm thật */
+button { transition: transform 0.15s var(--ease-spring); }
+button:not(:disabled):active { transform: scale(0.98); }
+
+/* 3. Số liệu thẳng cột trong bảng & stat (tabular figures) */
+table, .tabular { font-variant-numeric: tabular-nums; }
+
+/* 4. Tiêu đề: không mồ côi chữ cuối dòng, tracking chặt hơn */
+h1, h2, h3 { text-wrap: balance; letter-spacing: -0.01em; }
+p { text-wrap: pretty; }
+
+/* 5. Scrollbar: MỌI thanh cuộn trong app đều mảnh + chìm như nhau
+   (viên thuốc ~4px, track trong suốt — kiểu "Danh Sách Trọng Tài").
+   Áp toàn cục cho cả trang lẫn mọi khung overflow-y-auto bên trong. */
+* {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(125, 143, 179, 0.28) transparent;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-thumb {
+  background: rgba(125, 143, 179, 0.28);
+  border-radius: 999px;
+  border: 2px solid transparent;   /* tạo viên thuốc ~4px, có "lề thở" 2 bên */
+  background-clip: content-box;
+  min-height: 40px;
+}
+::-webkit-scrollbar-thumb:hover { background-color: rgba(201, 168, 76, 0.5); }
+
+/* Class .scrollbar-thin (một số panel đang gắn sẵn) = phiên bản mảnh hơn nữa */
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(125, 143, 179, 0.25);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+/* 6. Bôi đen chữ mang màu thương hiệu */
+::selection { background: rgba(201, 168, 76, 0.3); color: #F5E7BC; }
+
+/* 7. Anchor scroll mượt */
+html { scroll-behavior: smooth; }
+
+/* 8. Shimmer nút vàng: chỉ chạy khi hover (đỡ nhiễu mắt, đỡ tốn GPU) */
+.btn-gold::after { animation: none; opacity: 0; }
+.btn-gold:hover::after { animation: shimmer 1.6s var(--ease-out-expo); opacity: 1; }
+
+/* 9. Skeleton loader — thay chữ "Đang tải..." trơ trọi khi cần */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  min-height: 0.9em;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  animation: skeleton-sweep 1.4s infinite var(--ease-out-expo);
+}
+@keyframes skeleton-sweep { 100% { transform: translateX(100%); } }
+
+/* 10. Double-bezel (khung máy móc lồng nhau) cho card quan trọng */
+.bezel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 6px;
+}
+.bezel > * {
+  border-radius: 14px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+/* 11. Tôn trọng người dùng tắt animation (a11y) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}

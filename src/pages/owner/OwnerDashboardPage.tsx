@@ -14,6 +14,7 @@ import { getMyHorses } from '../../api/ownerService';
 import { getRaceSchedule } from '../../api/publicService';
 import { calculateAge } from '../../utils/format';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
@@ -134,7 +135,7 @@ export function OwnerDashboardPage() {
               </div>
               <div className="relative z-10 flex-1 space-y-2 overflow-y-auto">
                 {horsesLoading ? (
-                  <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+                  <LoadingSkeleton />
                 ) : horses.length === 0 ? (
                   <div className="text-center py-10"><div className="text-4xl opacity-40 mb-3">🐴</div><div className="text-muted text-sm">Chưa có ngựa nào trong chuồng</div></div>
                 ) : horses.map((h, i) => (
@@ -179,7 +180,7 @@ export function OwnerDashboardPage() {
               </div>
               <div className="relative z-10 flex-1 space-y-3">
                 {scheduleLoading ? (
-                  <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+                  <LoadingSkeleton />
                 ) : schedule.length === 0 ? (
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

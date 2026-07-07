@@ -9,6 +9,7 @@ import { getTournamentDetail, getRaceSchedule } from '../../api/publicService';
 import { formatDateTime } from '../../utils/format';
 import { useLanguage } from '../../context/LanguageContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   live: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   ongoing: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
@@ -62,7 +63,7 @@ export function SpectatorTournamentDetailPage() {
           </Link>
 
           {loading ? (
-             <div className="text-center py-12 text-muted">{t("Đang tải thông tin...")}</div>
+             <LoadingSkeleton rows={5} h="h-16" />
           ) : error ? (
              <div className="glass-panel p-8 text-center text-red-400">{error}</div>
           ) : !tournament ? (

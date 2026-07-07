@@ -9,6 +9,7 @@ import { getCurrentUser } from '../../api/authService';
 import { useNavigate } from 'react-router-dom';
 import { getRefereeDashboard } from '../../api/refereeService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
@@ -126,7 +127,7 @@ export function RefereeDashboardPage() {
               </div>
 
               {loading ? (
-                <div className="text-center py-12 text-muted text-sm">Đang tải cuộc đua...</div>
+                <LoadingSkeleton />
               ) : !data || data.assignedRaces.length === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
@@ -188,7 +189,7 @@ export function RefereeDashboardPage() {
               </div>
               
               {loading ? (
-                <div className="text-center py-12 text-muted text-sm">Đang tải hoạt động...</div>
+                <LoadingSkeleton />
               ) : !data || data.assignedRaces.length === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

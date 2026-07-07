@@ -10,6 +10,7 @@ import { getJockeyRankings, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const STATUS_CFG: Record<string, { label: string; color: string; Icon: typeof Clock }> = {
   Active:   { label: 'Đã xác nhận',  color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', Icon: CheckCircle },
   active:   { label: 'Đã xác nhận',  color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', Icon: CheckCircle },
@@ -213,7 +214,7 @@ export function OwnerJockeysPage() {
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
             {loading ? (
-              <div className="text-center py-12 text-muted text-sm">Đang tải...</div>
+              <LoadingSkeleton />
             ) : (
               <div className="space-y-3">
                 {proposals.map((p, i) => {

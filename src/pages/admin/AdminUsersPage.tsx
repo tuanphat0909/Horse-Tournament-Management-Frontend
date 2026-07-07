@@ -11,6 +11,7 @@ import { useNotifications } from '../../context/NotificationContext';
 import { formatUtcDateTime } from '../../utils/format';
 import { Pager, paginate } from '../../components/ui/Pager';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type RoleFilter = 'all' | 'owner' | 'jockey' | 'referee' | 'spectator' | 'admin';
 
 const ROLE_LABELS: Record<string, string> = { owner: 'Horse Owner', jockey: 'Jockey', referee: 'Referee', spectator: 'Spectator', admin: 'Admin' };
@@ -211,7 +212,7 @@ export function AdminUsersPage() {
             </div>
 
             {loadingAccounts ? (
-              <div className="text-center py-12 text-muted text-sm">Đang tải danh sách tài khoản...</div>
+              <LoadingSkeleton />
             ) : filteredAccounts.length === 0 ? (
               <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
@@ -334,7 +335,7 @@ export function AdminUsersPage() {
               <div>
                 <label className={LABEL}>Role *</label>
                 {roles.length === 0 ? (
-                  <div className="text-xs text-muted py-2">Đang tải danh sách role…</div>
+                  <LoadingSkeleton />
                 ) : (
                   <select
                     value={form.role}

@@ -6,6 +6,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRefereeDashboard, getHorseChecks } from '../../api/refereeService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'all' | 'pending' | 'approved' | 'rejected';
 
 interface AssignedRace {
@@ -199,9 +200,7 @@ export function RefereeHorseCheckPage() {
 
           {/* Table */}
           {loadingChecks ? (
-            <div className="glass-panel rounded-xl p-12 text-center text-muted">
-              Đang tải danh sách ngựa...
-            </div>
+            <LoadingSkeleton />
           ) : filteredChecks.length === 0 ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

@@ -7,6 +7,7 @@ import { getRefereeDashboard, submitResult } from '../../api/refereeService';
 import { getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-red-400/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
@@ -181,7 +182,7 @@ export function RefereeConfirmResultsPage() {
                 <div>
                   <label className={LABEL}>Trận đua *</label>
                   {loadingRaces ? (
-                    <div className="text-sm text-muted">Đang tải...</div>
+                    <LoadingSkeleton />
                   ) : (
                     <select value={form.raceId} onChange={e => handleRaceChange(e.target.value)} className={INPUT} style={{colorScheme: 'dark'}}>
                       <option value="">-- Chọn trận đua --</option>
@@ -194,7 +195,20 @@ export function RefereeConfirmResultsPage() {
                 
                 <div>
                   <label className={LABEL}>Ngựa chiến thắng *</label>
-                  <input value={form.winner} onChange={e => setF('winner', e.target.value)} placeholder="Tên ngựa hoặc ID ngựa" className={INPUT} />
+                  {/* Dropdown từ danh sách ngựa THẬT của cuộc đua — không bắt gõ tên/ID tay nữa */}
+                  <select value={form.winner} onChange={e => setF('winner', e.target.value)}
+                    disabled={!form.raceId || loadingEntries}
+                    className={INPUT} style={{ colorScheme: 'dark' }}>
+                    <option value="">{!form.raceId ? '-- Chọn cuộc đua trước --' : loadingEntries ? '-- Đang tải ngựa… --' : '-- Chọn ngựa thắng --'}</option>
+                    {raceEntries.map((e: any, i: number) => {
+                      const name = e.horseName ?? String(e.horseId);
+                      return (
+                        <option key={e.raceEntryId ?? i} value={name}>
+                          {`Làn ${e.laneNo ?? '?'}: ${name}${e.jockeyName ? ` (${e.jockeyName})` : ''}${e.finishPosition != null ? ` — hạng ${e.finishPosition}` : ''}`}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
                 
                 <div>
@@ -223,7 +237,7 @@ export function RefereeConfirmResultsPage() {
               <div className="glass-panel rounded-xl p-8 border border-glass-border flex flex-col h-fit">
                 <h2 className="text-xl font-serif text-white mb-6">Bảng xếp hạng lượt đua</h2>
                 {loadingEntries ? (
-                  <div className="text-sm text-muted py-6">Đang tải kết quả...</div>
+                  <LoadingSkeleton />
                 ) : raceEntries.length === 0 ? (
                   <div className="text-sm text-muted py-6 italic">Không có dữ liệu lượt đua</div>
                 ) : (

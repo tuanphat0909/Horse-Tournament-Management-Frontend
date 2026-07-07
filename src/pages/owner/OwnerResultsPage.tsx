@@ -7,6 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getOwnerResults } from '../../api/ownerService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 interface OwnerResult {
   raceId: number;
   raceName: string;
@@ -77,7 +78,7 @@ export function OwnerResultsPage() {
 
             <div className="relative z-10 p-6">
               {loading ? (
-                <div className="text-center py-12 text-muted text-sm">Đang tải kết quả...</div>
+                <LoadingSkeleton />
               ) : results.length === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

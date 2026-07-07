@@ -10,6 +10,7 @@ import { getContracts, respondContract, getJockeyStats, getAssignedHorses } from
 import { getCurrentUser, parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
@@ -155,10 +156,7 @@ export function JockeyDashboardPage() {
                 </button>
               </div>
               {loading ? (
-                <div className="text-center py-8 text-muted text-sm">
-                  <div className="text-4xl opacity-40 mb-3">⏳</div>
-                  Đang tải...
-                </div>
+                <LoadingSkeleton rows={3} h="h-12" />
               ) : pending.length === 0 ? (
                 <div className="text-center py-8 text-muted text-sm">
                   <div className="text-4xl opacity-40 mb-3">🏇</div>
@@ -207,10 +205,7 @@ export function JockeyDashboardPage() {
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
               {loading ? (
-                <div className="text-center py-12 text-muted text-sm">
-                  <div className="text-4xl opacity-40 mb-3">⏳</div>
-                  Đang tải...
-                </div>
+                <LoadingSkeleton rows={3} />
               ) : completedRaces.length === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

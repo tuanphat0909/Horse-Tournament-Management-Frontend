@@ -10,6 +10,7 @@ import { getReferees, getRacesRefereeAssignments, removeReferee } from '../../ap
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const fixMojibake = (str: string): string => {
   if (!str) return '';
   try {
@@ -109,7 +110,7 @@ export function AdminRefereesPage() {
           />
 
           {loading ? (
-            <div className="text-center py-24 text-muted text-lg">Đang tải dữ liệu...</div>
+            <LoadingSkeleton />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6">
 

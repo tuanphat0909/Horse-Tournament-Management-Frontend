@@ -7,6 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRaceSchedule, getJockeyRankings, getHorseRankings, getLiveRaces } from '../../api/publicService';
 
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const POS_STYLE: Record<number, string> = {
   1: 'bg-gold/20 text-gold border-gold/30',
   2: 'bg-white/10 text-white border-white/20',
@@ -72,7 +73,7 @@ export function SpectatorLiveResultsPage() {
             </div>
             <div className="p-6">
               {liveLoading ? (
-                <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+                <LoadingSkeleton />
               ) : liveRaces.length === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
@@ -105,7 +106,7 @@ export function SpectatorLiveResultsPage() {
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
             {scheduleLoading ? (
-              <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+              <LoadingSkeleton />
             ) : schedule.length === 0 ? (
               <div className="glass-panel rounded-xl p-8 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
@@ -152,7 +153,7 @@ export function SpectatorLiveResultsPage() {
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-[40px] pointer-events-none" />
                 {rankingsLoading ? (
-                  <div className="p-8 text-center text-muted text-sm">Đang tải...</div>
+                  <LoadingSkeleton />
                 ) : jockeyRankings.length === 0 ? (
                   <div className="p-8 text-center">
                     <div className="text-4xl opacity-40 mb-3">🏇</div>
@@ -190,7 +191,7 @@ export function SpectatorLiveResultsPage() {
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-[40px] pointer-events-none" />
                 {rankingsLoading ? (
-                  <div className="p-8 text-center text-muted text-sm">Đang tải...</div>
+                  <LoadingSkeleton />
                 ) : horseRankings.length === 0 ? (
                   <div className="p-8 text-center">
                     <div className="text-4xl opacity-40 mb-3">🐎</div>
@@ -227,7 +228,7 @@ export function SpectatorLiveResultsPage() {
             </div>
             
             {scheduleLoading ? (
-              <div className="text-center py-8 text-muted text-sm">Đang tải...</div>
+              <LoadingSkeleton />
             ) : (() => {
               const publishedRaces = schedule.filter(r => r.status === 'Published' || r.status === 'Finished');
               if (publishedRaces.length === 0) return (
