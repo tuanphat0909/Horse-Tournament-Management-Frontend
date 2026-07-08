@@ -141,9 +141,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
+    // Xác định ORIGIN của backend cho SignalR hub.
+    // FIX DEPLOY: trước đây dùng window.location.origin (domain của FE) → khi deploy
+    // FE và BE khác domain thì SignalR trỏ nhầm về FE, không nhận được thông báo.
+    // Giờ suy ra origin của BE từ VITE_API_URL (mặc định = server Azure đã deploy).
+    const apiURL = import.meta.env.VITE_API_URL || 'https://hrms-backend-a4dwfmgmgfagf7ax.southeastasia-01.azurewebsites.net/api';
+    const backendOrigin = apiURL.startsWith('http') ? new URL(apiURL).origin : window.location.origin;
+
     // Build SignalR connection
     const newConnection = new HubConnectionBuilder()
-      .withUrl(`${window.location.origin}/hubs/notification`, {
+      .withUrl(`${backendOrigin}/hubs/notification`, {
         accessTokenFactory: () => token
       })
       .configureLogging(LogLevel.Warning)

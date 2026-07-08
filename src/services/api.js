@@ -1,7 +1,11 @@
 // Cấu hình gốc cho tất cả API calls
 // Tự động gắn Bearer token từ localStorage vào mỗi request
+//
+// Mặc định trỏ tới BE ĐÃ DEPLOY trên Azure (giống cấu hình của nhóm) → clone về
+// chạy `npm run dev` là kết nối được ngay, không cần chạy BE local.
+// Muốn dev với BE local: tạo file .env.local với  VITE_API_URL=http://localhost:5000/api
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://hrms-backend-a4dwfmgmgfagf7ax.southeastasia-01.azurewebsites.net/api';
 
 async function request(method, endpoint, data) {
   const token = localStorage.getItem('token');

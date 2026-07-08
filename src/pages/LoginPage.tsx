@@ -15,10 +15,30 @@ const fadeUp: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 };
 
-function HorseSVG() {
+/**
+ * Hình ngựa + jockey trên trang đăng nhập.
+ * ƯU TIÊN dùng ảnh thật: lưu ảnh vào  public/images/horse-lineart.png
+ * → tự hiển thị ngay (F5). Chưa có file thì tạm dùng hình SVG vẽ tay bên dưới.
+ */
+function HorseArt() {
+  const [useFallback, setUseFallback] = useState(false);
+  if (useFallback) return <HorseSVG />;
   return (
-    <svg viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg"
+    <img
+      src="/images/horse-lineart.png"
+      alt="Ngựa đua và nài ngựa"
+      className="w-full h-full object-contain drop-shadow-[0_0_18px_rgba(212,175,55,0.35)] translate-x-[18%]"
+      onError={() => setUseFallback(true)}
+    />
+  );
+}
+
+function HorseSVG() {
+  // Line-art ngựa phi nước đại + jockey cúi người (nét vàng, phong cách khắc mảnh)
+  return (
+    <svg viewBox="0 0 640 400" fill="none" xmlns="http://www.w3.org/2000/svg"
          className="w-full h-full drop-shadow-[0_0_18px_rgba(212,175,55,0.35)]">
+      <title>Ngựa đua và nài ngựa</title>
       <defs>
         <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#e9c46a"/>
@@ -26,13 +46,50 @@ function HorseSVG() {
           <stop offset="100%" stopColor="#aa8c2c"/>
         </linearGradient>
       </defs>
-      <path
-        d="M70,80 C60,70 40,75 20,85 C30,75 45,65 55,65 C55,65 65,55 75,45 C85,35 100,25 115,20 C120,25 130,20 140,25 C145,30 150,40 155,50 C150,45 140,40 135,45 C130,50 135,60 140,65 C130,65 125,75 120,85 C115,95 110,110 100,120 C95,115 90,105 85,95 C80,85 75,75 70,80 Z"
-        fill="url(#gg)" stroke="#d4af37" strokeWidth="1.5"/>
-      <path d="M115,20 C105,15 95,20 85,30 C95,25 105,25 115,35" fill="none" stroke="#d4af37" strokeWidth="1.5"/>
-      <path d="M110,25 C100,20 90,25 80,35" fill="none" stroke="#d4af37" strokeWidth="1.5"/>
-      <path d="M20,85 C10,90 5,95 0,105 C10,100 20,95 30,95" fill="none" stroke="#d4af37" strokeWidth="1.5"/>
-      <path d="M25,80 C15,85 10,90 5,100" fill="none" stroke="#d4af37" strokeWidth="1.5"/>
+      <g stroke="url(#gg)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        {/* Đầu + mõm ngựa (hướng phải) */}
+        <path d="M470 160 C494 148 520 148 538 162 C550 172 556 184 554 194 C552 202 544 206 534 204 C540 210 538 216 530 217"/>
+        {/* Tai */}
+        <path d="M486 152 L497 132 L506 150"/>
+        {/* Cổ trên + bờm bay */}
+        <path d="M470 160 C440 150 410 152 386 166"/>
+        <path d="M478 168 C452 186 430 200 412 208"/>
+        <path d="M462 152 C450 138 436 132 420 134 M440 148 C430 140 420 138 410 142"/>
+        {/* Lưng → mông */}
+        <path d="M386 166 C346 158 300 160 266 176 C248 184 238 194 234 204"/>
+        {/* Ức + bụng */}
+        <path d="M412 208 C420 224 416 240 404 250 C380 268 330 272 298 262 C280 256 268 244 264 232"/>
+        {/* Chân trước duỗi tới (tư thế bay) */}
+        <path d="M404 250 C428 258 456 268 480 284 C496 294 510 306 518 318"/>
+        <path d="M416 236 C444 240 470 248 494 262 C506 270 514 278 518 286 M518 318 L536 324 M518 286 L534 288"/>
+        {/* Chân sau duỗi ra sau */}
+        <path d="M264 232 C236 244 206 260 180 278 C164 290 150 302 142 312"/>
+        <path d="M240 210 C214 218 188 230 164 246 C150 256 138 266 130 276 M142 312 L122 318 M130 276 L112 278"/>
+        {/* Đuôi bay */}
+        <path d="M234 204 C204 192 172 186 140 190 C118 193 100 200 88 210"/>
+        <path d="M236 214 C208 210 180 210 154 216 C136 220 120 228 110 236"/>
+        <path d="M232 196 C206 182 178 172 148 168"/>
+        {/* ── Jockey cúi người ── */}
+        {/* Mũ bảo hiểm */}
+        <path d="M368 96 C368 84 378 76 390 76 C402 76 411 85 411 96 C411 102 407 107 401 109 L374 108 C370 106 368 101 368 96 Z"/>
+        {/* Lưng cúi + hông */}
+        <path d="M370 108 C352 118 340 132 336 148 C334 158 338 166 348 170"/>
+        {/* Tay vươn tới dây cương */}
+        <path d="M394 112 C414 122 436 134 456 148"/>
+        <path d="M388 122 C406 134 424 146 440 158"/>
+        {/* Đùi + chân gập trên bàn đạp */}
+        <path d="M348 170 C356 182 366 192 378 198 C372 208 364 214 354 216"/>
+        {/* Dây cương xuống mõm */}
+        <path d="M456 148 C476 152 496 158 512 168"/>
+        {/* Yên */}
+        <path d="M336 176 C348 184 364 188 380 186"/>
+      </g>
+      {/* Vệt gió tốc độ */}
+      <g stroke="#d4af37" strokeOpacity="0.35" strokeWidth="2" strokeLinecap="round">
+        <path d="M96 258 L170 256"/>
+        <path d="M70 292 L160 290"/>
+        <path d="M110 326 L190 322"/>
+      </g>
     </svg>
   );
 }
@@ -138,8 +195,10 @@ export function LoginPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <div className="mb-8 w-72">
-              <HorseSVG />
+            {/* Khung 576px; ảnh gốc trống bên phải + trống đáy nên: dịch phải 18%
+                để ngựa vào tâm chữ, margin âm kéo khối chữ lên SÁT ngựa hơn */}
+            <div className="w-[36rem] max-w-full -mb-14">
+              <HorseArt />
             </div>
             <div className="mb-10">
               <h1
