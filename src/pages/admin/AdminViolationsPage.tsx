@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle, ArrowUpCircle, Check, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ArrowUpCircle, Check, X, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -24,6 +24,7 @@ interface Violation {
 
 export function AdminViolationsPage() {
   const [tab, setTab] = useState<Tab>('pending');
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [violations, setViolations] = useState<Violation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,8 +70,15 @@ export function AdminViolationsPage() {
   const confirmedViolations = violations.filter(v => v.status === 'Confirmed');
   const rejectedViolations = violations.filter(v => v.status === 'Rejected');
 
-  // Phân trang cho tab đang mở
-  const activeList = tab === 'pending' ? pendingViolations : tab === 'confirmed' ? confirmedViolations : rejectedViolations;
+  // Phân trang cho tab đang mở (kèm tìm kiếm theo cuộc đua / loại vi phạm / ghi chú)
+  const activeList = (tab === 'pending' ? pendingViolations : tab === 'confirmed' ? confirmedViolations : rejectedViolations)
+    .filter(v => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (v.raceName ?? '').toLowerCase().includes(q)
+        || (v.type ?? '').toLowerCase().includes(q)
+        || (v.note ?? '').toLowerCase().includes(q);
+    });
   const { paged: pagedViolations, totalPages, total, page: safePage } = paginate(activeList, page, 10);
 
   return (
@@ -148,6 +156,15 @@ export function AdminViolationsPage() {
                 {label}
               </button>
             ))}
+            <div className="ml-auto mb-1 flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-1.5 w-56">
+              <Search size={13} className="text-muted shrink-0" />
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Tìm cuộc đua, loại vi phạm..."
+                className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+              />
+            </div>
           </div>
 
           {/* Loading */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Megaphone, CheckCircle, DollarSign, Zap, X } from 'lucide-react';
+import { Megaphone, CheckCircle, DollarSign, Zap, X, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -31,6 +31,7 @@ export function AdminResultsPage() {
 
   // Races
   const [races, setRaces] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
   const [loadingRaces, setLoadingRaces] = useState(true);
 
   // Tournaments
@@ -195,6 +196,17 @@ export function AdminResultsPage() {
             imagePosition="center center"
           />
 
+          {/* Tìm kiếm cuộc đua */}
+          <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border focus-within:border-gold/40 transition-colors rounded-lg px-3 py-2 w-64">
+            <Search size={14} className="text-muted shrink-0" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Tìm cuộc đua, giải đấu..."
+              className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+            />
+          </div>
+
           {/* Management Tools */}
           <div className="grid grid-cols-2 gap-4">
             {/* Prizes Setup */}
@@ -274,7 +286,10 @@ export function AdminResultsPage() {
             {loadingRaces ? (
               <LoadingSkeleton />
             ) : (() => {
-              const pendingRaces = races.filter(r => r.status === 'Completed' || r.status === 'PendingPublish');
+              const matchesSearch = (r: any) => !search.trim()
+                || (r.name ?? r.raceName ?? '').toLowerCase().includes(search.toLowerCase())
+                || (r.tournamentName ?? '').toLowerCase().includes(search.toLowerCase());
+              const pendingRaces = races.filter(r => (r.status === 'Completed' || r.status === 'PendingPublish') && matchesSearch(r));
               if (pendingRaces.length === 0) return (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
@@ -368,7 +383,10 @@ export function AdminResultsPage() {
             {loadingRaces ? (
               <LoadingSkeleton />
             ) : (() => {
-              const publishedRaces = races.filter(r => r.status === 'Published' || r.status === 'Finished');
+              const publishedRaces = races.filter(r => (r.status === 'Published' || r.status === 'Finished')
+                && (!search.trim()
+                  || (r.name ?? r.raceName ?? '').toLowerCase().includes(search.toLowerCase())
+                  || (r.tournamentName ?? '').toLowerCase().includes(search.toLowerCase())));
               if (publishedRaces.length === 0) return (
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />

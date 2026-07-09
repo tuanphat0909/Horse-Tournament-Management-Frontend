@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Calendar, User } from 'lucide-react';
+import { CheckCircle, XCircle, Calendar, User, Clock } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getContracts, respondContract } from '../../api/jockeyService';
 import { parseApiError } from '../../api/authService';
+import { formatUtcDateTime, parseUtcDate } from '../../utils/format';
+import { CountdownTimer } from '../../components/ui/CountdownTimer';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'pending' | 'accepted' | 'rejected';
@@ -46,7 +48,7 @@ export function JockeyInvitationsPage() {
     })();
   }, []);
 
-  async function handleRespond(id: number, status: 'Active' | 'Rejected') {
+  async function handleRespond(id: number, status: 'Accepted' | 'Rejected') {
     setRespondingId(id);
     try {
       await respondContract(id, status);
@@ -102,6 +104,8 @@ export function JockeyInvitationsPage() {
             <div className="space-y-4">
               {filtered.map((inv, i) => {
                 const bucket = bucketOf(inv.status);
+                const expiryDate = parseUtcDate(inv.invitationExpiredAt);
+                const isExpired = (inv.status ?? '').toLowerCase() === 'expired' || (expiryDate != null && new Date() > expiryDate);
                 return (
                   <motion.div key={inv.id ?? i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
                     className="glass-panel rounded-2xl p-6 border border-glass-border hover:border-gold/30 hover:bg-gold/[0.02] transition-all relative overflow-hidden group">
@@ -120,21 +124,37 @@ export function JockeyInvitationsPage() {
                           {(inv.startDate || inv.endDate) && (
                             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border"><Calendar size={11} className="text-gold/60" /> <span className="text-champagne font-semibold">Thời gian: {formatDate(inv.startDate)} → {formatDate(inv.endDate)}</span></span>
                           )}
+                          {inv.invitationExpiredAt && (
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-red-400">
+                              <Clock size={11} className="text-red-400" />
+                              <span className="font-semibold">Hạn phản hồi: {formatUtcDateTime(inv.invitationExpiredAt)}</span>
+                            </span>
+                          )}
                         </div>
                         {bucket === 'pending' && (
-                          <div className="flex items-center gap-3">
-                            <button
-                              disabled={respondingId === inv.id}
-                              onClick={() => handleRespond(inv.id, 'Active')}
-                              className="px-5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-50">
-                              <CheckCircle size={15} /> Nhận lời mời
-                            </button>
-                            <button
-                              disabled={respondingId === inv.id}
-                              onClick={() => handleRespond(inv.id, 'Rejected')}
-                              className="px-5 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-50">
-                              <XCircle size={15} /> Từ chối
-                            </button>
+                          <div className="flex flex-col gap-2">
+                            {!isExpired && inv.invitationExpiredAt && (
+                              <CountdownTimer target={inv.invitationExpiredAt} className="self-start" />
+                            )}
+                            {isExpired && (
+                              <span className="inline-flex items-center gap-1.5 text-xs text-red-400 font-semibold mb-1">
+                                <Clock size={12} /> Expired (Lời mời đã hết hạn)
+                              </span>
+                            )}
+                            <div className="flex items-center gap-3">
+                              <button
+                                disabled={respondingId === inv.id || isExpired}
+                                onClick={() => handleRespond(inv.id, 'Accepted')}
+                                className="px-5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <CheckCircle size={15} /> Nhận lời mời
+                              </button>
+                              <button
+                                disabled={respondingId === inv.id || isExpired}
+                                onClick={() => handleRespond(inv.id, 'Rejected')}
+                                className="px-5 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <XCircle size={15} /> Từ chối
+                              </button>
+                            </div>
                           </div>
                         )}
                         {bucket === 'accepted' && (

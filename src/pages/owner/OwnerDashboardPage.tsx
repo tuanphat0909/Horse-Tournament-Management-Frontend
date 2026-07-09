@@ -12,7 +12,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser, parseApiError } from '../../api/authService';
 import { getMyHorses } from '../../api/ownerService';
 import { getRaceSchedule } from '../../api/publicService';
-import { calculateAge } from '../../utils/format';
+import { calculateAge, formatDateTime } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -83,12 +83,12 @@ export function OwnerDashboardPage() {
           {/* ROW 2: STATS */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
-              { title: 'Ngựa của tôi', value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0] },
-              { title: 'Đang thi đấu', value: '—', trend: '+1', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1] },
-              { title: 'Sắp thi đấu', value: scheduleLoading ? '…' : String(schedule.length), trend: '3 ngày nữa', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2] },
-              { title: 'Tiền thưởng', value: '—', trend: '+18%', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3] },
+              { title: 'Ngựa của tôi', value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0], to: '/owner/horses' },
+              { title: 'Đang thi đấu', value: '—', trend: '+1', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1], to: '/owner/registrations' },
+              { title: 'Sắp thi đấu', value: scheduleLoading ? '…' : String(schedule.length), trend: '3 ngày nữa', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2], to: '/owner/tournaments' },
+              { title: 'Tiền thưởng', value: '—', trend: '+18%', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3], to: '/owner/results' },
             ].map((m, i) => (
-              <motion.div key={i} variants={child} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-default" style={{ height: '140px' }}>
+              <motion.div key={i} variants={child} onClick={() => navigate(m.to)} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer hover:border-gold/30 transition-colors" style={{ height: '140px' }}>
                 <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
                 <div className="relative z-10 flex items-start justify-between mb-3">
                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.bg} border border-white/[0.08] flex items-center justify-center ${m.color}`}>
@@ -129,7 +129,7 @@ export function OwnerDashboardPage() {
                   <h2 className="text-lg font-serif text-white whitespace-nowrap">Ngựa của tôi</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
-                <button className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">
+                <button onClick={() => navigate('/owner/horses')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">
                   Xem tất cả <ChevronRight size={14} />
                 </button>
               </div>
@@ -139,7 +139,7 @@ export function OwnerDashboardPage() {
                 ) : horses.length === 0 ? (
                   <div className="text-center py-10"><div className="text-4xl opacity-40 mb-3">🐴</div><div className="text-muted text-sm">Chưa có ngựa nào trong chuồng</div></div>
                 ) : horses.map((h, i) => (
-                  <div key={h.id ?? i} className="flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
+                  <div key={h.id ?? i} onClick={() => navigate('/owner/horses')} className="flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
                     <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center font-serif font-bold text-champagne text-sm shrink-0">{i + 1}</div>
                     <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-gold/15 to-navy/60 border border-glass-border ring-1 ring-gold/30 flex items-center justify-center shrink-0 text-xl">🐴</div>
                     <div className="flex-1 min-w-0">
@@ -174,7 +174,7 @@ export function OwnerDashboardPage() {
                   </div>
                   <h2 className="text-lg font-serif text-white whitespace-nowrap">Lịch thi đấu sắp tới</h2>
                 </div>
-                <button className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">
+                <button onClick={() => navigate('/owner/tournaments')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">
                   Xem lịch <ChevronRight size={14} />
                 </button>
               </div>
@@ -188,7 +188,7 @@ export function OwnerDashboardPage() {
                     <div className="text-muted text-sm">Chưa có dữ liệu</div>
                   </div>
                 ) : schedule.map((r, i) => (
-                  <div key={r.id ?? i} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
+                  <div key={r.id ?? i} onClick={() => navigate('/owner/tournaments')} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
                     <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-gradient-to-b from-gold/60 to-transparent" />
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-sm font-semibold text-white group-hover:text-champagne transition-colors">{r.name}</h3>
@@ -197,7 +197,7 @@ export function OwnerDashboardPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-[11px] text-muted">
-                      {r.raceDate && <span className="flex items-center gap-1"><Clock size={11} className="text-gold/60" /> {r.raceDate}</span>}
+                      {r.raceDate && <span className="flex items-center gap-1"><Clock size={11} className="text-gold/60" /> {formatDateTime(r.raceDate)}</span>}
                       {r.distanceMeter != null && <span className="flex items-center gap-1"><Flag size={11} className="text-gold/60" /> {r.distanceMeter}m</span>}
                     </div>
                   </div>

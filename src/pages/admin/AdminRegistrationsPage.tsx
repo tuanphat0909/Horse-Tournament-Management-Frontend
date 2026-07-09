@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Check, X, RefreshCw } from 'lucide-react';
+import { Search, Check, X, RefreshCw, ArrowUpDown } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -34,6 +34,7 @@ export function AdminRegistrationsPage() {
   const { showToast } = useNotifications();
   const [tab, setTab] = useState<TabType>('pending');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'horse'>('newest');
   const [page, setPage] = useState(1);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +101,16 @@ export function AdminRegistrationsPage() {
     return statusMatch && searchMatch;
   });
 
-  const { paged: pagedRegistrations, totalPages, total, page: safePage } = paginate(filteredRegistrations, page, 10);
+  const sortedRegistrations = [...filteredRegistrations].sort((a, b) => {
+    switch (sortBy) {
+      case 'horse': return String(a.horseName ?? '').localeCompare(String(b.horseName ?? ''), 'vi');
+      case 'oldest': return new Date(a.registeredAt ?? 0).getTime() - new Date(b.registeredAt ?? 0).getTime();
+      case 'newest':
+      default: return new Date(b.registeredAt ?? 0).getTime() - new Date(a.registeredAt ?? 0).getTime();
+    }
+  });
+
+  const { paged: pagedRegistrations, totalPages, total, page: safePage } = paginate(sortedRegistrations, page, 10);
 
   const getCount = (t: TabType) => {
     const statusVal = TAB_CONFIG[t].statusValue.toLowerCase();
@@ -158,6 +168,19 @@ export function AdminRegistrationsPage() {
                   placeholder="Tìm ngựa, chủ ngựa..."
                   className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <ArrowUpDown size={14} className="text-muted" />
+                <select
+                  value={sortBy}
+                  onChange={e => { setSortBy(e.target.value as typeof sortBy); setPage(1); }}
+                  className="bg-navy/50 border border-glass-border rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-gold/40 transition-colors"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="horse">Tên ngựa A-Z</option>
+                </select>
               </div>
             </div>
           </div>

@@ -14,5 +14,6 @@ export const getMyProposals = () => api.get('/jockey-contracts/my-proposals');
 export const cancelJockeyContract = (id) => api.delete(`/jockey-contracts/${id}`);
 
 export const getOwnerResults = () => api.get('/owner/results');
+export const checkHorseBusy = (horseId, tournamentId) => api.get(`/horses/${horseId}/check-busy/${tournamentId}`);
 export const checkJockeyBusy = (jockeyId, tournamentId) => api.get(`/jockeys/${jockeyId}/check-busy/${tournamentId}`);
 

@@ -69,6 +69,17 @@ export function formatUtcDateTime(value) {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
+// Parse chuỗi datetime từ BE (UTC nhưng thường thiếu 'Z') thành Date đúng múi giờ
+export function parseUtcDate(value) {
+  if (!value) return null;
+  let s = value;
+  if (typeof s === 'string' && !s.endsWith('Z') && !s.includes('+')) {
+    s = s + 'Z';
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export function formatRaceCountdown(targetDate) {
   const diff = new Date(targetDate) - Date.now();
   if (diff <= 0) return 'Ended';

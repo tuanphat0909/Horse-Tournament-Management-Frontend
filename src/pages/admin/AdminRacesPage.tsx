@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Flag, UserCheck, ListOrdered, Trash2, Calendar, ChevronDown, ChevronUp, Trophy, Loader, Eye, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Flag, UserCheck, ListOrdered, Trash2, Calendar, ChevronDown, ChevronUp, Trophy, Loader, Eye, X, CheckCircle2, AlertCircle, ArrowUpDown, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -14,6 +14,7 @@ import { useNotifications } from '../../context/NotificationContext';
 
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { CountdownTimer } from '../../components/ui/CountdownTimer';
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
@@ -62,6 +63,15 @@ export function AdminRacesPage() {
   // Thu gọn/mở rộng từng giải đấu (mặc định thu gọn — bấm mũi tên để đổ detail vòng/cuộc đua)
   const [openTournaments, setOpenTournaments] = useState<Set<number>>(new Set());
   const [tourPage, setTourPage] = useState(1);
+
+  // Sắp xếp danh sách giải đấu
+  type SortKey = 'newest' | 'oldest' | 'name' | 'status';
+  const [sortBy, setSortBy] = useState<SortKey>('newest');
+
+  // Lọc theo trạng thái giải đấu + tìm kiếm theo tên
+  type StatusFilter = 'all' | 'active' | 'upcoming' | 'completed';
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [search, setSearch] = useState('');
 
   function toggleTournament(id: number) {
     setOpenTournaments(prev => {
@@ -493,6 +503,39 @@ export function AdminRacesPage() {
     };
   });
 
+  // Đếm số giải theo trạng thái (cho thanh filter)
+  const statsCounts: Record<StatusFilter, number> = {
+    all: groupedTournaments.length,
+    active: groupedTournaments.filter(t => t.status === 'Active').length,
+    upcoming: groupedTournaments.filter(t => t.status === 'Upcoming').length,
+    completed: groupedTournaments.filter(t => t.status === 'Completed').length,
+  };
+  const FILTER_LABELS: Record<StatusFilter, string> = {
+    all: 'Tất cả', active: 'Đang diễn ra', upcoming: 'Sắp diễn ra', completed: 'Đã kết thúc',
+  };
+
+  const filteredTournaments = groupedTournaments.filter(t => {
+    const matchesSearch = (t.name ?? '').toLowerCase().includes(search.toLowerCase());
+    if (statusFilter === 'all') return matchesSearch;
+    return matchesSearch && (t.status ?? '').toLowerCase() === statusFilter;
+  });
+
+  // Sắp xếp theo lựa chọn: mới nhất / cũ nhất (theo ngày bắt đầu), tên A-Z, trạng thái
+  const STATUS_ORDER: Record<string, number> = { Active: 0, Upcoming: 1, Completed: 2 };
+  const sortedTournaments = [...filteredTournaments].sort((a, b) => {
+    switch (sortBy) {
+      case 'oldest':
+        return new Date(a.startDate ?? 0).getTime() - new Date(b.startDate ?? 0).getTime();
+      case 'name':
+        return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
+      case 'status':
+        return (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
+      case 'newest':
+      default:
+        return new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime();
+    }
+  });
+
   const activeRefereeOptions = refereeOptions.filter((ref: any) =>
     String(ref.status ?? '').toLowerCase() === 'active'
   );
@@ -541,8 +584,57 @@ export function AdminRacesPage() {
             </div>
           )}
 
-          {!loadingData && !fetchError && groupedTournaments.length > 0 && (() => {
-            const { paged: pagedTournaments, totalPages: tourTotalPages, total: tourTotal, page: tourSafePage } = paginate(groupedTournaments, tourPage, 5);
+          {!loadingData && !fetchError && groupedTournaments.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {(['all', 'active', 'upcoming', 'completed'] as StatusFilter[]).map(s => (
+                <button
+                  key={s}
+                  onClick={() => { setStatusFilter(s); setTourPage(1); }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                    statusFilter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  {FILTER_LABELS[s]}
+                  <span className="ml-2 text-[11px] font-bold text-current opacity-60">{statsCounts[s]}</span>
+                </button>
+              ))}
+              <div className="ml-auto flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-56">
+                <Search size={14} className="text-muted shrink-0" />
+                <input
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setTourPage(1); }}
+                  placeholder="Tìm giải đấu..."
+                  className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <ArrowUpDown size={14} className="text-muted" />
+                <span className="text-xs text-muted font-medium">Sắp xếp:</span>
+                <select
+                  value={sortBy}
+                  onChange={e => { setSortBy(e.target.value as SortKey); setTourPage(1); }}
+                  className="bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-gold/40 transition-colors"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="name">Tên A-Z</option>
+                  <option value="status">Trạng thái (Đang diễn ra trước)</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {!loadingData && !fetchError && groupedTournaments.length > 0 && sortedTournaments.length === 0 && (
+            <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="text-4xl opacity-40 mb-3">🏆</div>
+              <div className="text-muted text-sm">Không tìm thấy giải đấu phù hợp</div>
+            </div>
+          )}
+
+          {!loadingData && !fetchError && sortedTournaments.length > 0 && (() => {
+            const { paged: pagedTournaments, totalPages: tourTotalPages, total: tourTotal, page: tourSafePage } = paginate(sortedTournaments, tourPage, 5);
             return (
             <div className="space-y-6">
               {pagedTournaments.map(t => {
@@ -652,6 +744,9 @@ export function AdminRacesPage() {
                       <div className="min-w-0">
                         <div className="text-sm font-bold">{t.genHint.label}</div>
                         {t.genHint.detail && <div className="text-xs opacity-90 mt-0.5">{t.genHint.detail}</div>}
+                        {t.genHint.tone === 'wait' && t.registrationEndDate && (
+                          <div className="mt-2"><CountdownTimer target={t.registrationEndDate} utc={false} /></div>
+                        )}
                       </div>
                     </div>
 
@@ -697,11 +792,11 @@ export function AdminRacesPage() {
                                           🏁 {race.name}
                                         </h4>
                                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                                          race.status === 'Finished' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                          (race.status === 'Finished' || race.status === 'Completed') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                                           race.status === 'Live' ? 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse' :
                                           'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                         }`}>
-                                          {race.status === 'Finished' ? 'Đã hoàn thành' : race.status === 'Live' ? 'Đang diễn ra' : 'Đã lên lịch'}
+                                          {(race.status === 'Finished' || race.status === 'Completed') ? 'Đã hoàn thành' : race.status === 'Live' ? 'Đang diễn ra' : 'Đã lên lịch'}
                                         </span>
                                       </div>
                                       <div className="text-right">

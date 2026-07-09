@@ -1,29 +1,35 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, CheckCircle, XCircle, Clock, Users, Calendar } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Clock, Users, Calendar, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getMyProposals, createJockeyContract, getMyHorses, cancelJockeyContract, getMyRegistrations, checkJockeyBusy } from '../../api/ownerService';
+import { getMyProposals, createJockeyContract, getMyHorses, cancelJockeyContract, getMyRegistrations, checkJockeyBusy, checkHorseBusy } from '../../api/ownerService';
 import { getJockeyRankings, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
+import { formatUtcDateTime } from '../../utils/format';
+import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { useNotifications } from '../../context/NotificationContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const STATUS_CFG: Record<string, { label: string; color: string; Icon: typeof Clock }> = {
   Active:   { label: 'Đã xác nhận',  color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', Icon: CheckCircle },
   active:   { label: 'Đã xác nhận',  color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', Icon: CheckCircle },
+  Accepted: { label: 'Đã xác nhận',  color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', Icon: CheckCircle },
+  accepted: { label: 'Đã xác nhận',  color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', Icon: CheckCircle },
   Pending:  { label: 'Chờ phản hồi', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',  Icon: Clock },
   pending:  { label: 'Chờ phản hồi', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',  Icon: Clock },
   Rejected: { label: 'Từ chối',      color: 'text-red-400 bg-red-500/10 border-red-500/20',            Icon: XCircle },
   rejected: { label: 'Từ chối',      color: 'text-red-400 bg-red-500/10 border-red-500/20',            Icon: XCircle },
   Cancelled: { label: 'Đã hủy',      color: 'text-muted bg-white/5 border-glass-border',               Icon: XCircle },
   cancelled: { label: 'Đã hủy',      color: 'text-muted bg-white/5 border-glass-border',               Icon: XCircle },
+  Expired:  { label: 'Hết hạn',      color: 'text-red-400 bg-red-500/10 border-red-500/20',            Icon: XCircle },
+  expired:  { label: 'Hết hạn',      color: 'text-red-400 bg-red-500/10 border-red-500/20',            Icon: XCircle },
 };
 const DEFAULT_CFG = { label: 'Không rõ', color: 'text-muted bg-white/5 border-glass-border', Icon: Clock };
 
-const INIT_FORM = { horseId: '', tournamentId: '', jockeyId: '', startDate: '', endDate: '' };
+const INIT_FORM = { horseId: '', tournamentId: '', jockeyId: '', startDate: '', endDate: '', expirationHours: '24' };
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
@@ -44,6 +50,19 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString('vi-VN');
 };
 
+type ContractFilter = 'all' | 'pending' | 'accepted' | 'rejected' | 'expired';
+const CONTRACT_FILTER_LABELS: Record<ContractFilter, string> = {
+  all: 'Tất cả', pending: 'Chờ phản hồi', accepted: 'Đã xác nhận', rejected: 'Từ chối', expired: 'Hết hạn',
+};
+// Gom status thô của BE về nhóm filter
+function contractBucket(status: string): ContractFilter {
+  const s = (status ?? '').toLowerCase();
+  if (s === 'active' || s === 'accepted') return 'accepted';
+  if (s === 'rejected' || s === 'declined' || s === 'cancelled') return 'rejected';
+  if (s === 'expired') return 'expired';
+  return 'pending';
+}
+
 export function OwnerJockeysPage() {
   const { showToast } = useNotifications();
   const [proposals, setProposals] = useState<any[]>([]);
@@ -53,6 +72,8 @@ export function OwnerJockeysPage() {
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [contractFilter, setContractFilter] = useState<ContractFilter>('all');
+  const [search, setSearch] = useState('');
   const [showInvite, setShowInvite] = useState(false);
   const [form, setForm] = useState(INIT_FORM);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -92,7 +113,7 @@ export function OwnerJockeysPage() {
 
   async function handleInvite() {
     setSubmitError(''); setSubmitSuccess('');
-    if (!form.horseId || !form.tournamentId || !form.jockeyId || !form.startDate || !form.endDate) {
+    if (!form.horseId || !form.tournamentId || !form.jockeyId || !form.startDate || !form.endDate || !form.expirationHours) {
       setSubmitError('Vui lòng điền đầy đủ thông tin.');
       return;
     }
@@ -114,12 +135,14 @@ export function OwnerJockeysPage() {
     }
     setSubmitLoading(true);
     try {
+      const expirationDate = new Date(Date.now() + Number(form.expirationHours) * 60 * 60 * 1000).toISOString();
       await createJockeyContract({
         horseId: Number(form.horseId),
         tournamentId: Number(form.tournamentId),
         jockeyId: Number(form.jockeyId),
         startDate: form.startDate,
         endDate: form.endDate,
+        invitationExpiredAt: expirationDate,
       });
       closeInvite();
       showToast('Thành công', 'Gửi lời mời Jockey thành công!', 'success');
@@ -143,6 +166,7 @@ export function OwnerJockeysPage() {
   }
 
   const [jockeyBusyError, setJockeyBusyError] = useState('');
+  const [horseBusyError, setHorseBusyError] = useState('');
 
   useEffect(() => {
     if (form.jockeyId && form.tournamentId) {
@@ -161,12 +185,46 @@ export function OwnerJockeysPage() {
     }
   }, [form.jockeyId, form.tournamentId]);
 
+  useEffect(() => {
+    if (form.horseId && form.tournamentId) {
+      setHorseBusyError('');
+      checkHorseBusy(Number(form.horseId), Number(form.tournamentId))
+        .then((res: any) => {
+          if (res?.result?.isBusy || res?.isBusy) {
+            setHorseBusyError('This horse already has a pending or active contract in this tournament.');
+          }
+        })
+        .catch(() => {
+          setHorseBusyError('');
+        });
+    } else {
+      setHorseBusyError('');
+    }
+  }, [form.horseId, form.tournamentId]);
+
   function closeInvite() {
     setShowInvite(false);
     setSubmitError(''); setSubmitSuccess('');
     setJockeyBusyError('');
+    setHorseBusyError('');
     setForm(INIT_FORM);
   }
+
+  const filterCounts: Record<ContractFilter, number> = {
+    all: proposals.length,
+    pending: proposals.filter(p => contractBucket(p.status) === 'pending').length,
+    accepted: proposals.filter(p => contractBucket(p.status) === 'accepted').length,
+    rejected: proposals.filter(p => contractBucket(p.status) === 'rejected').length,
+    expired: proposals.filter(p => contractBucket(p.status) === 'expired').length,
+  };
+
+  const visibleProposals = proposals.filter(p => {
+    if (contractFilter !== 'all' && contractBucket(p.status) !== contractFilter) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (p.jockeyName ?? '').toLowerCase().includes(q)
+      || (p.horseName ?? '').toLowerCase().includes(q);
+  });
 
   const selectedInviteTournament = tournaments.find((t: any) => String(t.tournamentId) === String(form.tournamentId));
 
@@ -198,6 +256,30 @@ export function OwnerJockeysPage() {
 
           {error && <div className="glass-panel rounded-xl p-5 text-red-400 text-sm border border-red-500/20">{error}</div>}
 
+          <div className="flex items-center gap-2 flex-wrap">
+            {(['all', 'pending', 'accepted', 'rejected', 'expired'] as ContractFilter[]).map(s => (
+              <button
+                key={s}
+                onClick={() => setContractFilter(s)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                  contractFilter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                {CONTRACT_FILTER_LABELS[s]}
+                <span className="ml-2 text-[11px] font-bold text-current opacity-60">{filterCounts[s]}</span>
+              </button>
+            ))}
+            <div className="ml-auto flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-56">
+              <Search size={14} className="text-muted shrink-0" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Tìm jockey, ngựa..."
+                className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+              />
+            </div>
+          </div>
+
           <div>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
@@ -210,7 +292,7 @@ export function OwnerJockeysPage() {
               <LoadingSkeleton />
             ) : (
               <div className="space-y-3">
-                {proposals.map((p, i) => {
+                {visibleProposals.map((p, i) => {
                   const cfg = STATUS_CFG[p.status] ?? DEFAULT_CFG;
                   const { Icon } = cfg;
                   return (
@@ -228,6 +310,8 @@ export function OwnerJockeysPage() {
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne">🐴 {p.horseName ?? `Ngựa #${p.horseId}`}</span>
                           {p.startDate && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted inline-flex items-center gap-1"><Calendar size={9} className="text-gold/60" /> Từ: {formatDate(p.startDate)}</span>}
                           {p.endDate && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted inline-flex items-center gap-1"><Calendar size={9} className="text-gold/60" /> Đến: {formatDate(p.endDate)}</span>}
+                          {p.invitationExpiredAt && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-red-400 inline-flex items-center gap-1"><Clock size={9} className="text-red-400" /> Hạn: {formatUtcDateTime(p.invitationExpiredAt)}</span>}
+                          {p.invitationExpiredAt && String(p.status ?? '').toLowerCase() === 'pending' && <CountdownTimer target={p.invitationExpiredAt} />}
                         </div>
                       </div>
                       <div className="relative z-10 flex items-center gap-2 shrink-0">
@@ -246,7 +330,7 @@ export function OwnerJockeysPage() {
                     </motion.div>
                   );
                 })}
-                {proposals.length === 0 && (
+                {visibleProposals.length === 0 && (
                   <div className="glass-panel rounded-xl p-12 text-center text-muted text-sm relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
                     <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
@@ -329,6 +413,11 @@ export function OwnerJockeysPage() {
                     Thời gian giải: {formatDate(selectedInviteTournament.startDate)} - {formatDate(selectedInviteTournament.endDate)}
                   </p>
                 )}
+                {horseBusyError && (
+                  <p className="text-[11px] text-red-400 mt-1.5 font-medium">
+                    {horseBusyError}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -340,12 +429,20 @@ export function OwnerJockeysPage() {
                   <input type="date" value={form.endDate} disabled className={`${INPUT} opacity-60 cursor-not-allowed`} style={{colorScheme:'dark'}} />
                 </div>
               </div>
+              <div>
+                <label className={LABEL}>Thời hạn phản hồi *</label>
+                <select value={form.expirationHours} onChange={e => setForm(p => ({...p, expirationHours: e.target.value}))} className={INPUT}>
+                  <option value="24">24 giờ</option>
+                  <option value="48">48 giờ</option>
+                  <option value="72">72 giờ</option>
+                </select>
+              </div>
               {submitError &&<div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{submitError}</div>}
               {submitSuccess && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{submitSuccess}</div>}
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={closeInvite} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
-              <button onClick={handleInvite} disabled={submitLoading || !!jockeyBusyError} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60">
+              <button onClick={handleInvite} disabled={submitLoading || !!jockeyBusyError || !!horseBusyError} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60">
                 {submitLoading ? 'Đang gửi…' : 'Gửi lời mời'}
               </button>
             </div>

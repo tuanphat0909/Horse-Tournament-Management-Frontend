@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, ShieldCheck, Edit2, Trash2, Eye, Search } from 'lucide-react';
+import { Plus, ShieldCheck, Edit2, Trash2, Eye, Search, ArrowUpDown } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -32,6 +32,7 @@ export function OwnerHorsesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'ageAsc' | 'ageDesc'>('name');
 
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState(INIT_CREATE);
@@ -147,7 +148,16 @@ export function OwnerHorsesPage() {
     }
   }
 
-  const filtered = horses.filter(h => (h.name ?? '').toLowerCase().includes(search.toLowerCase()));
+  const filtered = horses
+    .filter(h => (h.name ?? '').toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'ageAsc': return new Date(b.age ?? 0).getTime() - new Date(a.age ?? 0).getTime(); // sinh sau = trẻ hơn
+        case 'ageDesc': return new Date(a.age ?? 0).getTime() - new Date(b.age ?? 0).getTime();
+        case 'name':
+        default: return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
+      }
+    });
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
@@ -169,9 +179,24 @@ export function OwnerHorsesPage() {
             }
           />
 
-          <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border focus-within:border-gold/40 rounded-lg px-3 py-2 w-72 transition-colors">
-            <Search size={15} className="text-gold/60 shrink-0" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm tên ngựa..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border focus-within:border-gold/40 rounded-lg px-3 py-2 w-72 transition-colors">
+              <Search size={15} className="text-gold/60 shrink-0" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm tên ngựa..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <ArrowUpDown size={14} className="text-muted" />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                className="bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-gold/40 transition-colors"
+                style={{ colorScheme: 'dark' }}
+              >
+                <option value="name">Tên A-Z</option>
+                <option value="ageAsc">Trẻ nhất</option>
+                <option value="ageDesc">Lớn tuổi nhất</option>
+              </select>
+            </div>
           </div>
 
           {loading && <LoadingSkeleton />}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle, Trash2, Calendar, ShieldAlert, Flag, ArrowRight } from 'lucide-react';
+import { AlertCircle, CheckCircle, Trash2, Calendar, ShieldAlert, Flag, ArrowRight, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
@@ -25,6 +25,7 @@ export function AdminRefereesPage() {
   const { showToast } = useNotifications();
   const [referees, setReferees] = useState<any[]>([]);
   const [races, setRaces] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -89,6 +90,14 @@ export function AdminRefereesPage() {
   const unassignedRaces = races.filter(r => !r.referees || r.referees.length === 0);
   const assignedRaces = races.filter(r => r.referees && r.referees.length > 0);
 
+  const filteredReferees = referees.filter(r => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (r.fullName ?? '').toLowerCase().includes(q)
+      || (r.email ?? '').toLowerCase().includes(q)
+      || (r.licenseNumber ?? '').toLowerCase().includes(q);
+  });
+
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
@@ -123,15 +132,26 @@ export function AdminRefereesPage() {
                 <div className="p-5 border-b border-glass-border flex items-center gap-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
                   <h2 className="text-lg font-serif text-white font-semibold">Danh Sách Trọng Tài</h2>
                   <span className="ml-auto px-2.5 py-0.5 rounded-full bg-gold/10 text-gold text-xs font-bold border border-gold/20">
-                    {referees.length}
+                    {filteredReferees.length}
                   </span>
                 </div>
+                <div className="px-5 pt-4">
+                  <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2">
+                    <Search size={13} className="text-muted shrink-0" />
+                    <input
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      placeholder="Tìm trọng tài theo tên, email, giấy phép..."
+                      className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+                    />
+                  </div>
+                </div>
                 <div className="p-5">
-                  {referees.length === 0 ? (
-                    <div className="text-center py-12 text-muted">Không có trọng tài nào trong hệ thống.</div>
+                  {filteredReferees.length === 0 ? (
+                    <div className="text-center py-12 text-muted">{search ? 'Không tìm thấy trọng tài phù hợp.' : 'Không có trọng tài nào trong hệ thống.'}</div>
                   ) : (
                     <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
-                      {referees.map((r) => {
+                      {filteredReferees.map((r) => {
                         const assigns = assignmentsByReferee[r.refereeId] ?? [];
                         return (
                           <div

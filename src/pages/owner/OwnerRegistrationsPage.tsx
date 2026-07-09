@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, CheckCircle, XCircle, Calendar, Trophy } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Calendar, Trophy, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -34,6 +34,7 @@ export function OwnerRegistrationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<Tab>('pending');
+  const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ horseId: '', tournamentId: '' });
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -98,7 +99,13 @@ export function OwnerRegistrationsPage() {
     setForm({ horseId: '', tournamentId: '' });
   }
 
-  const filtered = registrations.filter(r => normalizeStatus(r.status) === tab);
+  const filtered = registrations.filter(r => {
+    if (normalizeStatus(r.status) !== tab) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (r.horseName ?? '').toLowerCase().includes(q)
+      || (r.tournamentName ?? '').toLowerCase().includes(q);
+  });
   const counts = {
     pending:  registrations.filter(r => normalizeStatus(r.status) === 'pending').length,
     approved: registrations.filter(r => normalizeStatus(r.status) === 'approved').length,
@@ -147,6 +154,15 @@ export function OwnerRegistrationsPage() {
                 </span>
               </button>
             ))}
+            <div className="ml-auto mb-1 flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-1.5 w-56">
+              <Search size={13} className="text-muted shrink-0" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Tìm ngựa, giải đấu..."
+                className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+              />
+            </div>
           </div>
 
           {loading ? (

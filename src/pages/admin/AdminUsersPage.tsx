@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Plus, Users, Eye, EyeOff } from 'lucide-react';
+import { Search, Plus, Users, Eye, EyeOff, ArrowUpDown } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -27,6 +27,7 @@ export function AdminUsersPage() {
   const { showToast } = useNotifications();
   const [filter, setFilter] = useState<RoleFilter>('all');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
   const [page, setPage] = useState(1);
 
   const [showModal, setShowModal] = useState(false);
@@ -149,7 +150,16 @@ export function AdminUsersPage() {
     return true;
   });
 
-  const { paged: pagedAccounts, totalPages, total, page: safePage } = paginate(filteredAccounts, page, 10);
+  const sortedAccounts = [...filteredAccounts].sort((a, b) => {
+    switch (sortBy) {
+      case 'name': return String(a.fullName ?? '').localeCompare(String(b.fullName ?? ''), 'vi');
+      case 'oldest': return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
+      case 'newest':
+      default: return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+    }
+  });
+
+  const { paged: pagedAccounts, totalPages, total, page: safePage } = paginate(sortedAccounts, page, 10);
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -209,6 +219,19 @@ export function AdminUsersPage() {
                 />
               </div>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-muted"><span className="text-champagne font-semibold">{filteredAccounts.length}</span> kết quả</span>
+              <div className="ml-auto flex items-center gap-2">
+                <ArrowUpDown size={14} className="text-muted" />
+                <select
+                  value={sortBy}
+                  onChange={e => { setSortBy(e.target.value as typeof sortBy); setPage(1); }}
+                  className="bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-gold/40 transition-colors"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="name">Tên A-Z</option>
+                </select>
+              </div>
             </div>
 
             {loadingAccounts ? (

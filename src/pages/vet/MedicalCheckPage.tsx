@@ -66,39 +66,35 @@ export function MedicalCheckPage() {
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Tải CẢ HAI danh sách cùng lúc để số đếm trên tab luôn đúng
+  // (trước đây chỉ tải tab đang mở → tab kia hiển thị 0 cho tới khi bấm vào)
   const loadData = () => {
     setLoading(true);
     setError('');
-    
-    if (activeTab === 'pending') {
-      getPendingRegistrations()
-        .then(res => {
-          if (res && res.result) {
-            setPendingList(res.result);
-          }
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
+
+    Promise.allSettled([getPendingRegistrations(), getMedicalChecks()])
+      .then(([pendingRes, historyRes]) => {
+        if (pendingRes.status === 'fulfilled' && pendingRes.value?.result) {
+          setPendingList(pendingRes.value.result);
+        }
+        if (historyRes.status === 'fulfilled' && historyRes.value?.result) {
+          setHistoryList(historyRes.value.result);
+        }
+        if (pendingRes.status === 'rejected' && historyRes.status === 'rejected') {
+          console.error(pendingRes.reason, historyRes.reason);
+          setError('Không thể tải dữ liệu kiểm tra sức khỏe.');
+        } else if (pendingRes.status === 'rejected') {
+          console.error(pendingRes.reason);
           setError('Không thể tải danh sách ngựa cần kiểm tra.');
-          setLoading(false);
-        });
-    } else {
-      getMedicalChecks()
-        .then(res => {
-          if (res && res.result) {
-            setHistoryList(res.result);
-          }
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
+        } else if (historyRes.status === 'rejected') {
+          console.error(historyRes.reason);
           setError('Không thể tải lịch sử kiểm tra.');
-          setLoading(false);
-        });
-    }
+        }
+        setLoading(false);
+      });
   };
 
   const handleOpenCreateModal = (pc: PendingCheck) => {

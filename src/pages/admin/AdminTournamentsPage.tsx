@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Loader, Plus, Search, Shuffle, Trophy, Clock } from 'lucide-react';
+import { Loader, Plus, Search, Shuffle, Trophy, Clock, ArrowUpDown } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -9,6 +9,7 @@ import { createTournament, generateTournamentRaces, generateFinalRace, closeTour
 import { getRaceSchedule, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { formatDateTime } from '../../utils/format';
+import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
 
@@ -42,6 +43,10 @@ export function AdminTournamentsPage() {
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  // Sắp xếp danh sách giải đấu
+  type SortKey = 'newest' | 'oldest' | 'name' | 'status';
+  const [sortBy, setSortBy] = useState<SortKey>('newest');
 
   const [form, setForm] = useState(INIT_FORM);
   const [loading, setLoading] = useState(false);
@@ -237,6 +242,22 @@ export function AdminTournamentsPage() {
     return matchesSearch;
   });
 
+  // Sắp xếp theo lựa chọn: mới nhất / cũ nhất (theo ngày bắt đầu), tên A-Z, trạng thái
+  const STATUS_ORDER: Record<string, number> = { Active: 0, Upcoming: 1, Completed: 2 };
+  const sortedTournaments = [...filteredTournaments].sort((a, b) => {
+    switch (sortBy) {
+      case 'oldest':
+        return new Date(a.startDate ?? 0).getTime() - new Date(b.startDate ?? 0).getTime();
+      case 'name':
+        return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
+      case 'status':
+        return (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
+      case 'newest':
+      default:
+        return new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime();
+    }
+  });
+
   function getTournamentRaceState(tour: any) {
     const tournamentRaces = races.filter(r => r.tournamentId === tour.tournamentId);
     const rounds = tour.rounds ?? [];
@@ -323,7 +344,21 @@ export function AdminTournamentsPage() {
             ))}
             <div className="ml-auto flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-64">
               <Search size={14} className="text-muted shrink-0" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("Tìm giải đấu...")} className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("Tìm giải đấu...")} className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none focus:outline-none focus:ring-0 border-0 w-full" style={{ boxShadow: 'none' }} />
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowUpDown size={14} className="text-muted" />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as SortKey)}
+                className="bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-gold/40 transition-colors"
+                style={{ colorScheme: 'dark' }}
+              >
+                <option value="newest">Mới nhất</option>
+                <option value="oldest">Cũ nhất</option>
+                <option value="name">Tên A-Z</option>
+                <option value="status">Trạng thái</option>
+              </select>
             </div>
           </div>
 
@@ -344,7 +379,7 @@ export function AdminTournamentsPage() {
           ) : (
             <div className="overflow-y-auto pr-1.5 -mr-1.5 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 330px)' }}>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {filteredTournaments.map((tour, i) => {
+              {sortedTournaments.map((tour, i) => {
                 const s = tour.status?.toLowerCase() ?? 'upcoming';
                 const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
                 const raceState = getTournamentRaceState(tour);
@@ -358,10 +393,13 @@ export function AdminTournamentsPage() {
                     className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left"
                   >
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-start gap-2 flex-wrap mb-3">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                       </span>
+                      {tour.registrationEndDate && (
+                        <CountdownTimer target={tour.registrationEndDate} utc={false} hideWhenExpired />
+                      )}
                     </div>
                     <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-1 line-clamp-1">{tour.name}</h3>
                     <p className="text-xs text-muted/80 line-clamp-2 min-h-[32px] mb-3">{tour.description || t("Chưa có mô tả chi tiết.")}</p>

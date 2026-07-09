@@ -490,8 +490,9 @@ h1, h2, h3, h4, h5, h6 {
   outline-offset: 2px;
   border-radius: 6px;
 }
+/* Form fields đã có border focus riêng (focus:border-gold/40) — bỏ ring vàng để không bị viền đôi */
 input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline-offset: 0;
+  outline: none;
 }
 
 /* 2. Phản hồi vật lý khi bấm: mọi nút "lún" nhẹ như bấm thật */

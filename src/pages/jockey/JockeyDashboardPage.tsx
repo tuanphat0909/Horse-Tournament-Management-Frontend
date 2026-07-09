@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { getContracts, respondContract, getJockeyStats, getAssignedHorses } from '../../api/jockeyService';
 import { getCurrentUser, parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
+import { CountdownTimer } from '../../components/ui/CountdownTimer';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -53,13 +54,13 @@ export function JockeyDashboardPage() {
       .catch(console.error);
   }, []);
 
-  async function handleRespond(id: number, status: 'Active' | 'Rejected') {
+  async function handleRespond(id: number, status: 'Accepted' | 'Rejected') {
     setRespondingId(id);
     try {
       await respondContract(id, status);
       setContracts(prev => prev.map(c => c.id === id ? {...c, status} : c));
       showToast(
-        status === 'Active' ? 'Chấp nhận hợp đồng thành công' : 'Từ chối hợp đồng thành công',
+        status === 'Accepted' ? 'Chấp nhận hợp đồng thành công' : 'Từ chối hợp đồng thành công',
         `Hợp đồng #${id} đã được xử lý.`,
         'success'
       );
@@ -174,11 +175,16 @@ export function JockeyDashboardPage() {
                           Chủ: {c.ownerName ?? `Owner #${c.ownerId ?? '—'}`}
                           {c.startDate ? ` • ${c.startDate}` : ''}
                         </div>
+                        {c.invitationExpiredAt && (
+                          <div className="mt-1.5">
+                            <CountdownTimer target={c.invitationExpiredAt} />
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2 shrink-0">
                         <button
                           disabled={respondingId === c.id}
-                          onClick={() => handleRespond(c.id, 'Active')}
+                          onClick={() => handleRespond(c.id, 'Accepted')}
                           className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors disabled:opacity-50">
                           Nhận
                         </button>

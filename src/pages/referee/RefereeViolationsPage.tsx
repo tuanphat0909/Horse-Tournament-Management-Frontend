@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { AlertTriangle, Plus, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -17,6 +17,7 @@ const INIT_FORM = { raceId: '', description: '', type: 'warning', horseOrJockey:
 
 export function RefereeViolationsPage() {
   const [tab, setTab] = useState<Tab>('active');
+  const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [editingVio, setEditingVio] = useState<any>(null);
   const [editPenalty, setEditPenalty] = useState('');
@@ -113,7 +114,14 @@ export function RefereeViolationsPage() {
     }
   }
 
-  const { paged: pagedViolations, totalPages: vioTotalPages, total: vioTotal, page: vioSafePage } = paginate(violations, page, 9);
+  const visibleViolations = violations.filter((v: any) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (v.raceName ?? '').toLowerCase().includes(q)
+      || (v.type ?? '').toLowerCase().includes(q)
+      || (v.note ?? v.description ?? '').toLowerCase().includes(q);
+  });
+  const { paged: pagedViolations, totalPages: vioTotalPages, total: vioTotal, page: vioSafePage } = paginate(visibleViolations, page, 9);
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
@@ -166,11 +174,20 @@ export function RefereeViolationsPage() {
                 {label}
               </button>
             ))}
+            <div className="ml-auto mb-1 flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-1.5 w-56">
+              <Search size={13} className="text-muted shrink-0" />
+              <input
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Tìm cuộc đua, loại vi phạm..."
+                className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
+              />
+            </div>
           </div>
 
           {loading ? (
             <LoadingSkeleton />
-          ) : violations.length === 0 ? (
+          ) : visibleViolations.length === 0 ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="text-4xl opacity-40 mb-3">⚠️</div>
