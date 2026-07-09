@@ -342,7 +342,8 @@ export function AdminTournamentsPage() {
               <div className="text-muted text-sm">{t("Chưa có dữ liệu")}</div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="overflow-y-auto pr-1.5 -mr-1.5 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 330px)' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {filteredTournaments.map((tour, i) => {
                 const s = tour.status?.toLowerCase() ?? 'upcoming';
                 const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
@@ -455,6 +456,7 @@ export function AdminTournamentsPage() {
                   </motion.div>
                 );
               })}
+              </div>
             </div>
           )}
 

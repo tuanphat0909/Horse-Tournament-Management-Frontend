@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { BrandLogo } from '../ui/BrandLogo';
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -26,11 +27,7 @@ export function Navbar() {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => navigate('/')}
         >
-          <div className="w-8 h-8 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30 group-hover:shadow-[0_0_15px_rgba(201,168,76,0.3)] transition-all">
-            <svg viewBox="0 0 24 24" fill="var(--color-gold)" className="w-4 h-4">
-              <path d="M12 2C9 2 8 5 8 5L6 6V10L8 12V18L6 20H8V22H10V20H14V22H16V20H18L16 18V12L18 10V6L16 5C16 5 15 2 12 2Z" />
-            </svg>
-          </div>
+          <BrandLogo size={56} />
           <span className="font-serif text-2xl font-bold text-champagne tracking-wider">EQUESTRIA</span>
         </div>
 

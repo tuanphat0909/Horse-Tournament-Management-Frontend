@@ -5,6 +5,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { register, parseApiError } from '../api/authService';
 import { getDashboardPath } from '../utils/roleRoutes';
+import { BrandLogo } from '../components/ui/BrandLogo';
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -176,6 +177,7 @@ export function RegisterPage() {
 
               {/* Header */}
               <motion.div variants={fadeUp} className="text-center mb-7 relative z-10">
+                <BrandLogo size={84} className="mb-3" />
                 <h2
                   className="text-2xl tracking-widest mb-2"
                   style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37' }}

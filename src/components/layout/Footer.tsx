@@ -1,4 +1,5 @@
 import { Globe, Mail, MessageCircle } from 'lucide-react';
+import { BrandLogo } from '../ui/BrandLogo';
 
 export function Footer() {
   return (
@@ -8,11 +9,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 relative z-10">
         <div className="md:col-span-1">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 rounded-full bg-gold/10 flex items-center justify-center border border-gold/30">
-              <svg viewBox="0 0 24 24" fill="var(--color-gold)" className="w-3 h-3">
-                <path d="M12 2C9 2 8 5 8 5L6 6V10L8 12V18L6 20H8V22H10V20H14V22H16V20H18L16 18V12L18 10V6L16 5C16 5 15 2 12 2Z" />
-              </svg>
-            </div>
+            <BrandLogo size={44} />
             <div className="font-serif text-xl font-bold text-champagne tracking-wider">EQUESTRIA</div>
           </div>
           <p className="text-sm text-muted mb-6">The ultimate management platform for elite equestrian tournaments.</p>

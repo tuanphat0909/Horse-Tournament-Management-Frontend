@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Search, Trophy, Activity, Sparkles, Wallet, Info } from 'lucide-react';
+import { Bell, Search, Trophy, Activity, Sparkles, Wallet, Info, CheckCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
 
 export function Topbar() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -107,9 +107,13 @@ export function Topbar() {
             <div className="px-4 py-3 border-b border-glass-border flex items-center justify-between bg-white/[0.01]">
               <span className="text-xs font-bold text-champagne uppercase tracking-wider">{t("Thông báo")}</span>
               {unreadCount > 0 && (
-                <span className="text-[10px] text-gold font-medium">
-                  {unreadCount} {t("chưa đọc")}
-                </span>
+                <button
+                  onClick={() => markAllAsRead()}
+                  className="flex items-center gap-1 text-[10px] font-bold text-gold hover:text-white transition-colors"
+                  title={t("Đánh dấu tất cả đã đọc")}
+                >
+                  <CheckCheck size={12} /> {t("Đánh dấu đã đọc")} ({unreadCount})
+                </button>
               )}
             </div>
 

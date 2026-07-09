@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser, logout } from '../../api/authService';
 import { useLanguage } from '../../context/LanguageContext';
+import { BrandLogo } from '../ui/BrandLogo';
 
 interface NavItem {
   icon: React.ElementType;
@@ -114,11 +115,7 @@ export function Sidebar() {
     <aside className="w-[280px] shrink-0 h-screen sticky top-0 border-r border-glass-border bg-[#0A1220] flex flex-col z-40 relative">
       {/* Logo */}
       <div className="px-6 h-16 flex items-center gap-2.5 border-b border-glass-border shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center border border-gold/30">
-          <svg viewBox="0 0 24 24" fill="var(--color-gold)" className="w-4 h-4">
-            <path d="M12 2C9 2 8 5 8 5L6 6V10L8 12V18L6 20H8V22H10V20H14V22H16V20H18L16 18V12L18 10V6L16 5C16 5 15 2 12 2Z" />
-          </svg>
-        </div>
+        <BrandLogo size={44} />
         <span className="font-serif text-lg font-bold text-champagne tracking-wider">EQUESTRIA</span>
       </div>
 

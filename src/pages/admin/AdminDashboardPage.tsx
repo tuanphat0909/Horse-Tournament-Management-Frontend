@@ -220,10 +220,10 @@ export function AdminDashboardPage() {
                   </div>
                 </div>
               ) : (
-                <div className="relative z-10 flex-1 overflow-x-auto min-h-[300px]">
+                <div className="relative z-10 flex-1 overflow-x-auto overflow-y-auto min-h-[300px] max-h-[300px] scrollbar-thin">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-glass-border bg-white/[0.01] text-[11px] font-bold text-muted uppercase tracking-wider">
+                      <tr className="sticky top-0 z-10 border-b border-glass-border bg-navy text-[11px] font-bold text-muted uppercase tracking-wider">
                         <th className="px-4 py-3">{t("Mã")}</th>
                         <th className="px-4 py-3">{t("Ngựa")}</th>
                         <th className="px-4 py-3">{t("Chủ")}</th>

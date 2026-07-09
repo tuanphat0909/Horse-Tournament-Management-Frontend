@@ -20,6 +20,14 @@ const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.
 const INIT_RACE = { roundId: '', name: '', raceDate: '', distanceMeter: '1200', maxLanes: '12' };
 const INIT_REF = { raceId: '', refereeId: '' };
 
+// Màu theo trạng thái sẵn sàng xếp làn của giải đấu
+const HINT_TONE: Record<string, string> = {
+  wait: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+  ready: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  progress: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  info: 'text-muted bg-white/5 border-glass-border',
+};
+
 type Modal = 'none' | 'race' | 'lanes' | 'referee' | 'detail';
 
 const fixMojibake = (str: string): string => {
@@ -432,12 +440,56 @@ export function AdminRacesPage() {
         ? 'Thiếu Final Race'
         : '';
 
+    // ── Trạng thái sẵn sàng xếp làn (để admin biết trước khi bấm nút) ──
+    const now = new Date();
+    const regEnd = t.registrationEndDate ? new Date(t.registrationEndDate) : null;
+    const regOpen = regEnd ? now < regEnd : false;
+    const hasAnyRaces = rounds.some((r: any) => r.races.length > 0);
+
+    let genHint: { tone: string; label: string; detail: string };
+    if (regOpen) {
+      genHint = {
+        tone: 'wait',
+        label: 'Chưa thể xếp làn — đăng ký còn mở',
+        detail: `Đăng ký đóng lúc ${fmtDate(t.registrationEndDate)}. Phải chờ hết hạn đăng ký thì mới "Auto xếp làn đua" (vòng Pre) được.`,
+      };
+    } else if (!hasAnyRaces) {
+      genHint = {
+        tone: 'ready',
+        label: 'Sẵn sàng xếp làn Pre',
+        detail: 'Đã đóng đăng ký. Bấm "Auto xếp làn đua" để hệ thống tự sinh vòng loại (Pre).',
+      };
+    } else if (canGenerateFinal) {
+      genHint = {
+        tone: 'ready',
+        label: 'Sẵn sàng xếp Chung kết',
+        detail: 'Vòng Pre đã hoàn thành. Bấm "Auto xếp Final (Top 12)" để sinh bảng Chung kết.',
+      };
+    } else if (waitingLabel === 'Chờ hoàn thành Pre') {
+      genHint = {
+        tone: 'progress',
+        label: 'Đang thi đấu vòng Pre',
+        detail: 'Chờ tất cả cuộc đua vòng Pre hoàn thành (Finished) mới xếp được Chung kết.',
+      };
+    } else if (waitingLabel === 'Thiếu Final Race') {
+      genHint = {
+        tone: 'progress',
+        label: 'Thiếu bảng Chung kết',
+        detail: 'Vòng Pre đã xong nhưng chưa có bảng Chung kết.',
+      };
+    } else {
+      genHint = { tone: 'info', label: 'Đã có lịch đua', detail: '' };
+    }
+
     return {
       ...t,
       rounds,
       canGeneratePre,
       canGenerateFinal,
-      waitingLabel
+      waitingLabel,
+      regOpen,
+      hasAnyRaces,
+      genHint,
     };
   });
 
@@ -524,11 +576,15 @@ export function AdminRacesPage() {
                           Thời gian: {new Date(t.startDate).toLocaleDateString()} - {new Date(t.endDate).toLocaleDateString()}
                         </p>
                       )}
+                      <span className={`inline-flex items-center gap-1.5 mt-2 ml-6 text-[10px] font-bold px-2.5 py-1 rounded-full border ${HINT_TONE[t.genHint.tone]}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${t.genHint.tone === 'wait' ? 'bg-yellow-400' : t.genHint.tone === 'ready' ? 'bg-emerald-400' : t.genHint.tone === 'progress' ? 'bg-blue-400' : 'bg-muted'}`} />
+                        {t.genHint.label}
+                      </span>
                     </button>
 
                     <div className="flex items-center gap-3">
-                      {/* Prefinal generation */}
-                      {t.canGeneratePre && (
+                      {/* Prefinal generation — chỉ cho bấm khi đã đóng đăng ký */}
+                      {t.canGeneratePre && !t.regOpen && (
                         <button
                           onClick={() => handleGenerateRaces(t.tournamentId)}
                           disabled={generatingForTournament === t.tournamentId}
@@ -542,6 +598,17 @@ export function AdminRacesPage() {
                           ) : (
                             'Auto xếp làn đua'
                           )}
+                        </button>
+                      )}
+
+                      {/* Đăng ký còn mở → chưa thể xếp làn */}
+                      {t.regOpen && !t.hasAnyRaces && (
+                        <button
+                          disabled
+                          title={`Đăng ký đóng lúc ${fmtDate(t.registrationEndDate)}. Chờ hết hạn đăng ký mới xếp làn được.`}
+                          className="px-4 py-2 bg-white/[0.04] text-muted border border-glass-border text-xs font-bold rounded-lg cursor-not-allowed flex items-center gap-1.5"
+                        >
+                          <AlertCircle size={12} /> Chờ đóng đăng ký
                         </button>
                       )}
 
@@ -576,6 +643,24 @@ export function AdminRacesPage() {
                   {/* Rounds — chỉ hiển thị khi giải đấu được mở rộng */}
                   {isOpen && (
                   <div className="grid grid-cols-1 gap-6">
+                    {/* Banner trạng thái xếp làn */}
+                    <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${HINT_TONE[t.genHint.tone]}`}>
+                      {t.genHint.tone === 'wait' ? <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                        : t.genHint.tone === 'ready' ? <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
+                        : t.genHint.tone === 'progress' ? <Loader size={16} className="shrink-0 mt-0.5 animate-spin" />
+                        : <Flag size={16} className="shrink-0 mt-0.5" />}
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold">{t.genHint.label}</div>
+                        {t.genHint.detail && <div className="text-xs opacity-90 mt-0.5">{t.genHint.detail}</div>}
+                      </div>
+                    </div>
+
+                    {t.rounds.length === 0 && (
+                      <div className="text-xs text-muted/50 italic py-2 text-center">
+                        Chưa có vòng đấu nào. Sau khi đóng đăng ký, dùng "Auto xếp làn đua" để hệ thống sinh vòng Pre.
+                      </div>
+                    )}
+
                     {t.rounds.map((r: any) => (
                       <div key={r.roundId} className="space-y-3 bg-navy/20 p-4 rounded-xl border border-glass-border/40">
                         <div className="flex items-center justify-between border-b border-glass-border/30 pb-2">
