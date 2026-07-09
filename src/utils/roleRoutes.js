@@ -5,6 +5,7 @@ const ROLE_DASHBOARD = {
   jockey: '/jockey/dashboard',
   referee: '/referee/dashboard',
   spectator: '/spectator/dashboard',
+  veterinarian: '/vet/dashboard',
 };
 
 export function getDashboardPath(role) {

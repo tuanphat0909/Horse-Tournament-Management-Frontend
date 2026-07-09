@@ -120,8 +120,6 @@ export function JockeyInvitationsPage() {
                           {(inv.startDate || inv.endDate) && (
                             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border"><Calendar size={11} className="text-gold/60" /> <span className="text-champagne font-semibold">Thời gian: {formatDate(inv.startDate)} → {formatDate(inv.endDate)}</span></span>
                           )}
-                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-gold font-semibold">💰 Tiền thuê: ${inv.rentalFee ?? 0}</span>
-                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-emerald-400 font-semibold">🏆 Thưởng thắng: {inv.winningBonusPercentage ?? 0}%</span>
                         </div>
                         {bucket === 'pending' && (
                           <div className="flex items-center gap-3">

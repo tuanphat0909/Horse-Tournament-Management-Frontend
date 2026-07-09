@@ -48,6 +48,10 @@ import { SpectatorPredictionsPage } from '../pages/spectator/SpectatorPrediction
 import { SpectatorNotificationsPage } from '../pages/spectator/SpectatorNotificationsPage';
 import { SpectatorWalletPage } from '../pages/spectator/SpectatorWalletPage';
 
+// Veterinarian
+import { VetDashboardPage } from '../pages/vet/VetDashboardPage';
+import { MedicalCheckPage } from '../pages/vet/MedicalCheckPage';
+
 import { PrivateRoute } from './PrivateRoute';
 import { NotificationProvider } from '../context/NotificationContext';
 
@@ -106,6 +110,10 @@ export function AppRoutes() {
         <Route path="/spectator/notifications" element={<PrivateRoute><SpectatorNotificationsPage /></PrivateRoute>} />
         <Route path="/spectator/wallet" element={<PrivateRoute><SpectatorWalletPage /></PrivateRoute>} />
         
+        {/* Veterinarian */}
+        <Route path="/vet/dashboard" element={<PrivateRoute><VetDashboardPage /></PrivateRoute>} />
+        <Route path="/vet/medical-check" element={<PrivateRoute><MedicalCheckPage /></PrivateRoute>} />
+
         {/* Core notifications route accessible by all roles */}
         <Route path="/notifications" element={<PrivateRoute><SpectatorNotificationsPage /></PrivateRoute>} />
       </Routes>

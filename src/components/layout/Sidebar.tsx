@@ -59,6 +59,10 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { icon: Target, label: 'My Predictions', path: '/spectator/predictions' },
     { icon: Bell, label: 'Notifications', path: '/spectator/notifications' },
   ],
+  veterinarian: [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/vet/dashboard' },
+    { icon: ClipboardList, label: 'Medical Check', path: '/vet/medical-check' },
+  ],
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -67,6 +71,7 @@ const ROLE_LABELS: Record<string, string> = {
   jockey: 'Jockey',
   referee: 'Referee',
   spectator: 'Spectator',
+  veterinarian: 'Veterinarian',
 };
 
 function toRoleKey(role: string | undefined): string {
