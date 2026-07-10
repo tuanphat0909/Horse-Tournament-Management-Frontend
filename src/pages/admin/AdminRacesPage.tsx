@@ -436,19 +436,20 @@ export function AdminRacesPage() {
     const prefinalFinished = Boolean(
       prefinalRound &&
       prefinalRound.races.length > 0 &&
-      prefinalRound.races.every((r: any) => r.status === 'Finished')
+      prefinalRound.races.every((r: any) => r.status === 'Finished' || r.status === 'Completed')
     );
 
-    const canGenerateFinal =
-      prefinalFinished &&
-      finalRound &&
-      finalRound.races.every((race: any) => race.status === 'Scheduled');
+    const finalRaces = finalRound?.races ?? [];
+    const finalDone = finalRaces.length > 0
+      && finalRaces.every((r: any) => r.status === 'Finished' || r.status === 'Completed');
+
+    // Chỉ cho xếp Final khi Pre xong mà CHƯA có race Chung kết nào
+    // (BE đã tự sinh Final khi race Pre cuối nộp kết quả — nút này là dự phòng)
+    const canGenerateFinal = prefinalFinished && hasPrefinalRaces && finalRaces.length === 0;
     const canGeneratePre = !prefinalFinished;
     const waitingLabel = hasPrefinalRaces && !prefinalFinished
       ? 'Chờ hoàn thành Pre'
-      : hasPrefinalRaces && prefinalFinished && (!finalRound || finalRound.races.length === 0)
-        ? 'Thiếu Final Race'
-        : '';
+      : '';
 
     // ── Trạng thái sẵn sàng xếp làn (để admin biết trước khi bấm nút) ──
     const now = new Date();
@@ -473,19 +474,25 @@ export function AdminRacesPage() {
       genHint = {
         tone: 'ready',
         label: 'Sẵn sàng xếp Chung kết',
-        detail: 'Vòng Pre đã hoàn thành. Bấm "Auto xếp Final (Top 12)" để sinh bảng Chung kết.',
+        detail: 'Vòng Pre đã hoàn thành nhưng chưa có bảng Chung kết. Hệ thống thường tự sinh — nếu chưa thấy, bấm "Auto xếp Final (Top 12)".',
       };
     } else if (waitingLabel === 'Chờ hoàn thành Pre') {
       genHint = {
         tone: 'progress',
         label: 'Đang thi đấu vòng Pre',
-        detail: 'Chờ tất cả cuộc đua vòng Pre hoàn thành (Finished) mới xếp được Chung kết.',
+        detail: 'Chờ tất cả cuộc đua vòng Pre hoàn thành mới xếp được Chung kết.',
       };
-    } else if (waitingLabel === 'Thiếu Final Race') {
+    } else if (finalDone) {
+      genHint = {
+        tone: 'info',
+        label: 'Giải đấu đã hoàn tất',
+        detail: 'Vòng Pre và Chung kết đều đã hoàn thành — công bố kết quả tại trang Kết quả & Công bố.',
+      };
+    } else if (prefinalFinished && finalRaces.length > 0) {
       genHint = {
         tone: 'progress',
-        label: 'Thiếu bảng Chung kết',
-        detail: 'Vòng Pre đã xong nhưng chưa có bảng Chung kết.',
+        label: 'Đang thi đấu Chung kết',
+        detail: 'Vòng Pre đã hoàn thành, bảng Chung kết (Top 12) đã được tạo và đang chờ thi đấu.',
       };
     } else {
       genHint = { tone: 'info', label: 'Đã có lịch đua', detail: '' };

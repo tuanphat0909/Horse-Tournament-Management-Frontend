@@ -23,6 +23,23 @@ export function RefereeConfirmResultsPage() {
   const [raceEntries, setRaceEntries] = useState<any[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(false);
 
+  // Race đã có kết quả (Completed/Finished) thì khóa form — BE sẽ từ chối nộp lần 2
+  const selectedRace = races.find(r => r.raceId === Number(form.raceId));
+  const isCompleted = selectedRace && (selectedRace.status === 'Completed' || selectedRace.status === 'Finished');
+
+  useEffect(() => {
+    if (form.raceId) {
+      const race = races.find(r => r.raceId === Number(form.raceId));
+      if (race && (race.status === 'Completed' || race.status === 'Finished')) {
+        setError('Cuộc đua này đã có kết quả — không thể nộp lại.');
+      } else {
+        setError('');
+      }
+    } else {
+      setError('');
+    }
+  }, [form.raceId, races]);
+
   useEffect(() => {
     getRefereeDashboard()
       .then((data: any) => {
@@ -117,7 +134,12 @@ export function RefereeConfirmResultsPage() {
       setError('Vui lòng chọn trận đua.');
       return;
     }
-    
+
+    if (isCompleted) {
+      setError('Cuộc đua này đã có kết quả — không thể nộp lại.');
+      return;
+    }
+
     const invalidEntry = raceEntries.find(e => e.finishPosition == null || e.finishTime == null);
     if (invalidEntry) {
       setError('Vui lòng nhập đầy đủ hạng và thời gian cho tất cả ngựa.');
@@ -197,7 +219,7 @@ export function RefereeConfirmResultsPage() {
                   <label className={LABEL}>Ngựa chiến thắng *</label>
                   {/* Dropdown từ danh sách ngựa THẬT của cuộc đua — không bắt gõ tên/ID tay nữa */}
                   <select value={form.winner} onChange={e => setF('winner', e.target.value)}
-                    disabled={!form.raceId || loadingEntries}
+                    disabled={!form.raceId || loadingEntries || !!isCompleted}
                     className={INPUT} style={{ colorScheme: 'dark' }}>
                     <option value="">{!form.raceId ? '-- Chọn cuộc đua trước --' : loadingEntries ? '-- Đang tải ngựa… --' : '-- Chọn ngựa thắng --'}</option>
                     {raceEntries.map((e: any, i: number) => {
@@ -213,20 +235,20 @@ export function RefereeConfirmResultsPage() {
                 
                 <div>
                   <label className={LABEL}>Thời gian hoàn thành (Winning Time) *</label>
-                  <input value={form.winningTime} onChange={e => setF('winningTime', e.target.value)} placeholder="VD: 01:23.45" className={INPUT} />
+                  <input disabled={!!isCompleted} value={form.winningTime} onChange={e => setF('winningTime', e.target.value)} placeholder="VD: 01:23.45" className={INPUT} />
                 </div>
                 
                 <div>
                   <label className={LABEL}>Ghi chú thêm</label>
-                  <textarea rows={3} value={form.remarks} onChange={e => setF('remarks', e.target.value)} placeholder="Ví dụ: Về đích sát sao, kỷ lục mới..." className={INPUT + " resize-none"} />
+                  <textarea disabled={!!isCompleted} rows={3} value={form.remarks} onChange={e => setF('remarks', e.target.value)} placeholder="Ví dụ: Về đích sát sao, kỷ lục mới..." className={INPUT + " resize-none"} />
                 </div>
 
                 {error && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>}
                 {success && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">{success}</div>}
 
                 <div className="pt-2">
-                  <button type="submit" disabled={loading} className="btn-red w-full py-3 rounded-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed">
-                    {loading ? 'Đang gửi...' : 'Xác nhận kết quả'}
+                  <button type="submit" disabled={loading || !!isCompleted} className="btn-red w-full py-3 rounded-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed">
+                    {loading ? 'Đang gửi...' : isCompleted ? 'Đã có kết quả' : 'Xác nhận kết quả'}
                   </button>
                 </div>
               </form>
@@ -259,8 +281,9 @@ export function RefereeConfirmResultsPage() {
                             <td className="py-3 pr-3 font-medium">🐎 {entry.horseName}</td>
                             <td className="py-3 pr-3 text-muted">{entry.jockeyName || 'N/A'}</td>
                             <td className="py-3 pr-3">
-                              <input 
-                                type="number" 
+                              <input
+                                disabled={!!isCompleted}
+                                type="number"
                                 min="1"
                                 max={raceEntries.length}
                                 value={entry.finishPosition ?? ''} 
@@ -270,9 +293,10 @@ export function RefereeConfirmResultsPage() {
                               />
                             </td>
                             <td className="py-3 text-right">
-                              <input 
-                                type="number" 
-                                step="0.01" 
+                              <input
+                                disabled={!!isCompleted}
+                                type="number"
+                                step="0.01"
                                 min="0"
                                 value={entry.finishTime ?? ''} 
                                 onChange={e => handleEntryChange(entry.raceEntryId, 'finishTime', e.target.value)}

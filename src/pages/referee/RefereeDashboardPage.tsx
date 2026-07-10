@@ -156,11 +156,11 @@ export function RefereeDashboardPage() {
                           </td>
                           <td className="px-4 py-3.5">
                             <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                              race.status === 'Finished' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                              (race.status === 'Finished' || race.status === 'Completed') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                               race.status === 'InProgress' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse' :
                               'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                             }`}>
-                              {race.status === 'Finished' ? 'Đã kết thúc' : race.status === 'InProgress' ? 'Đang chạy' : 'Lịch trình'}
+                              {(race.status === 'Finished' || race.status === 'Completed') ? 'Đã kết thúc' : race.status === 'InProgress' ? 'Đang chạy' : 'Lịch trình'}
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-right">
