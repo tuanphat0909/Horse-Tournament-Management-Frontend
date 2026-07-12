@@ -8,7 +8,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../api/authService';
 import { getBalance, getMyBets } from '../../api/spectatorService';
-import { getNotifications, getRaceSchedule } from '../../api/publicService';
+import { getNotifications, getRaceSchedule, getTournaments } from '../../api/publicService';
 import { formatDateTime } from '../../utils/format';
 
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -21,6 +21,7 @@ export function SpectatorDashboardPage() {
   const [bets, setBets] = useState<any[]>([]);
   const [notifCount, setNotifCount] = useState(0);
   const [upcoming, setUpcoming] = useState<any[]>([]);
+  const [tournaments, setTournaments] = useState<any[]>([]);
 
   useEffect(() => {
     getBalance().then(d => {
@@ -33,12 +34,13 @@ export function SpectatorDashboardPage() {
       setNotifCount(list.filter((n: any) => !(n.isRead ?? n.read)).length);
     }).catch(() => setNotifCount(0));
     getRaceSchedule().then(d => setUpcoming(d?.result ?? (Array.isArray(d) ? d : []))).catch(() => setUpcoming([]));
+    getTournaments().then(d => setTournaments(d?.result ?? (Array.isArray(d) ? d : []))).catch(() => setTournaments([]));
   }, []);
 
   const pendingBets = bets.filter(b => { const s = (b.status ?? '').toLowerCase(); return s !== 'win' && s !== 'won' && s !== 'lose' && s !== 'lost' && s !== 'correct' && s !== 'incorrect'; }).length;
 
   const liveRaces = upcoming.filter(r => ['active', 'ongoing', 'inprogress'].includes(r.status?.toLowerCase()));
-  const upcomingRaces = upcoming.filter(r => ['scheduled', 'upcoming'].includes(r.status?.toLowerCase()));
+  const upcomingTournaments = tournaments.filter(t => t.status !== 'Completed' && t.status !== 'Cancelled');
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -129,23 +131,33 @@ export function SpectatorDashboardPage() {
               )}
               <div className="mt-4 relative z-10">
                 <div className="flex items-center gap-3 mb-3">
-                  <h3 className="text-sm font-medium text-muted">Sắp diễn ra</h3>
+                  <h3 className="text-sm font-medium text-muted">Giải đấu sắp tới</h3>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+                  <button onClick={() => navigate('/spectator/tournaments')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">Xem tất cả <ChevronRight size={12} /></button>
                 </div>
-                {upcomingRaces.length === 0 ? (
-                  <div className="text-center py-6 text-muted text-sm">Chưa có lịch thi đấu</div>
+                {upcomingTournaments.length === 0 ? (
+                  <div className="text-center py-6 text-muted text-sm">Chưa có giải đấu nào</div>
                 ) : (
                   <div className="space-y-2">
-                    {upcomingRaces.map((u: any, i: number) => (
-                      <div key={i} className="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group">
+                    {upcomingTournaments.slice(0, 4).map((t: any, i: number) => (
+                      <button
+                        key={t.tournamentId ?? i}
+                        onClick={() => navigate(`/spectator/tournaments/${t.tournamentId}`)}
+                        className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/5 transition-all group text-left"
+                      >
                         <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center font-serif font-bold text-champagne text-sm shrink-0">{i + 1}</div>
                         <Trophy size={13} className="text-gold/60 shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs font-medium text-white">{u.name ?? u.round}</div>
-                          <div className="text-[10px] text-muted">{(u.tournamentName ?? u.tournament ?? '')}{u.raceDate ? ' • ' + formatDateTime(u.raceDate) : ''}</div>
+                          <div className="text-xs font-medium text-white">{t.name}</div>
+                          <div className="text-[10px] text-muted">
+                            {t.startDate ? new Date(t.startDate).toLocaleDateString('vi-VN') : ''}
+                            {t.endDate ? ` → ${new Date(t.endDate).toLocaleDateString('vi-VN')}` : ''}
+                          </div>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne shrink-0">{u.distanceMeter ? `${u.distanceMeter}m` : 'Sắp tới'}</span>
-                      </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${t.status === 'Active' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-blue-400 bg-blue-500/10 border-blue-500/20'}`}>
+                          {t.status === 'Active' ? 'Đang diễn ra' : 'Sắp tới'}
+                        </span>
+                      </button>
                     ))}
                   </div>
                 )}

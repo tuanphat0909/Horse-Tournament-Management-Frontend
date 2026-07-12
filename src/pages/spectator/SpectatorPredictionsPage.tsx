@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, Plus, CheckCircle, XCircle, Clock, TrendingUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Plus, CheckCircle, XCircle, Clock, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -45,6 +45,7 @@ export function SpectatorPredictionsPage() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
+  const [expandedId, setExpandedId] = useState<number | string | null>(null);
 
   const [horses, setHorses] = useState<any[]>([]);
   const [loadingHorses, setLoadingHorses] = useState(false);
@@ -211,12 +212,17 @@ export function SpectatorPredictionsPage() {
                 const statusKey = normalizeStatus(b.status);
                 const cfg = RESULT_CONFIG[statusKey];
                 const Icon = cfg.icon;
+                const uid = b.id ?? b.betId ?? b.predictionId ?? i;
+                const isExpanded = expandedId === uid;
                 return (
-                  <motion.div key={b.id ?? i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                    className="glass-panel rounded-xl p-5 border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all relative overflow-hidden group">
+                  <motion.div key={uid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                    className="glass-panel rounded-xl border border-glass-border hover:border-gold/30 transition-all relative overflow-hidden group">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-[40px] pointer-events-none" />
-                    <div className="relative z-10 flex items-start gap-4">
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : uid)}
+                      className="relative z-10 w-full flex items-start gap-4 p-5 text-left"
+                    >
                       <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center text-2xl shrink-0">🐴</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -228,16 +234,33 @@ export function SpectatorPredictionsPage() {
                         <div className="flex flex-wrap gap-4 text-xs text-muted">
                           {b.raceName && <span>{b.raceName}</span>}
                           {b.raceId && !b.raceName && <span>Race #{b.raceId}</span>}
-                          {b.createdAt && <span className="text-muted/60">{b.createdAt}</span>}
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
+                      <div className="text-right shrink-0 flex flex-col items-end gap-1">
                         <div className="text-xs text-muted">Cược: <span className="text-white font-medium">{Number(b.amount ?? 0).toLocaleString()} coins</span></div>
                         {b.prize != null && b.prize > 0 && (
                           <div className="text-sm font-bold text-gold">+{Number(b.prize).toLocaleString()} coins</div>
                         )}
+                        {isExpanded ? <ChevronUp size={14} className="text-muted mt-1" /> : <ChevronDown size={14} className="text-muted mt-1" />}
                       </div>
-                    </div>
+                    </button>
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.18 }} className="overflow-hidden"
+                        >
+                          <div className="relative z-10 px-5 pb-4 pt-1 border-t border-glass-border grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-muted">
+                            {b.raceName && <span>Cuộc đua: <span className="text-white">{b.raceName}</span></span>}
+                            {b.raceId && <span>Race ID: <span className="text-white">#{b.raceId}</span></span>}
+                            {b.tournamentName && <span>Giải đấu: <span className="text-champagne">{b.tournamentName}</span></span>}
+                            {b.createdAt && <span>Thời gian: <span className="text-white">{new Date(b.createdAt).toLocaleString('vi-VN')}</span></span>}
+                            {b.currentOdds != null && <span>Tỷ lệ cược: <span className="text-gold font-bold">x{Number(b.currentOdds).toFixed(2)}</span></span>}
+                            {b.laneNo != null && <span>Làn số: <span className="text-white">{b.laneNo}</span></span>}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 );
               })}

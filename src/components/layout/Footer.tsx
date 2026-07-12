@@ -14,13 +14,13 @@ export function Footer() {
           </div>
           <p className="text-sm text-muted mb-6">The ultimate management platform for elite equestrian tournaments.</p>
           <div className="flex items-center gap-4">
-            <a href="#" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all">
+            <a href="/" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all" aria-label="Home">
               <Globe className="w-4 h-4" />
             </a>
-            <a href="#" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all">
+            <a href="#about" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all" aria-label="Contact">
               <MessageCircle className="w-4 h-4" />
             </a>
-            <a href="#" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all">
+            <a href="#about" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all" aria-label="About">
               <Mail className="w-4 h-4" />
             </a>
           </div>
@@ -29,20 +29,20 @@ export function Footer() {
         <div>
           <h4 className="text-white font-bold mb-6">Platform</h4>
           <ul className="space-y-3 text-sm text-muted">
-            <li><a href="#" className="hover:text-gold transition-colors">Tournaments</a></li>
-            <li><a href="#" className="hover:text-gold transition-colors">Leaderboards</a></li>
-            <li><a href="#" className="hover:text-gold transition-colors">AI Analytics</a></li>
-            <li><a href="#" className="hover:text-gold transition-colors">Live Tracking</a></li>
+            <li><a href="#tournaments" className="hover:text-gold transition-colors">Tournaments</a></li>
+            <li><a href="#leaderboard" className="hover:text-gold transition-colors">Leaderboards</a></li>
+            <li><a href="#features" className="hover:text-gold transition-colors">AI Analytics</a></li>
+            <li><a href="#features" className="hover:text-gold transition-colors">Live Tracking</a></li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-white font-bold mb-6">Company</h4>
           <ul className="space-y-3 text-sm text-muted">
-            <li><a href="#" className="hover:text-gold transition-colors">About Us</a></li>
-            <li><a href="#" className="hover:text-gold transition-colors">Careers</a></li>
-            <li><a href="#" className="hover:text-gold transition-colors">Partners</a></li>
-            <li><a href="#" className="hover:text-gold transition-colors">Contact</a></li>
+            <li><a href="#about" className="hover:text-gold transition-colors">About Us</a></li>
+            <li><a href="#about" className="hover:text-gold transition-colors">Careers</a></li>
+            <li><a href="#about" className="hover:text-gold transition-colors">Partners</a></li>
+            <li><a href="#about" className="hover:text-gold transition-colors">Contact</a></li>
           </ul>
         </div>
 

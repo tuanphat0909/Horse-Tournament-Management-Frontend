@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from './routes';
 import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
 
 function GlobalWave() {
   return (
@@ -39,10 +40,12 @@ export default function App() {
 
   return (
     <LanguageProvider>
-      <BrowserRouter>
-        <GlobalWave />
-        <AppRoutes />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <GlobalWave />
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
     </LanguageProvider>
   );
 }

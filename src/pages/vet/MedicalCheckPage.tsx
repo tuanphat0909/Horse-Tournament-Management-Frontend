@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, RefreshCw } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { 
-  getMedicalChecks, 
-  createMedicalCheck, 
-  updateMedicalCheck, 
-  deleteMedicalCheck, 
-  getPendingRegistrations 
+import {
+  getMedicalChecks,
+  createMedicalCheck,
+  updateMedicalCheck,
+  deleteMedicalCheck,
+  getPendingRegistrations,
+  getAssignedEntries,
+  performRecheck,
 } from '../../api/vetService';
 
-type Tab = 'pending' | 'history';
+type Tab = 'pending' | 'assigned' | 'history';
 
 interface PendingCheck {
   registrationId: number;
@@ -20,6 +22,24 @@ interface PendingCheck {
   tournamentName: string;
   ownerName: string;
   registeredAt: string;
+}
+
+interface AssignedEntry {
+  raceEntryId: number;
+  raceId: number;
+  raceName: string | null;
+  raceDate: string;
+  raceStatus: string;
+  laneNo: number;
+  raceEntryStatus: string;
+  registrationId: number;
+  horseName: string | null;
+  ownerName: string | null;
+  jockeyName: string | null;
+  tournamentName: string | null;
+  lastMedicalResult: string | null;
+  lastCheckType: string | null;
+  lastCheckedAt: string | null;
 }
 
 interface MedicalRecord {
@@ -41,168 +61,157 @@ interface MedicalRecord {
 export function MedicalCheckPage() {
   const [activeTab, setActiveTab] = useState<Tab>('pending');
   const [search, setSearch] = useState('');
-  
+
   const [pendingList, setPendingList] = useState<PendingCheck[]>([]);
+  const [assignedList, setAssignedList] = useState<AssignedEntry[]>([]);
   const [historyList, setHistoryList] = useState<MedicalRecord[]>([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Modals state
+  // Modal state — shared for create / edit / recheck
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState<'create' | 'edit'>('create');
+  const [modalType, setModalType] = useState<'create' | 'edit' | 'recheck'>('create');
   const [selectedRecordId, setSelectedRecordId] = useState<number | null>(null);
   const [selectedRegId, setSelectedRegId] = useState<number | null>(null);
   const [selectedHorseName, setSelectedHorseName] = useState('');
-  
+
   // Form fields
-  const [weight, setWeight] = useState<string>('');
-  const [temperature, setTemperature] = useState<string>('');
-  const [heartRate, setHeartRate] = useState<string>('');
-  const [dopingResult, setDopingResult] = useState<string>('Negative');
-  const [medicalResult, setMedicalResult] = useState<string>('Pass');
-  const [notes, setNotes] = useState<string>('');
+  const [weight, setWeight] = useState('');
+  const [temperature, setTemperature] = useState('');
+  const [heartRate, setHeartRate] = useState('');
+  const [dopingResult, setDopingResult] = useState('Negative');
+  const [medicalResult, setMedicalResult] = useState('Pass');
+  const [failReason, setFailReason] = useState('');
+  const [notes, setNotes] = useState('');
 
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
-  // Tải CẢ HAI danh sách cùng lúc để số đếm trên tab luôn đúng
-  // (trước đây chỉ tải tab đang mở → tab kia hiển thị 0 cho tới khi bấm vào)
-  const loadData = () => {
+  function loadData() {
     setLoading(true);
     setError('');
+    Promise.allSettled([
+      getPendingRegistrations(),
+      getAssignedEntries(),
+      getMedicalChecks(),
+    ]).then(([pendingRes, assignedRes, historyRes]) => {
+      if (pendingRes.status === 'fulfilled') setPendingList(pendingRes.value?.result ?? []);
+      if (assignedRes.status === 'fulfilled') setAssignedList(assignedRes.value?.result ?? []);
+      if (historyRes.status === 'fulfilled') setHistoryList(historyRes.value?.result ?? []);
+      if (pendingRes.status === 'rejected' && assignedRes.status === 'rejected' && historyRes.status === 'rejected') {
+        setError('Không thể tải dữ liệu kiểm tra sức khỏe.');
+      }
+      setLoading(false);
+    });
+  }
 
-    Promise.allSettled([getPendingRegistrations(), getMedicalChecks()])
-      .then(([pendingRes, historyRes]) => {
-        if (pendingRes.status === 'fulfilled' && pendingRes.value?.result) {
-          setPendingList(pendingRes.value.result);
-        }
-        if (historyRes.status === 'fulfilled' && historyRes.value?.result) {
-          setHistoryList(historyRes.value.result);
-        }
-        if (pendingRes.status === 'rejected' && historyRes.status === 'rejected') {
-          console.error(pendingRes.reason, historyRes.reason);
-          setError('Không thể tải dữ liệu kiểm tra sức khỏe.');
-        } else if (pendingRes.status === 'rejected') {
-          console.error(pendingRes.reason);
-          setError('Không thể tải danh sách ngựa cần kiểm tra.');
-        } else if (historyRes.status === 'rejected') {
-          console.error(historyRes.reason);
-          setError('Không thể tải lịch sử kiểm tra.');
-        }
-        setLoading(false);
-      });
-  };
+  function resetForm() {
+    setWeight(''); setTemperature(''); setHeartRate('');
+    setDopingResult('Negative'); setMedicalResult('Pass');
+    setFailReason(''); setNotes('');
+  }
 
-  const handleOpenCreateModal = (pc: PendingCheck) => {
+  function openCreate(pc: PendingCheck) {
     setModalType('create');
     setSelectedRegId(pc.registrationId);
     setSelectedHorseName(pc.horseName);
-    setWeight('');
-    setTemperature('');
-    setHeartRate('');
-    setDopingResult('Negative');
-    setMedicalResult('Pass');
-    setNotes('');
+    resetForm();
     setShowModal(true);
-  };
+  }
 
-  const handleOpenEditModal = (mr: MedicalRecord) => {
+  function openEdit(mr: MedicalRecord) {
     setModalType('edit');
     setSelectedRecordId(mr.id);
     setSelectedHorseName(mr.horseName);
     setWeight(mr.weight.toString());
-    setTemperature(mr.temperature ? mr.temperature.toString() : '');
-    setHeartRate(mr.heartRate ? mr.heartRate.toString() : '');
+    setTemperature(mr.temperature?.toString() ?? '');
+    setHeartRate(mr.heartRate?.toString() ?? '');
     setDopingResult(mr.dopingResult);
     setMedicalResult(mr.medicalResult);
-    setNotes(mr.notes || '');
+    setFailReason(''); setNotes(mr.notes ?? '');
     setShowModal(true);
-  };
+  }
 
-  const handleDeleteRecord = (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bệnh án kiểm tra này?')) return;
-    
+  function openRecheck(ae: AssignedEntry) {
+    setModalType('recheck');
+    setSelectedRegId(ae.registrationId);
+    setSelectedHorseName(ae.horseName ?? `Ngựa #${ae.raceId}`);
+    resetForm();
+    setShowModal(true);
+  }
+
+  function handleDelete(id: number) {
+    if (!window.confirm('Xác nhận xóa bệnh án này?')) return;
     setLoading(true);
     deleteMedicalCheck(id)
-      .then(() => {
-        setSuccess('Đã xóa bệnh án kiểm tra thành công!');
-        loadData();
-      })
-      .catch(err => {
-        console.error(err);
-        setError('Lỗi khi xóa bệnh án kiểm tra.');
-        setLoading(false);
-      });
-  };
+      .then(() => { setSuccess('Đã xóa bệnh án thành công!'); loadData(); })
+      .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi xóa.'); setLoading(false); });
+  }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!weight || parseFloat(weight) <= 0) {
-      setError('Cân nặng phải lớn hơn 0.');
-      return;
+    if (!weight || parseFloat(weight) <= 0) { setError('Cân nặng phải > 0.'); return; }
+    if (medicalResult === 'Fail' && modalType === 'recheck' && !failReason.trim()) {
+      setError('Cần nhập FailReason khi kết quả là Fail.'); return;
     }
 
-    const data = {
-      registrationId: selectedRegId,
+    const base = {
       weight: parseFloat(weight),
       temperature: temperature ? parseFloat(temperature) : null,
       heartRate: heartRate ? parseInt(heartRate) : null,
       dopingResult,
       medicalResult,
-      notes: notes || null
+      notes: notes || null,
     };
 
-    setLoading(true);
-    setError('');
-    setSuccess('');
+    setLoading(true); setError(''); setSuccess('');
 
     if (modalType === 'create') {
-      createMedicalCheck(data)
-        .then(() => {
-          setSuccess('Đã lưu kết quả kiểm tra thành công!');
-          setShowModal(false);
-          loadData();
-        })
-        .catch(err => {
-          console.error(err);
-          const msg = err.response?.data?.message || 'Có lỗi xảy ra khi tạo kết quả kiểm tra.';
-          setError(msg);
-          setLoading(false);
-        });
+      createMedicalCheck({ registrationId: selectedRegId, ...base })
+        .then(() => { setSuccess('Đã lưu kết quả khám!'); setShowModal(false); loadData(); })
+        .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi tạo.'); setLoading(false); });
+    } else if (modalType === 'edit') {
+      updateMedicalCheck(selectedRecordId!, base)
+        .then(() => { setSuccess('Đã cập nhật bệnh án!'); setShowModal(false); loadData(); })
+        .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi cập nhật.'); setLoading(false); });
     } else {
-      updateMedicalCheck(selectedRecordId!, data)
-        .then(() => {
-          setSuccess('Đã cập nhật kết quả kiểm tra thành công!');
-          setShowModal(false);
-          loadData();
+      // recheck
+      performRecheck({ registrationId: selectedRegId, ...base, failReason: failReason || null })
+        .then((res: any) => {
+          const withdrawn = res?.result?.horseWithdrawn;
+          setSuccess(withdrawn
+            ? `Tái khám xong — Ngựa đã bị rút khỏi cuộc đua (kết quả Fail).`
+            : `Tái khám xong — Ngựa tiếp tục thi đấu (kết quả Pass).`);
+          setShowModal(false); loadData();
         })
-        .catch(err => {
-          console.error(err);
-          const msg = err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật kết quả kiểm tra.';
-          setError(msg);
-          setLoading(false);
-        });
+        .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi tái khám.'); setLoading(false); });
     }
-  };
+  }
 
-  const filteredPending = pendingList.filter(pc => 
-    pc.horseName.toLowerCase().includes(search.toLowerCase()) ||
-    pc.tournamentName.toLowerCase().includes(search.toLowerCase()) ||
-    pc.ownerName.toLowerCase().includes(search.toLowerCase())
+  const INPUT_CLS = 'w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 text-sm text-white focus:border-gold outline-none';
+
+  const filteredPending = pendingList.filter(pc =>
+    [pc.horseName, pc.tournamentName, pc.ownerName].some(s => s?.toLowerCase().includes(search.toLowerCase()))
+  );
+  const filteredAssigned = assignedList.filter(ae =>
+    [ae.horseName, ae.raceName, ae.tournamentName, ae.ownerName].some(s => s?.toLowerCase().includes(search.toLowerCase()))
+  );
+  const filteredHistory = historyList.filter(mr =>
+    [mr.horseName, mr.tournamentName, mr.checkedByName].some(s => s?.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const filteredHistory = historyList.filter(mr => 
-    mr.horseName.toLowerCase().includes(search.toLowerCase()) ||
-    mr.tournamentName.toLowerCase().includes(search.toLowerCase()) ||
-    mr.checkedByName.toLowerCase().includes(search.toLowerCase())
+  const TAB_BTN = (t: Tab, label: string, count: number) => (
+    <button
+      onClick={() => { setActiveTab(t); setSearch(''); }}
+      className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${activeTab === t ? 'text-gold border-gold' : 'text-muted border-transparent hover:text-white'}`}
+    >
+      {label} ({count})
+    </button>
   );
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="red" />
@@ -211,273 +220,276 @@ export function MedicalCheckPage() {
 
           <PageHero
             title="Kiểm Tra Sức Khỏe Ngựa"
-            subtitle="Cung cấp bệnh án, xét nghiệm doping và đánh giá điều kiện tham gia giải đấu"
+            subtitle="Bệnh án, xét nghiệm doping và đánh giá điều kiện tham gia — tái khám ngựa đã xếp lịch đua"
             imageUrl="/images/hero-referee.jpg"
             imagePosition="right 52%"
           />
 
-          {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-sm">
-              {success}
-            </div>
-          )}
+          {error && <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm">{error}</div>}
+          {success && <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-sm">{success}</div>}
 
           {/* Tabs & Search */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-b border-glass-border">
             <div className="flex items-center gap-1">
-              <button 
-                onClick={() => { setActiveTab('pending'); setSearch(''); }}
-                className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${activeTab === 'pending' ? 'text-gold border-gold' : 'text-muted border-transparent hover:text-white'}`}
-              >
-                Chờ kiểm tra ({pendingList.length})
-              </button>
-              <button 
-                onClick={() => { setActiveTab('history'); setSearch(''); }}
-                className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${activeTab === 'history' ? 'text-gold border-gold' : 'text-muted border-transparent hover:text-white'}`}
-              >
-                Lịch sử khám ({historyList.length})
-              </button>
+              {TAB_BTN('pending', 'Chờ kiểm tra', pendingList.length)}
+              {TAB_BTN('assigned', 'Đã xếp lịch đua', assignedList.length)}
+              {TAB_BTN('history', 'Lịch sử khám', historyList.length)}
             </div>
-
             <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-full md:w-64 mb-3">
               <Search size={14} className="text-muted shrink-0" />
-              <input 
-                value={search} 
-                onChange={e => setSearch(e.target.value)} 
-                placeholder="Tìm ngựa, giải đấu, chủ sở hữu..." 
-                className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" 
-              />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm ngựa, giải đấu, chủ ngựa..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
             </div>
           </div>
 
-          {/* Pending List Tab */}
+          {/* Tab: Chờ kiểm tra */}
           {activeTab === 'pending' && (
-            loading ? (
-              <div className="text-center py-12 text-muted">Đang tải danh sách chờ...</div>
-            ) : filteredPending.length === 0 ? (
-              <div className="glass-panel rounded-xl p-12 text-center text-muted">
-                Không tìm thấy lượt đăng ký chờ khám sức khỏe nào.
-              </div>
-            ) : (
-              <div className="glass-panel rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                        <th className="px-6 py-4">Ngựa</th>
-                        <th className="px-6 py-4">Giải đấu</th>
-                        <th className="px-6 py-4">Chủ sở hữu</th>
-                        <th className="px-6 py-4">Ngày đăng ký</th>
-                        <th className="px-6 py-4 text-right">Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-glass-border/40 text-sm text-white">
-                      {filteredPending.map(pc => (
-                        <tr key={pc.registrationId} className="hover:bg-white/[0.01] transition-colors">
-                          <td className="px-6 py-4 font-medium text-gold">{pc.horseName}</td>
-                          <td className="px-6 py-4 text-muted">{pc.tournamentName}</td>
-                          <td className="px-6 py-4 text-muted">{pc.ownerName}</td>
-                          <td className="px-6 py-4 text-muted">{new Date(pc.registeredAt).toLocaleDateString('vi-VN')}</td>
-                          <td className="px-6 py-4 text-right">
-                            <button
-                              onClick={() => handleOpenCreateModal(pc)}
-                              className="bg-gold/10 hover:bg-gold/20 text-gold hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 border border-gold/30"
-                            >
-                              <Plus size={12} /> Khám sức khỏe
-                            </button>
-                          </td>
+            loading ? <div className="text-center py-12 text-muted">Đang tải...</div>
+            : filteredPending.length === 0
+              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">Không có ngựa nào chờ khám.</div>
+              : (
+                <div className="glass-panel rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
+                          <th className="px-6 py-4">Ngựa</th>
+                          <th className="px-6 py-4">Giải đấu</th>
+                          <th className="px-6 py-4">Chủ sở hữu</th>
+                          <th className="px-6 py-4">Ngày đăng ký</th>
+                          <th className="px-6 py-4 text-right">Hành động</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-glass-border/40 text-sm text-white">
+                        {filteredPending.map(pc => (
+                          <tr key={pc.registrationId} className="hover:bg-white/[0.01] transition-colors">
+                            <td className="px-6 py-4 font-medium text-gold">{pc.horseName}</td>
+                            <td className="px-6 py-4 text-muted">{pc.tournamentName}</td>
+                            <td className="px-6 py-4 text-muted">{pc.ownerName}</td>
+                            <td className="px-6 py-4 text-muted">{new Date(pc.registeredAt).toLocaleDateString('vi-VN')}</td>
+                            <td className="px-6 py-4 text-right">
+                              <button onClick={() => openCreate(pc)} className="bg-gold/10 hover:bg-gold/20 text-gold px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 border border-gold/30">
+                                <Plus size={12} /> Khám sức khỏe
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            )
+              )
           )}
 
-          {/* History Tab */}
+          {/* Tab: Ngựa đã xếp lịch đua */}
+          {activeTab === 'assigned' && (
+            loading ? <div className="text-center py-12 text-muted">Đang tải...</div>
+            : filteredAssigned.length === 0
+              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">Không có ngựa nào đã xếp lịch đua.</div>
+              : (
+                <div className="glass-panel rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
+                          <th className="px-6 py-4">Ngựa</th>
+                          <th className="px-6 py-4">Cuộc đua</th>
+                          <th className="px-6 py-4">Ngày đua</th>
+                          <th className="px-6 py-4">Làn</th>
+                          <th className="px-6 py-4">Lần khám cuối</th>
+                          <th className="px-6 py-4">Trạng thái entry</th>
+                          <th className="px-6 py-4 text-right">Tái khám</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-glass-border/40 text-sm text-white">
+                        {filteredAssigned.map(ae => (
+                          <tr key={ae.raceEntryId} className="hover:bg-white/[0.01] transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-gold">{ae.horseName ?? '—'}</div>
+                              {ae.ownerName && <div className="text-xs text-muted">{ae.ownerName}</div>}
+                            </td>
+                            <td className="px-6 py-4 text-muted">
+                              <div>{ae.raceName ?? '—'}</div>
+                              {ae.tournamentName && <div className="text-xs text-muted/60">{ae.tournamentName}</div>}
+                            </td>
+                            <td className="px-6 py-4 text-muted whitespace-nowrap">
+                              {ae.raceDate ? new Date(ae.raceDate).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
+                            </td>
+                            <td className="px-6 py-4 text-center font-mono font-bold text-champagne">{ae.laneNo}</td>
+                            <td className="px-6 py-4">
+                              {ae.lastMedicalResult ? (
+                                <div>
+                                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${ae.lastMedicalResult === 'Pass' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                    {ae.lastMedicalResult === 'Pass' ? 'Đạt' : 'Không đạt'}
+                                  </span>
+                                  {ae.lastCheckType && <span className="ml-1 text-[10px] text-muted">{ae.lastCheckType}</span>}
+                                  {ae.lastCheckedAt && <div className="text-[10px] text-muted/60 mt-0.5">{new Date(ae.lastCheckedAt).toLocaleDateString('vi-VN')}</div>}
+                                </div>
+                              ) : <span className="text-muted text-xs">Chưa có</span>}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${
+                                ae.raceEntryStatus === 'Withdrawn' || ae.raceEntryStatus === 'Disqualified'
+                                  ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                  : ae.raceEntryStatus === 'Confirmed' || ae.raceEntryStatus === 'Active'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                              }`}>
+                                {ae.raceEntryStatus || '—'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={() => openRecheck(ae)}
+                                disabled={ae.raceEntryStatus === 'Withdrawn' || ae.raceEntryStatus === 'Disqualified'}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <RefreshCw size={11} /> Tái khám
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )
+          )}
+
+          {/* Tab: Lịch sử khám */}
           {activeTab === 'history' && (
-            loading ? (
-              <div className="text-center py-12 text-muted">Đang tải lịch sử khám...</div>
-            ) : filteredHistory.length === 0 ? (
-              <div className="glass-panel rounded-xl p-12 text-center text-muted">
-                Không tìm thấy bệnh án sức khỏe nào đã ghi nhận.
-              </div>
-            ) : (
-              <div className="glass-panel rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                        <th className="px-6 py-4">Ngựa</th>
-                        <th className="px-6 py-4">Giải đấu</th>
-                        <th className="px-6 py-4">Cân nặng</th>
-                        <th className="px-6 py-4">Nhiệt độ</th>
-                        <th className="px-6 py-4">Nhịp tim</th>
-                        <th className="px-6 py-4">Doping</th>
-                        <th className="px-6 py-4">Y tế</th>
-                        <th className="px-6 py-4">Người khám</th>
-                        <th className="px-6 py-4 text-right">Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-glass-border/40 text-sm text-white">
-                      {filteredHistory.map(mr => (
-                        <tr key={mr.id} className="hover:bg-white/[0.01] transition-colors">
-                          <td className="px-6 py-4 font-medium text-gold">{mr.horseName}</td>
-                          <td className="px-6 py-4 text-muted text-xs max-w-[150px] truncate">{mr.tournamentName}</td>
-                          <td className="px-6 py-4 font-mono">{mr.weight} kg</td>
-                          <td className="px-6 py-4 font-mono">{mr.temperature ? `${mr.temperature}°C` : '-'}</td>
-                          <td className="px-6 py-4 font-mono">{mr.heartRate ? `${mr.heartRate} bpm` : '-'}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                              mr.dopingResult === 'Negative' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                            }`}>
-                              {mr.dopingResult === 'Negative' ? 'Âm tính' : 'Dương tính'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                              mr.medicalResult === 'Pass' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                            }`}>
-                              {mr.medicalResult === 'Pass' ? 'Đạt' : 'Không đạt'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-muted text-xs">{mr.checkedByName}</td>
-                          <td className="px-6 py-4 text-right space-x-2 shrink-0">
-                            <button
-                              onClick={() => handleOpenEditModal(mr)}
-                              className="text-gold hover:text-white bg-gold/10 hover:bg-gold/20 p-1.5 rounded transition-all inline-flex items-center"
-                              title="Chỉnh sửa bệnh án"
-                            >
-                              <Edit2 size={12} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteRecord(mr.id)}
-                              className="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 p-1.5 rounded transition-all inline-flex items-center"
-                              title="Xóa bệnh án"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </td>
+            loading ? <div className="text-center py-12 text-muted">Đang tải lịch sử...</div>
+            : filteredHistory.length === 0
+              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">Không tìm thấy bệnh án nào.</div>
+              : (
+                <div className="glass-panel rounded-xl overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
+                          <th className="px-6 py-4">Ngựa</th>
+                          <th className="px-6 py-4">Giải đấu</th>
+                          <th className="px-6 py-4">Cân nặng</th>
+                          <th className="px-6 py-4">Nhiệt độ</th>
+                          <th className="px-6 py-4">Nhịp tim</th>
+                          <th className="px-6 py-4">Doping</th>
+                          <th className="px-6 py-4">Y tế</th>
+                          <th className="px-6 py-4">Người khám</th>
+                          <th className="px-6 py-4 text-right">Hành động</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-glass-border/40 text-sm text-white">
+                        {filteredHistory.map(mr => (
+                          <tr key={mr.id} className="hover:bg-white/[0.01] transition-colors">
+                            <td className="px-6 py-4 font-medium text-gold">{mr.horseName}</td>
+                            <td className="px-6 py-4 text-muted text-xs max-w-[150px] truncate">{mr.tournamentName}</td>
+                            <td className="px-6 py-4 font-mono">{mr.weight} kg</td>
+                            <td className="px-6 py-4 font-mono">{mr.temperature ? `${mr.temperature}°C` : '—'}</td>
+                            <td className="px-6 py-4 font-mono">{mr.heartRate ? `${mr.heartRate} bpm` : '—'}</td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${mr.dopingResult === 'Negative' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                {mr.dopingResult === 'Negative' ? 'Âm tính' : 'Dương tính'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${mr.medicalResult === 'Pass' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                {mr.medicalResult === 'Pass' ? 'Đạt' : 'Không đạt'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-muted text-xs">{mr.checkedByName}</td>
+                            <td className="px-6 py-4 text-right space-x-2 shrink-0">
+                              <button onClick={() => openEdit(mr)} className="text-gold hover:text-white bg-gold/10 hover:bg-gold/20 p-1.5 rounded transition-all inline-flex items-center" title="Chỉnh sửa">
+                                <Edit2 size={12} />
+                              </button>
+                              <button onClick={() => handleDelete(mr.id)} className="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 p-1.5 rounded transition-all inline-flex items-center" title="Xóa">
+                                <Trash2 size={12} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            )
+              )
           )}
 
-          {/* Form Modal */}
+          {/* Modal: tạo / sửa / tái khám */}
           {showModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-              <div className="bg-[#0f172a] border border-glass-border rounded-xl w-full max-w-lg overflow-hidden shadow-2xl relative">
+              <div className="bg-[#0f172a] border border-glass-border rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 border-b border-glass-border flex justify-between items-center bg-white/[0.02]">
                   <h3 className="font-serif text-lg font-bold text-champagne">
-                    {modalType === 'create' ? `Khám sức khỏe: ${selectedHorseName}` : `Chỉnh sửa bệnh án: ${selectedHorseName}`}
+                    {modalType === 'create' && `Khám sức khỏe: ${selectedHorseName}`}
+                    {modalType === 'edit' && `Chỉnh sửa bệnh án: ${selectedHorseName}`}
+                    {modalType === 'recheck' && `Tái khám: ${selectedHorseName}`}
                   </h3>
-                  <button 
-                    onClick={() => setShowModal(false)}
-                    className="text-muted hover:text-white text-lg font-bold"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => setShowModal(false)} className="text-muted hover:text-white text-xl font-bold">×</button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                  {modalType === 'recheck' && (
+                    <div className="text-[11px] text-cyan-400/80 bg-cyan-500/5 border border-cyan-500/20 rounded-lg px-3 py-2">
+                      Tái khám cho ngựa đã xếp lịch đua. Nếu kết quả <b>Fail</b> → BE tự động rút ngựa khỏi cuộc đua và gửi thông báo.
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase mb-1">Cân nặng (kg) *</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        required
-                        value={weight}
-                        onChange={e => setWeight(e.target.value)}
-                        placeholder="VD: 450.5"
-                        className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 text-sm text-white focus:border-gold outline-none"
-                      />
+                      <input type="number" step="0.01" required value={weight} onChange={e => setWeight(e.target.value)} placeholder="VD: 450.5" className={INPUT_CLS} />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase mb-1">Nhiệt độ (°C)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={temperature}
-                        onChange={e => setTemperature(e.target.value)}
-                        placeholder="VD: 38.2"
-                        className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 text-sm text-white focus:border-gold outline-none"
-                      />
+                      <input type="number" step="0.1" value={temperature} onChange={e => setTemperature(e.target.value)} placeholder="VD: 38.2" className={INPUT_CLS} />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-muted uppercase mb-1">Nhịp tim (bpm)</label>
-                    <input
-                      type="number"
-                      value={heartRate}
-                      onChange={e => setHeartRate(e.target.value)}
-                      placeholder="VD: 40"
-                      className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 text-sm text-white focus:border-gold outline-none"
-                    />
+                    <input type="number" value={heartRate} onChange={e => setHeartRate(e.target.value)} placeholder="VD: 40" className={INPUT_CLS} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase mb-1">Kết quả Doping *</label>
-                      <select
-                        value={dopingResult}
-                        onChange={e => setDopingResult(e.target.value)}
-                        className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 text-sm text-white focus:border-gold outline-none"
-                      >
+                      <select value={dopingResult} onChange={e => setDopingResult(e.target.value)} className={INPUT_CLS}>
                         <option value="Negative" className="bg-[#0f172a]">Negative (Âm tính)</option>
                         <option value="Positive" className="bg-[#0f172a]">Positive (Dương tính)</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase mb-1">Đánh giá Y tế *</label>
-                      <select
-                        value={medicalResult}
-                        onChange={e => setMedicalResult(e.target.value)}
-                        className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 text-sm text-white focus:border-gold outline-none"
-                      >
-                        <option value="Pass" className="bg-[#0f172a]">Pass (Đạt chuẩn)</option>
+                      <select value={medicalResult} onChange={e => setMedicalResult(e.target.value)} className={INPUT_CLS}>
+                        <option value="Pass" className="bg-[#0f172a]">Pass (Đạt)</option>
                         <option value="Fail" className="bg-[#0f172a]">Fail (Không đạt)</option>
                       </select>
                     </div>
                   </div>
 
+                  {/* FailReason — required for recheck with Fail result */}
+                  {modalType === 'recheck' && medicalResult === 'Fail' && (
+                    <div>
+                      <label className="block text-xs font-bold text-muted uppercase mb-1">Lý do Fail *</label>
+                      <select value={failReason} onChange={e => setFailReason(e.target.value)} className={INPUT_CLS}>
+                        <option value="" className="bg-[#0f172a]">— Chọn lý do —</option>
+                        <option value="FailedMedicalReCheck" className="bg-[#0f172a]">Không đạt tái khám y tế</option>
+                        <option value="VeterinaryDecision" className="bg-[#0f172a]">Quyết định của thú y</option>
+                        <option value="HorseInjury" className="bg-[#0f172a]">Ngựa bị thương</option>
+                      </select>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-bold text-muted uppercase mb-1">Ghi chú y khoa</label>
-                    <textarea
-                      value={notes}
-                      onChange={e => setNotes(e.target.value)}
-                      placeholder="Ghi chú thêm về sức khỏe ngựa..."
-                      rows={3}
-                      className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 text-sm text-white focus:border-gold outline-none resize-none"
-                    />
+                    <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ghi chú thêm..." rows={3} className={`${INPUT_CLS} resize-none`} />
                   </div>
 
+                  {error && <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</div>}
+
                   <div className="pt-4 flex justify-end gap-3 border-t border-glass-border">
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(false)}
-                      className="px-4 py-2 border border-glass-border hover:bg-white/[0.05] rounded-lg text-sm text-muted hover:text-white transition-all"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-gold hover:bg-gold-hover text-black font-bold px-4 py-2 rounded-lg text-sm transition-all"
-                    >
-                      {loading ? 'Đang lưu...' : 'Lưu kết quả'}
+                    <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-glass-border hover:bg-white/[0.05] rounded-lg text-sm text-muted hover:text-white transition-all">Hủy</button>
+                    <button type="submit" disabled={loading} className="bg-gold hover:bg-gold/80 text-black font-bold px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-60">
+                      {loading ? 'Đang lưu...' : modalType === 'recheck' ? 'Lưu kết quả tái khám' : 'Lưu kết quả'}
                     </button>
                   </div>
                 </form>

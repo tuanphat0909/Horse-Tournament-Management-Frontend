@@ -5,7 +5,7 @@ import {
   Bell, LogOut, Users, ClipboardList,
   ShieldCheck, FileText, Target, Star, Activity,
   Megaphone, UserCheck, AlertTriangle, Wallet,
-  Settings, Sun, Moon,
+  Settings, Sun, Moon, GitBranch,
 } from 'lucide-react';
 import { getCurrentUser, logout } from '../../api/authService';
 import { useLanguage } from '../../context/LanguageContext';
@@ -28,6 +28,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { icon: Megaphone, label: 'Publish Results', path: '/admin/results' },
     { icon: AlertTriangle, label: 'Violations', path: '/admin/violations' },
     { icon: Target, label: 'Predictions', path: '/admin/predictions' },
+    { icon: GitBranch, label: 'Demo Flow', path: '/admin/demo-flow' },
   ],
   owner: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/owner/dashboard' },

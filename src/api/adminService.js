@@ -52,3 +52,6 @@ export const updateViolationStatus = (id, status) => api.put(`/admin/violations/
 export const getRacesRefereeAssignments = () => api.get('/admin/races/referee-assignments');
 
 export const getActivityLog = () => api.get('/admin/activity-log');
+
+export const withdrawRaceEntry = (raceEntryId, reason) =>
+  api.post(`/admin/races/entries/${raceEntryId}/withdraw`, { reason });

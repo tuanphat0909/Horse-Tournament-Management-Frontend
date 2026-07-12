@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { login, parseApiError } from '../api/authService';
 import { getDashboardPath } from '../utils/roleRoutes';
 import { BrandLogo } from '../components/ui/BrandLogo';
+import { useAuth } from '../context/AuthContext';
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -107,18 +108,25 @@ function CornerOrnament() {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { user, authReady, setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Already authenticated — go straight to the correct dashboard.
+  if (authReady && user) {
+    return <Navigate to={getDashboardPath(user.role)} replace />;
+  }
+
   async function handleSignIn() {
     setError('');
     setLoading(true);
     try {
-      const user = await login(email, password);
-      navigate(getDashboardPath(user.role), { replace: true });
+      const result = await login(email, password);
+      setUser(result);
+      navigate(getDashboardPath(result.role), { replace: true });
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {

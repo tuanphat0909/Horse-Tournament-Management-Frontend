@@ -7,7 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { RaceTrack3D } from '../../components/ui/RaceTrack3D';
 import { Pager, paginate } from '../../components/ui/Pager';
-import { createRace, deleteRace, createRaceEntry, assignReferee, getRaceReferees, removeReferee, generateTournamentRaces, generateFinalRace, getRegistrations, getReferees } from '../../api/adminService';
+import { createRace, deleteRace, createRaceEntry, assignReferee, getRaceReferees, removeReferee, generateTournamentRaces, generateFinalRace, getRegistrations, getReferees, withdrawRaceEntry } from '../../api/adminService';
 import { getRaceSchedule, getTournaments, getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
@@ -39,6 +39,28 @@ const fixMojibake = (str: string): string => {
     return str;
   }
 };
+
+// Detect race type from name for badge
+function raceTypeBadge(name: string = ''): { label: string; cls: string } | null {
+  const n = name.toLowerCase();
+  if (n.includes('chung kết') || n.includes('chung ket') || n.includes('final')) {
+    return { label: '🏆 Chung kết', cls: 'text-gold bg-gold/15 border-gold/30' };
+  }
+  if (n.includes('sơ loại') || n.includes('so loai') || n.includes('heat') || n.includes('vòng loại')) {
+    return { label: '⚡ Sơ loại', cls: 'text-orange-400 bg-orange-500/10 border-orange-500/25' };
+  }
+  return null;
+}
+
+// Even-split: distribute N horses into heats of ≤12, return array of sizes
+function calcHeats(total: number): number[] {
+  if (total <= 0) return [];
+  if (total <= 12) return [total];
+  const n = Math.ceil(total / 12);
+  const base = Math.floor(total / n);
+  const rem = total % n;
+  return Array.from({ length: n }, (_, i) => (i < rem ? base + 1 : base));
+}
 
 // "2026-07-04T18:30:00" -> "04/07/2026 18:30"
 function fmtDate(v: any): string {
@@ -96,6 +118,9 @@ export function AdminRacesPage() {
   const [laneLoading, setLaneLoading] = useState(false);
   const [laneSaving, setLaneSaving] = useState(false);
   const [laneMsg, setLaneMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [swapFromEntry, setSwapFromEntry] = useState<any | null>(null);
+  const [swapToLane, setSwapToLane] = useState<number>(0);
+  const [withdrawingEntryId, setWithdrawingEntryId] = useState<number | null>(null);
 
   // Chi tiết cuộc đua (modal 'detail'): sơ đồ làn 3D + trọng tài
   const [detailRace, setDetailRace] = useState<any | null>(null);
@@ -144,7 +169,8 @@ export function AdminRacesPage() {
         ...r,
         horseName: fixMojibake(r.horseName),
         ownerName: fixMojibake(r.ownerName),
-        tournamentName: fixMojibake(r.tournamentName)
+        tournamentName: fixMojibake(r.tournamentName),
+        healthStatus: r.healthStatus ?? 'Healthy',
       })));
 
       setRefereeOptions(fetchedReferees.map((r: any) => ({
@@ -207,6 +233,7 @@ export function AdminRacesPage() {
     setModal('none');
     setRaceError(''); setRaceForm(INIT_RACE);
     setLaneRaceId(''); setLaneEntries([]); setLaneSel({}); setLaneMsg(null);
+    setSwapFromEntry(null); setSwapToLane(0);
     setRefError(''); setRefForm(INIT_REF);
     setReferees([]);
     setDetailRace(null); setDetailEntries([]); setDetailRefs([]);
@@ -278,6 +305,7 @@ export function AdminRacesPage() {
       const regId = r.registrationId ?? r.id;
       return Number(r.tournamentId ?? r.TournamentId) === Number(laneRace.tournamentId)
         && (r.status ?? '').toLowerCase() === 'approved'
+        && (r.healthStatus ?? 'Healthy').toLowerCase() === 'healthy'
         && !takenRegIds.has(regId) && !takenHorseIds.has(r.horseId);
     });
   }, [registrationsList, laneEntries, laneRace]);
@@ -401,6 +429,21 @@ export function AdminRacesPage() {
       setReferees(prev => prev.filter(r => (r.id ?? r.refereeId) !== refereeId));
     } catch (err: unknown) {
       showToast('Lỗi', parseApiError(err as Error), 'error');
+    }
+  }
+
+  async function handleWithdrawEntry(raceEntryId: number, horseName: string) {
+    if (!window.confirm(`Loại bỏ "${horseName}" khỏi cuộc đua? Hành động này không thể hoàn tác.`)) return;
+    setWithdrawingEntryId(raceEntryId);
+    try {
+      await withdrawRaceEntry(raceEntryId, 'Sức khỏe không đủ điều kiện tham gia');
+      showToast('Đã loại bỏ', `Ngựa "${horseName}" đã bị rút khỏi cuộc đua.`);
+      if (modal === 'lanes') await selectLaneRace(laneRaceId);
+      if (modal === 'detail' && detailRace) await openDetail(detailRace);
+    } catch (err: unknown) {
+      showToast('Lỗi', parseApiError(err as Error), 'error');
+    } finally {
+      setWithdrawingEntryId(null);
     }
   }
 
@@ -812,8 +855,13 @@ export function AdminRacesPage() {
                                   <div className="p-4 space-y-3">
                                     <div className="flex items-start justify-between gap-2">
                                       <div>
-                                        <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                                        <h4 className="text-sm font-bold text-white flex items-center gap-1.5 flex-wrap">
                                           🏁 {race.name}
+                                          {raceTypeBadge(race.name) && (
+                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${raceTypeBadge(race.name)!.cls}`}>
+                                              {raceTypeBadge(race.name)!.label}
+                                            </span>
+                                          )}
                                         </h4>
                                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
                                           (race.status === 'Finished' || race.status === 'Completed') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
@@ -987,11 +1035,60 @@ export function AdminRacesPage() {
               {laneRaceId && (
                 <div className="text-[11px] text-champagne/80 bg-gold/5 border border-gold/15 rounded-lg px-3 py-2 leading-relaxed">
                   Chọn ngựa cho từng làn trống rồi bấm <b>"Lưu các làn đã chọn"</b>.
-                  Chỉ hiển thị ngựa có đơn <b>đã duyệt (Approved)</b>, chưa được ghép — ngựa đã chọn ở làn khác sẽ tự ẩn.
+                  Chỉ hiển thị ngựa có đơn <b>đã duyệt (Approved) + sức khỏe Healthy</b>, chưa được ghép — ngựa đã chọn ở làn khác sẽ tự ẩn.
                   Nài ngựa được hệ thống tự gán theo hợp đồng jockey đã chấp nhận.
-                  <br />⚠ Theo quy trình, chỉ ghép ngựa có sức khỏe <b>Khỏe mạnh (Healthy)</b> — kiểm tra với trọng tài/chủ ngựa trước khi ghép (hệ thống chưa tự chặn được vì API đăng ký chưa trả tình trạng sức khỏe).
                 </div>
               )}
+
+              {/* Warning: Approved but not Healthy */}
+              {laneRaceId && (() => {
+                const unhealthy = registrationsList.filter(r =>
+                  Number(r.tournamentId ?? r.TournamentId) === Number(laneRace?.tournamentId)
+                  && (r.status ?? '').toLowerCase() === 'approved'
+                  && (r.healthStatus ?? 'Healthy').toLowerCase() !== 'healthy'
+                );
+                if (unhealthy.length === 0) return null;
+                return (
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2.5 text-[11px] text-red-400 space-y-1">
+                    <div className="font-bold">⚠ {unhealthy.length} ngựa Approved nhưng chưa đủ sức khỏe (bị loại khỏi danh sách ghép làn)</div>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {unhealthy.map(r => (
+                        <span key={r.registrationId ?? r.id} className="px-2 py-0.5 rounded bg-red-500/15 border border-red-500/25 text-red-300">
+                          {r.horseName} — <span className="font-bold">{r.healthStatus}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Feature 1: Auto-split hint — sơ loại vs chung kết */}
+              {laneRaceId && (() => {
+                const totalApproved = eligibleRegs.length + laneEntries.length;
+                if (totalApproved === 0) return null;
+                if (totalApproved <= 12) {
+                  return (
+                    <div className="rounded-lg bg-emerald-500/8 border border-emerald-500/25 px-3 py-2.5 text-[11px] text-emerald-400 space-y-0.5">
+                      <div className="font-bold">🏆 Race chung kết trực tiếp</div>
+                      <div><b>{totalApproved}</b> ngựa hợp lệ ≤ 12 → toàn bộ <b>{totalApproved}</b> ngựa vào thẳng race chung kết này, không cần vòng sơ loại.</div>
+                    </div>
+                  );
+                }
+                const heats = calcHeats(totalApproved);
+                return (
+                  <div className="rounded-lg bg-orange-500/10 border border-orange-500/30 px-3 py-2.5 space-y-2 text-[11px]">
+                    <div className="font-bold text-orange-400">⚡ Cần tổ chức race sơ loại trước chung kết</div>
+                    <div className="text-orange-400"><b>{totalApproved}</b> ngựa hợp lệ &gt; 12 → chia đều thành <b>{heats.length}</b> race sơ loại:</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {heats.map((size, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-lg bg-orange-500/15 border border-orange-500/25 text-orange-400 font-bold">Sơ loại {i + 1}: {size} ngựa</span>
+                      ))}
+                      <span className="px-2.5 py-1 rounded-lg bg-gold/15 border border-gold/30 text-gold font-bold">🏆 Chung kết: 12 ngựa</span>
+                    </div>
+                    <div className="text-orange-400/80">Sau sơ loại → chọn <b className="text-orange-400">12 ngựa có thời gian đua tốt nhất</b> → race chung kết. Hãy tạo <b>{heats.length}</b> race sơ loại + <b>1</b> race chung kết trong vòng đua này.</div>
+                  </div>
+                );
+              })()}
 
               {laneLoading ? (
                 <LoadingSkeleton />
@@ -1000,14 +1097,68 @@ export function AdminRacesPage() {
                   {Array.from({ length: maxLanes }, (_, idx) => idx + 1).map(laneNo => {
                     const existing = laneEntries.find((e: any) => e.laneNo === laneNo);
                     if (existing) {
-                      // Làn đã ghép — khoá lại, hiển thị thông tin
+                      // Feature 4: lane swap mock UI
+                      const isSwapping = swapFromEntry?.laneNo === laneNo;
+                      const isUnhealthy = existing.healthStatus && existing.healthStatus.toLowerCase() !== 'healthy';
                       return (
-                        <div key={laneNo} className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                          <span className="w-14 shrink-0 text-xs font-bold text-emerald-400">Làn {laneNo}</span>
-                          <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                          <span className="text-sm text-white truncate">{existing.horseName ?? `Ngựa #${existing.horseId}`}</span>
-                          {existing.jockeyName && <span className="text-xs text-muted truncate">• {existing.jockeyName}</span>}
-                          <span className="ml-auto text-[10px] uppercase font-bold text-emerald-400/70 shrink-0">Đã ghép</span>
+                        <div key={laneNo} className="space-y-1">
+                          <div className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border ${isUnhealthy ? 'bg-red-500/8 border-red-500/30' : 'bg-emerald-500/5 border-emerald-500/20'}`}>
+                            <span className={`w-14 shrink-0 text-xs font-bold ${isUnhealthy ? 'text-red-400' : 'text-emerald-400'}`}>Làn {laneNo}</span>
+                            {isUnhealthy
+                              ? <AlertCircle size={14} className="text-red-400 shrink-0" />
+                              : <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />}
+                            <span className="text-sm text-white truncate">{existing.horseName ?? `Ngựa #${existing.horseId}`}</span>
+                            {existing.jockeyName && <span className="text-xs text-muted truncate">• {existing.jockeyName}</span>}
+                            {isUnhealthy && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 border border-red-500/30 text-red-300 font-bold shrink-0">{existing.healthStatus}</span>
+                            )}
+                            <span className={`ml-auto text-[10px] uppercase font-bold shrink-0 mr-2 ${isUnhealthy ? 'text-red-400/70' : 'text-emerald-400/70'}`}>{isUnhealthy ? 'Không đủ SK' : 'Đã ghép'}</span>
+                            {isUnhealthy ? (
+                              <button
+                                onClick={() => handleWithdrawEntry(existing.raceEntryId, existing.horseName ?? `Ngựa #${existing.horseId}`)}
+                                disabled={withdrawingEntryId === existing.raceEntryId}
+                                className="text-[10px] px-2 py-1 rounded border border-red-500/40 bg-red-500/15 text-red-400 hover:bg-red-500/25 shrink-0 font-bold disabled:opacity-50"
+                              >{withdrawingEntryId === existing.raceEntryId ? '...' : 'Loại bỏ'}</button>
+                            ) : (
+                              <button
+                                onClick={() => { setSwapFromEntry(existing); setSwapToLane(0); }}
+                                className="text-[10px] px-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 shrink-0 font-bold"
+                                title="Đổi làn [MOCK]"
+                              >⇄ Đổi</button>
+                            )}
+                          </div>
+                          {isSwapping && (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/5 border border-blue-500/25">
+                              <span className="text-[10px] font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-1.5 py-0.5 rounded shrink-0">MOCK</span>
+                              <span className="text-[11px] text-muted shrink-0">Chuyển sang:</span>
+                              <select value={swapToLane} onChange={e => setSwapToLane(Number(e.target.value))}
+                                className="flex-1 bg-navy/50 border border-glass-border rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-blue-400/40"
+                                style={{ colorScheme: 'dark' }}>
+                                <option value={0}>— Chọn làn đích —</option>
+                                {Array.from({ length: maxLanes }, (_, i) => i + 1)
+                                  .filter(l => l !== laneNo)
+                                  .map(l => {
+                                    const occ = laneEntries.find((e: any) => e.laneNo === l);
+                                    return <option key={l} value={l}>Làn {l}{occ ? ` ↔ ${occ.horseName ?? 'ngựa'}` : ' (trống)'}</option>;
+                                  })}
+                              </select>
+                              <button disabled={!swapToLane} onClick={() => {
+                                if (!swapToLane) return;
+                                const fromLane = laneNo; const toLane = swapToLane;
+                                const toEntry = laneEntries.find((e: any) => e.laneNo === toLane);
+                                setLaneEntries(prev => prev.map((e: any) => {
+                                  if (e.laneNo === fromLane) return { ...e, laneNo: toLane };
+                                  if (e.laneNo === toLane) return { ...e, laneNo: fromLane };
+                                  return e;
+                                }));
+                                setSwapFromEntry(null); setSwapToLane(0);
+                                showToast('Đã đổi làn [MOCK]', toEntry
+                                  ? `Hoán đổi Làn ${fromLane} ↔ Làn ${toLane}: ${existing.horseName} ↔ ${toEntry.horseName}`
+                                  : `Chuyển ${existing.horseName} từ Làn ${fromLane} → Làn ${toLane}`);
+                              }} className="text-[11px] px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 disabled:opacity-40 shrink-0 font-bold">Xác nhận</button>
+                              <button onClick={() => { setSwapFromEntry(null); setSwapToLane(0); }} className="text-[11px] px-2 py-1 rounded-lg border border-glass-border text-muted hover:text-white shrink-0">Hủy</button>
+                            </div>
+                          )}
                         </div>
                       );
                     }
@@ -1134,13 +1285,24 @@ export function AdminRacesPage() {
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {[...detailEntries].sort((a: any, b: any) => (a.laneNo ?? 0) - (b.laneNo ?? 0)).map((e: any, i: number) => {
                         const isOver = (e.laneNo ?? 0) > Number(detailRace.maxLanes ?? 0);
+                        const isUnhealthy = e.healthStatus && e.healthStatus.toLowerCase() !== 'healthy';
                         return (
-                          <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${isOver ? 'bg-red-500/10 border border-red-500/30' : 'bg-white/2 border border-glass-border'}`}>
-                            <span className={`font-bold shrink-0 w-11 ${isOver ? 'text-red-400' : 'text-emerald-400'}`}>Làn {e.laneNo}</span>
+                          <div key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${isOver ? 'bg-red-500/10 border border-red-500/30' : isUnhealthy ? 'bg-red-500/8 border border-red-500/25' : 'bg-white/2 border border-glass-border'}`}>
+                            <span className={`font-bold shrink-0 w-11 ${isOver || isUnhealthy ? 'text-red-400' : 'text-emerald-400'}`}>Làn {e.laneNo}</span>
                             <span className="text-white truncate">🐴 {e.horseName ?? `Ngựa #${e.horseId}`}</span>
                             <span className="text-muted truncate">{e.jockeyName ? `• ${e.jockeyName}` : '• Chưa có jockey'}</span>
                             {isOver && <span className="ml-auto font-bold text-red-400 shrink-0 text-[10px]">VƯỢT LÀN</span>}
-                            {!isOver && e.finishPosition != null && <span className="ml-auto font-bold text-gold shrink-0">#{e.finishPosition}</span>}
+                            {isUnhealthy && !isOver && (
+                              <>
+                                <span className="ml-auto font-bold text-red-400 shrink-0 text-[10px]">{e.healthStatus}</span>
+                                <button
+                                  onClick={() => handleWithdrawEntry(e.raceEntryId, e.horseName ?? `Ngựa #${e.horseId}`)}
+                                  disabled={withdrawingEntryId === e.raceEntryId}
+                                  className="text-[10px] px-1.5 py-0.5 rounded border border-red-500/40 bg-red-500/15 text-red-400 hover:bg-red-500/25 shrink-0 font-bold disabled:opacity-50"
+                                >{withdrawingEntryId === e.raceEntryId ? '...' : 'Loại bỏ'}</button>
+                              </>
+                            )}
+                            {!isOver && !isUnhealthy && e.finishPosition != null && <span className="ml-auto font-bold text-gold shrink-0">#{e.finishPosition}</span>}
                           </div>
                         );
                       })}

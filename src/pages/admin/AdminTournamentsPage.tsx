@@ -403,6 +403,22 @@ export function AdminTournamentsPage() {
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5 whitespace-nowrap shrink-0`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                       </span>
+                      {/* 3-state registration badge */}
+                      {(() => {
+                        const now = Date.now();
+                        const endMs = tour.registrationEndDate ? new Date(tour.registrationEndDate).getTime() : null;
+                        const daysLeft = endMs !== null ? Math.ceil((endMs - now) / 86400000) : null;
+                        if (daysLeft === null) return null;
+                        if (daysLeft < 0) return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">🔒 Đã đóng ĐK</span>
+                        );
+                        if (daysLeft <= 12) return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-yellow-500/40 bg-yellow-500/10 text-yellow-400 shrink-0">⚡ Final · còn {daysLeft}n</span>
+                        );
+                        return (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 text-emerald-400 shrink-0">✓ Đang mở ĐK</span>
+                        );
+                      })()}
                       {raceState.regNotStarted && tour.registrationStartDate ? (
                         <CountdownTimer target={tour.registrationStartDate} utc={false} label="Mở ĐK sau:" />
                       ) : tour.registrationEndDate ? (

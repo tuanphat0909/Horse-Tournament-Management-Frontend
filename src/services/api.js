@@ -19,6 +19,13 @@ async function request(method, endpoint, data) {
     body: data ? JSON.stringify(data) : undefined,
   });
 
+  if (res.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+  }
+
   if (!res.ok) {
     const message = await res.text();
     throw new Error(message || `HTTP error ${res.status}`);
