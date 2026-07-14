@@ -7,7 +7,8 @@ import {
   Megaphone, UserCheck, AlertTriangle, Wallet,
   Settings, Sun, Moon, GitBranch,
 } from 'lucide-react';
-import { getCurrentUser, logout } from '../../api/authService';
+import { getCurrentUser } from '../../api/authService';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { BrandLogo } from '../ui/BrandLogo';
 
@@ -89,6 +90,7 @@ export function Sidebar() {
   const roleKey = toRoleKey(user?.role);
   const navItems = NAV_BY_ROLE[roleKey] ?? NAV_BY_ROLE.spectator;
 
+  const { setUser } = useAuth();
   const { language, setLanguage, t } = useLanguage();
 
   const [showSettings, setShowSettings] = useState(false);
@@ -108,8 +110,8 @@ export function Sidebar() {
   }, [theme]);
 
   function handleLogout() {
-    logout();
-    navigate('/login');
+    setUser(null);                       // clear React state + localStorage atomically
+    navigate('/login', { replace: true }); // replace: Back không quay lại dashboard cũ
   }
 
   return (
