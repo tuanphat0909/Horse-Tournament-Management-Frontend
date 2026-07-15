@@ -100,7 +100,7 @@ export function MedicalCheckPage() {
       if (assignedRes.status === 'fulfilled') setAssignedList(assignedRes.value?.result ?? []);
       if (historyRes.status === 'fulfilled') setHistoryList(historyRes.value?.result ?? []);
       if (pendingRes.status === 'rejected' && assignedRes.status === 'rejected' && historyRes.status === 'rejected') {
-        setError('Không thể tải dữ liệu kiểm tra sức khỏe.');
+        setError('Failed to load health inspection data.');
       }
       setLoading(false);
     });
@@ -136,24 +136,24 @@ export function MedicalCheckPage() {
   function openRecheck(ae: AssignedEntry) {
     setModalType('recheck');
     setSelectedRegId(ae.registrationId);
-    setSelectedHorseName(ae.horseName ?? `Ngựa #${ae.raceId}`);
+    setSelectedHorseName(ae.horseName ?? `Horse #${ae.raceId}`);
     resetForm();
     setShowModal(true);
   }
 
   function handleDelete(id: number) {
-    if (!window.confirm('Xác nhận xóa bệnh án này?')) return;
+    if (!window.confirm('Are you sure you want to delete this medical record?')) return;
     setLoading(true);
     deleteMedicalCheck(id)
-      .then(() => { setSuccess('Đã xóa bệnh án thành công!'); loadData(); })
-      .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi xóa.'); setLoading(false); });
+      .then(() => { setSuccess('Medical record deleted successfully!'); loadData(); })
+      .catch((err: any) => { setError(err.response?.data?.message ?? 'Error deleting.'); setLoading(false); });
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!weight || parseFloat(weight) <= 0) { setError('Cân nặng phải > 0.'); return; }
+    if (!weight || parseFloat(weight) <= 0) { setError('Weight must be greater than 0.'); return; }
     if (medicalResult === 'Fail' && modalType === 'recheck' && !failReason.trim()) {
-      setError('Cần nhập FailReason khi kết quả là Fail.'); return;
+      setError('FailReason is required when result is Fail.'); return;
     }
 
     const base = {
@@ -169,23 +169,23 @@ export function MedicalCheckPage() {
 
     if (modalType === 'create') {
       createMedicalCheck({ registrationId: selectedRegId, ...base })
-        .then(() => { setSuccess('Đã lưu kết quả khám!'); setShowModal(false); loadData(); })
-        .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi tạo.'); setLoading(false); });
+        .then(() => { setSuccess('Inspection result saved!'); setShowModal(false); loadData(); })
+        .catch((err: any) => { setError(err.response?.data?.message ?? 'Error creating.'); setLoading(false); });
     } else if (modalType === 'edit') {
       updateMedicalCheck(selectedRecordId!, base)
-        .then(() => { setSuccess('Đã cập nhật bệnh án!'); setShowModal(false); loadData(); })
-        .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi cập nhật.'); setLoading(false); });
+        .then(() => { setSuccess('Medical record updated!'); setShowModal(false); loadData(); })
+        .catch((err: any) => { setError(err.response?.data?.message ?? 'Error updating.'); setLoading(false); });
     } else {
       // recheck
       performRecheck({ registrationId: selectedRegId, ...base, failReason: failReason || null })
         .then((res: any) => {
           const withdrawn = res?.result?.horseWithdrawn;
           setSuccess(withdrawn
-            ? `Tái khám xong — Ngựa đã bị rút khỏi cuộc đua (kết quả Fail).`
-            : `Tái khám xong — Ngựa tiếp tục thi đấu (kết quả Pass).`);
+            ? `Recheck completed — Horse withdrawn from the race (Failed).`
+            : `Recheck completed — Horse continues to compete (Passed).`);
           setShowModal(false); loadData();
         })
-        .catch((err: any) => { setError(err.response?.data?.message ?? 'Lỗi khi tái khám.'); setLoading(false); });
+        .catch((err: any) => { setError(err.response?.data?.message ?? 'Error during re-inspection.'); setLoading(false); });
     }
   }
 
@@ -219,8 +219,8 @@ export function MedicalCheckPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Kiểm Tra Sức Khỏe Ngựa"
-            subtitle="Bệnh án, xét nghiệm doping và đánh giá điều kiện tham gia — tái khám ngựa đã xếp lịch đua"
+            title="Horse Health Inspection"
+            subtitle="Medical record, doping test and entry eligibility check - re-inspection of scheduled horses"
             imageUrl="/images/hero-referee.jpg"
             imagePosition="right 52%"
           />
@@ -231,32 +231,32 @@ export function MedicalCheckPage() {
           {/* Tabs & Search */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between border-b border-glass-border">
             <div className="flex items-center gap-1">
-              {TAB_BTN('pending', 'Chờ kiểm tra', pendingList.length)}
-              {TAB_BTN('assigned', 'Đã xếp lịch đua', assignedList.length)}
-              {TAB_BTN('history', 'Lịch sử khám', historyList.length)}
+              {TAB_BTN('pending', 'Awaiting Inspection', pendingList.length)}
+              {TAB_BTN('assigned', 'Race Scheduled', assignedList.length)}
+              {TAB_BTN('history', 'Inspection History', historyList.length)}
             </div>
             <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-full md:w-64 mb-3">
               <Search size={14} className="text-muted shrink-0" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm ngựa, giải đấu, chủ ngựa..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search horses, tournaments, owners..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
             </div>
           </div>
 
-          {/* Tab: Chờ kiểm tra */}
+          {/* Tab: Awaiting Inspection */}
           {activeTab === 'pending' && (
-            loading ? <div className="text-center py-12 text-muted">Đang tải...</div>
+            loading ? <div className="text-center py-12 text-muted">Loading...</div>
             : filteredPending.length === 0
-              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">Không có ngựa nào chờ khám.</div>
+              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">No horses awaiting inspection.</div>
               : (
                 <div className="glass-panel rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                          <th className="px-6 py-4">Ngựa</th>
-                          <th className="px-6 py-4">Giải đấu</th>
-                          <th className="px-6 py-4">Chủ sở hữu</th>
-                          <th className="px-6 py-4">Ngày đăng ký</th>
-                          <th className="px-6 py-4 text-right">Hành động</th>
+                          <th className="px-6 py-4">Horse</th>
+                          <th className="px-6 py-4">Tournaments</th>
+                          <th className="px-6 py-4">Owner</th>
+                          <th className="px-6 py-4">Registration Date</th>
+                          <th className="px-6 py-4 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -268,7 +268,7 @@ export function MedicalCheckPage() {
                             <td className="px-6 py-4 text-muted">{new Date(pc.registeredAt).toLocaleDateString('vi-VN')}</td>
                             <td className="px-6 py-4 text-right">
                               <button onClick={() => openCreate(pc)} className="bg-gold/10 hover:bg-gold/20 text-gold px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 border border-gold/30">
-                                <Plus size={12} /> Khám sức khỏe
+                                <Plus size={12} /> Medical Check
                               </button>
                             </td>
                           </tr>
@@ -280,24 +280,24 @@ export function MedicalCheckPage() {
               )
           )}
 
-          {/* Tab: Ngựa đã xếp lịch đua */}
+          {/* Tab: Horse đã xếp lịch đua */}
           {activeTab === 'assigned' && (
-            loading ? <div className="text-center py-12 text-muted">Đang tải...</div>
+            loading ? <div className="text-center py-12 text-muted">Loading...</div>
             : filteredAssigned.length === 0
-              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">Không có ngựa nào đã xếp lịch đua.</div>
+              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">No horses scheduled for races.</div>
               : (
                 <div className="glass-panel rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                          <th className="px-6 py-4">Ngựa</th>
-                          <th className="px-6 py-4">Cuộc đua</th>
-                          <th className="px-6 py-4">Ngày đua</th>
-                          <th className="px-6 py-4">Làn</th>
-                          <th className="px-6 py-4">Lần khám cuối</th>
-                          <th className="px-6 py-4">Trạng thái entry</th>
-                          <th className="px-6 py-4 text-right">Tái khám</th>
+                          <th className="px-6 py-4">Horse</th>
+                          <th className="px-6 py-4">Race</th>
+                          <th className="px-6 py-4">Race Date</th>
+                          <th className="px-6 py-4">Lane</th>
+                          <th className="px-6 py-4">Last Check</th>
+                          <th className="px-6 py-4">Status entry</th>
+                          <th className="px-6 py-4 text-right">Recheck</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -319,12 +319,12 @@ export function MedicalCheckPage() {
                               {ae.lastMedicalResult ? (
                                 <div>
                                   <span className={`px-2 py-0.5 rounded text-xs font-semibold ${ae.lastMedicalResult === 'Pass' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                    {ae.lastMedicalResult === 'Pass' ? 'Đạt' : 'Không đạt'}
+                                    {ae.lastMedicalResult === 'Pass' ? 'Pass' : 'Fail'}
                                   </span>
                                   {ae.lastCheckType && <span className="ml-1 text-[10px] text-muted">{ae.lastCheckType}</span>}
                                   {ae.lastCheckedAt && <div className="text-[10px] text-muted/60 mt-0.5">{new Date(ae.lastCheckedAt).toLocaleDateString('vi-VN')}</div>}
                                 </div>
-                              ) : <span className="text-muted text-xs">Chưa có</span>}
+                              ) : <span className="text-muted text-xs">None</span>}
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${
@@ -343,7 +343,7 @@ export function MedicalCheckPage() {
                                 disabled={ae.raceEntryStatus === 'Withdrawn' || ae.raceEntryStatus === 'Disqualified'}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                               >
-                                <RefreshCw size={11} /> Tái khám
+                                <RefreshCw size={11} /> Recheck
                               </button>
                             </td>
                           </tr>
@@ -355,26 +355,26 @@ export function MedicalCheckPage() {
               )
           )}
 
-          {/* Tab: Lịch sử khám */}
+          {/* Tab: Inspection History */}
           {activeTab === 'history' && (
-            loading ? <div className="text-center py-12 text-muted">Đang tải lịch sử...</div>
+            loading ? <div className="text-center py-12 text-muted">Loading history...</div>
             : filteredHistory.length === 0
-              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">Không tìm thấy bệnh án nào.</div>
+              ? <div className="glass-panel rounded-xl p-12 text-center text-muted">No medical records found.</div>
               : (
                 <div className="glass-panel rounded-xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                          <th className="px-6 py-4">Ngựa</th>
-                          <th className="px-6 py-4">Giải đấu</th>
-                          <th className="px-6 py-4">Cân nặng</th>
-                          <th className="px-6 py-4">Nhiệt độ</th>
-                          <th className="px-6 py-4">Nhịp tim</th>
+                          <th className="px-6 py-4">Horse</th>
+                          <th className="px-6 py-4">Tournaments</th>
+                          <th className="px-6 py-4">Weight</th>
+                          <th className="px-6 py-4">Temperature</th>
+                          <th className="px-6 py-4">Heart Rate</th>
                           <th className="px-6 py-4">Doping</th>
-                          <th className="px-6 py-4">Y tế</th>
-                          <th className="px-6 py-4">Người khám</th>
-                          <th className="px-6 py-4 text-right">Hành động</th>
+                          <th className="px-6 py-4">Medical</th>
+                          <th className="px-6 py-4">Checked By</th>
+                          <th className="px-6 py-4 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -387,20 +387,20 @@ export function MedicalCheckPage() {
                             <td className="px-6 py-4 font-mono">{mr.heartRate ? `${mr.heartRate} bpm` : '—'}</td>
                             <td className="px-6 py-4">
                               <span className={`px-2 py-0.5 rounded text-xs font-semibold ${mr.dopingResult === 'Negative' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                {mr.dopingResult === 'Negative' ? 'Âm tính' : 'Dương tính'}
+                                {mr.dopingResult === 'Negative' ? 'Negative' : 'Positive'}
                               </span>
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 py-0.5 rounded text-xs font-semibold ${mr.medicalResult === 'Pass' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                {mr.medicalResult === 'Pass' ? 'Đạt' : 'Không đạt'}
+                                {mr.medicalResult === 'Pass' ? 'Pass' : 'Fail'}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-muted text-xs">{mr.checkedByName}</td>
                             <td className="px-6 py-4 text-right space-x-2 shrink-0">
-                              <button onClick={() => openEdit(mr)} className="text-gold hover:text-white bg-gold/10 hover:bg-gold/20 p-1.5 rounded transition-all inline-flex items-center" title="Chỉnh sửa">
+                              <button onClick={() => openEdit(mr)} className="text-gold hover:text-white bg-gold/10 hover:bg-gold/20 p-1.5 rounded transition-all inline-flex items-center" title="Edit">
                                 <Edit2 size={12} />
                               </button>
-                              <button onClick={() => handleDelete(mr.id)} className="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 p-1.5 rounded transition-all inline-flex items-center" title="Xóa">
+                              <button onClick={() => handleDelete(mr.id)} className="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500/20 p-1.5 rounded transition-all inline-flex items-center" title="Delete">
                                 <Trash2 size={12} />
                               </button>
                             </td>
@@ -419,9 +419,9 @@ export function MedicalCheckPage() {
               <div className="bg-[#0f172a] border border-glass-border rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 border-b border-glass-border flex justify-between items-center bg-white/[0.02]">
                   <h3 className="font-serif text-lg font-bold text-champagne">
-                    {modalType === 'create' && `Khám sức khỏe: ${selectedHorseName}`}
-                    {modalType === 'edit' && `Chỉnh sửa bệnh án: ${selectedHorseName}`}
-                    {modalType === 'recheck' && `Tái khám: ${selectedHorseName}`}
+                    {modalType === 'create' && `Medical Check: ${selectedHorseName}`}
+                    {modalType === 'edit' && `Edit Medical Record: ${selectedHorseName}`}
+                    {modalType === 'recheck' && `Recheck: ${selectedHorseName}`}
                   </h3>
                   <button onClick={() => setShowModal(false)} className="text-muted hover:text-white text-xl font-bold">×</button>
                 </div>
@@ -429,39 +429,39 @@ export function MedicalCheckPage() {
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                   {modalType === 'recheck' && (
                     <div className="text-[11px] text-cyan-400/80 bg-cyan-500/5 border border-cyan-500/20 rounded-lg px-3 py-2">
-                      Tái khám cho ngựa đã xếp lịch đua. Nếu kết quả <b>Fail</b> → BE tự động rút ngựa khỏi cuộc đua và gửi thông báo.
+                      Re-inspect scheduled horses. If result is Fail, the system automatically withdraws the horse and sends notifications.
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-muted uppercase mb-1">Cân nặng (kg) *</label>
+                      <label className="block text-xs font-bold text-muted uppercase mb-1">Weight (kg) *</label>
                       <input type="number" step="0.01" required value={weight} onChange={e => setWeight(e.target.value)} placeholder="VD: 450.5" className={INPUT_CLS} />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-muted uppercase mb-1">Nhiệt độ (°C)</label>
+                      <label className="block text-xs font-bold text-muted uppercase mb-1">Temperature (°C)</label>
                       <input type="number" step="0.1" value={temperature} onChange={e => setTemperature(e.target.value)} placeholder="VD: 38.2" className={INPUT_CLS} />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-muted uppercase mb-1">Nhịp tim (bpm)</label>
+                    <label className="block text-xs font-bold text-muted uppercase mb-1">Heart Rate (bpm)</label>
                     <input type="number" value={heartRate} onChange={e => setHeartRate(e.target.value)} placeholder="VD: 40" className={INPUT_CLS} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-muted uppercase mb-1">Kết quả Doping *</label>
+                      <label className="block text-xs font-bold text-muted uppercase mb-1">Results Doping *</label>
                       <select value={dopingResult} onChange={e => setDopingResult(e.target.value)} className={INPUT_CLS}>
-                        <option value="Negative" className="bg-[#0f172a]">Negative (Âm tính)</option>
-                        <option value="Positive" className="bg-[#0f172a]">Positive (Dương tính)</option>
+                        <option value="Negative" className="bg-[#0f172a]">Negative (Negative)</option>
+                        <option value="Positive" className="bg-[#0f172a]">Positive (Positive)</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-muted uppercase mb-1">Đánh giá Y tế *</label>
+                      <label className="block text-xs font-bold text-muted uppercase mb-1">Medical Assessment *</label>
                       <select value={medicalResult} onChange={e => setMedicalResult(e.target.value)} className={INPUT_CLS}>
-                        <option value="Pass" className="bg-[#0f172a]">Pass (Đạt)</option>
-                        <option value="Fail" className="bg-[#0f172a]">Fail (Không đạt)</option>
+                        <option value="Pass" className="bg-[#0f172a]">Pass (Pass)</option>
+                        <option value="Fail" className="bg-[#0f172a]">Fail (Fail)</option>
                       </select>
                     </div>
                   </div>
@@ -469,27 +469,27 @@ export function MedicalCheckPage() {
                   {/* FailReason — required for recheck with Fail result */}
                   {modalType === 'recheck' && medicalResult === 'Fail' && (
                     <div>
-                      <label className="block text-xs font-bold text-muted uppercase mb-1">Lý do Fail *</label>
+                      <label className="block text-xs font-bold text-muted uppercase mb-1">Reason Fail *</label>
                       <select value={failReason} onChange={e => setFailReason(e.target.value)} className={INPUT_CLS}>
-                        <option value="" className="bg-[#0f172a]">— Chọn lý do —</option>
-                        <option value="FailedMedicalReCheck" className="bg-[#0f172a]">Không đạt tái khám y tế</option>
-                        <option value="VeterinaryDecision" className="bg-[#0f172a]">Quyết định của thú y</option>
-                        <option value="HorseInjury" className="bg-[#0f172a]">Ngựa bị thương</option>
+                        <option value="" className="bg-[#0f172a]">— Select Reason —</option>
+                        <option value="FailedMedicalReCheck" className="bg-[#0f172a]">Failed Medical Re-inspection</option>
+                        <option value="VeterinaryDecision" className="bg-[#0f172a]">Veterinary Decision</option>
+                        <option value="HorseInjury" className="bg-[#0f172a]">Horse Injury</option>
                       </select>
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-xs font-bold text-muted uppercase mb-1">Ghi chú y khoa</label>
-                    <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ghi chú thêm..." rows={3} className={`${INPUT_CLS} resize-none`} />
+                    <label className="block text-xs font-bold text-muted uppercase mb-1">Notes y khoa</label>
+                    <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional notes..." rows={3} className={`${INPUT_CLS} resize-none`} />
                   </div>
 
                   {error && <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</div>}
 
                   <div className="pt-4 flex justify-end gap-3 border-t border-glass-border">
-                    <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-glass-border hover:bg-white/[0.05] rounded-lg text-sm text-muted hover:text-white transition-all">Hủy</button>
+                    <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-glass-border hover:bg-white/[0.05] rounded-lg text-sm text-muted hover:text-white transition-all">Cancel</button>
                     <button type="submit" disabled={loading} className="bg-gold hover:bg-gold/80 text-black font-bold px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-60">
-                      {loading ? 'Đang lưu...' : modalType === 'recheck' ? 'Lưu kết quả tái khám' : 'Lưu kết quả'}
+                      {loading ? 'Saving...' : modalType === 'recheck' ? 'Save Recheck Result' : 'Save Result'}
                     </button>
                   </div>
                 </form>

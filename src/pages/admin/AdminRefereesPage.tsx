@@ -58,17 +58,17 @@ export function AdminRefereesPage() {
   }, []);
 
   const handleRemove = async (raceId: number, refereeId: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy phân công trọng tài này cho cuộc đua?')) return;
+    if (!window.confirm('Are you sure you want to cancel this referee assignment for the race?')) return;
     try {
       await removeReferee(raceId, refereeId);
-      showToast('Thành công', 'Đã hủy phân công trọng tài.');
+      showToast('Success', 'Cancelled phân công trọng tài.');
       await fetchData();
     } catch (err: any) {
-      showToast('Lỗi', parseApiError(err), 'error');
+      showToast('Error', parseApiError(err), 'error');
     }
   };
 
-  // Tra cứu ngược: mỗi trọng tài đang phụ trách những cuộc đua nào (vòng nào, giải nào)
+  // Tra cứu ngược: mỗi trọng tài đang phụ trách những races nào (vòng nào, giải nào)
   const assignmentsByReferee = useMemo(() => {
     const map: Record<number, any[]> = {};
     races.forEach((race: any) => {
@@ -108,12 +108,12 @@ export function AdminRefereesPage() {
 
           <PageHero
             title="Quản lý trọng tài"
-            subtitle="Theo dõi danh sách trọng tài và phân công theo từng vòng, từng giải — việc gán trọng tài thực hiện tại trang Quản lý cuộc đua, sau khi ghép làn"
+            subtitle="Theo dõi danh sách trọng tài và phân công theo từng vòng, từng giải — việc gán trọng tài thực hiện tại trang Manage races, sau khi ghép lanes"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             actions={
               <button onClick={() => navigate('/admin/races')} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
-                Tới trang Quản lý cuộc đua <ArrowRight size={15} />
+                Tới trang Manage races <ArrowRight size={15} />
               </button>
             }
           />
@@ -166,12 +166,12 @@ export function AdminRefereesPage() {
                                 <div className="text-sm font-semibold text-white truncate">{r.fullName}</div>
                                 <div className="text-xs text-muted truncate">{r.email}</div>
                                 <div className="text-[10px] text-gold/80 mt-0.5">
-                                  GP: {r.licenseNumber || 'N/A'} • {r.experienceYears} năm KN
+                                  GP: {r.licenseNumber || 'N/A'} • {r.experienceYears} years KN
                                 </div>
                               </div>
                               {assigns.length > 0 ? (
                                 <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                  {assigns.length} cuộc đua
+                                  {assigns.length} races
                                 </span>
                               ) : (
                                 <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-muted border border-glass-border">
@@ -180,14 +180,14 @@ export function AdminRefereesPage() {
                               )}
                             </div>
 
-                            {/* Đang phụ trách: cuộc đua • vòng • giải */}
+                            {/* Đang phụ trách: races • vòng • giải */}
                             {assigns.length > 0 && (
                               <div className="mt-2.5 pt-2.5 border-t border-glass-border/50 space-y-1.5">
                                 {assigns.map((a: any, i: number) => (
                                   <div key={i} className="flex items-center gap-2 text-[11px]">
                                     <Flag size={11} className="text-cyan-400 shrink-0" />
                                     <span className="text-white truncate">{a.raceName}</span>
-                                    <span className="text-muted truncate">• {a.roundName || 'Vòng ?'} • {a.tournamentName || 'Giải ?'}</span>
+                                    <span className="text-muted truncate">• {a.roundName || 'Round ?'} • {a.tournamentName || 'Giải ?'}</span>
                                     <span className="ml-auto text-muted/70 shrink-0">{a.raceDate ? new Date(a.raceDate).toLocaleDateString('vi-VN') : ''}</span>
                                   </div>
                                 ))}
@@ -201,7 +201,7 @@ export function AdminRefereesPage() {
                 </div>
               </motion.div>
 
-              {/* Right Column: Phân công theo cuộc đua (chỉ xem / gỡ — gán tại trang Quản lý cuộc đua) */}
+              {/* Right Column: Phân công theo races (chỉ xem / gỡ — gán tại trang Manage races) */}
               <div className="space-y-6">
 
                 {/* 1. Races chưa có trọng tài — cảnh báo, dẫn sang trang lịch đua */}
@@ -212,7 +212,7 @@ export function AdminRefereesPage() {
                 >
                   <div className="p-5 border-b border-glass-border flex items-center gap-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
                     <AlertCircle size={18} className="text-yellow-400" />
-                    <h2 className="text-lg font-serif text-white font-semibold">Chưa Phân Công Trọng Tài (Unassigned)</h2>
+                    <h2 className="text-lg font-serif text-white font-semibold">Unassigned</h2>
                     <span className="ml-auto px-2.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 text-xs font-bold border border-yellow-500/20">
                       {unassignedRaces.length}
                     </span>
@@ -222,12 +222,12 @@ export function AdminRefereesPage() {
                     {unassignedRaces.length === 0 ? (
                       <div className="p-8 text-center text-muted">
                         <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400 opacity-60" />
-                        Tất cả các trận đấu đã được phân công trọng tài.
+                        All các races đấu đã được phân công trọng tài.
                       </div>
                     ) : (
                       <>
                         <div className="mb-4 text-[11px] text-champagne/80 bg-gold/5 border border-gold/15 rounded-lg px-3 py-2 leading-relaxed">
-                          Các cuộc đua dưới đây chưa có trọng tài. Vào <b>Quản lý cuộc đua</b> → bấm nút <b>phân công trọng tài</b> trên card cuộc đua (sau khi đã ghép ngựa vào làn).
+                          Các races dưới đây chưa có trọng tài. Vào <b>Manage races</b> → bấm nút <b>phân công trọng tài</b> trên card races (sau khi assigned horse vào lanes).
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {unassignedRaces.map((race) => (
@@ -246,9 +246,9 @@ export function AdminRefereesPage() {
                                   </span>
                                 </div>
                                 <h3 className="text-sm font-semibold text-white mb-1">{race.raceName}</h3>
-                                <p className="text-xs text-muted mb-3 truncate">{race.tournamentName || 'Giải đấu'}</p>
+                                <p className="text-xs text-muted mb-3 truncate">{race.tournamentName || 'Tournaments'}</p>
                                 <div className="text-xs text-muted/80">
-                                  Cự ly: <span className="text-white font-mono">{race.distanceMeter}m</span>
+                                  Distance: <span className="text-white font-mono">{race.distanceMeter}m</span>
                                 </div>
                               </div>
                               <div className="pt-3 mt-3 border-t border-glass-border">
@@ -256,7 +256,7 @@ export function AdminRefereesPage() {
                                   onClick={() => navigate('/admin/races')}
                                   className="w-full py-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all text-xs font-semibold flex items-center justify-center gap-1.5"
                                 >
-                                  Phân công tại Quản lý cuộc đua <ArrowRight size={12} />
+                                  Phân công tại Manage races <ArrowRight size={12} />
                                 </button>
                               </div>
                             </div>
@@ -286,7 +286,7 @@ export function AdminRefereesPage() {
                     {assignedRaces.length === 0 ? (
                       <div className="p-8 text-center text-muted">
                         <ShieldAlert size={32} className="mx-auto mb-2 text-yellow-400 opacity-60" />
-                        Chưa có cuộc đua nào được gán trọng tài.
+                        None races nào được gán trọng tài.
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,15 +306,15 @@ export function AdminRefereesPage() {
                                 </span>
                               </div>
                               <h3 className="text-sm font-semibold text-white mb-1">{race.raceName}</h3>
-                              <p className="text-xs text-muted mb-3 truncate">{race.tournamentName || 'Giải đấu'}</p>
+                              <p className="text-xs text-muted mb-3 truncate">{race.tournamentName || 'Tournaments'}</p>
                               <div className="text-xs text-muted/80 mb-4">
-                                Cự ly: <span className="text-white font-mono">{race.distanceMeter}m</span>
+                                Distance: <span className="text-white font-mono">{race.distanceMeter}m</span>
                               </div>
                             </div>
 
                             {/* Assigned Referees List */}
                             <div className="pt-3 border-t border-glass-border space-y-2">
-                              <div className="text-xs font-semibold text-white/70 mb-1">Trọng tài phụ trách:</div>
+                              <div className="text-xs font-semibold text-white/70 mb-1">Referee in Charge:</div>
                               <div className="space-y-1.5">
                                 {race.referees.map((ref: any) => (
                                   <div
@@ -328,7 +328,7 @@ export function AdminRefereesPage() {
                                     <button
                                       className="p-1 rounded text-muted hover:text-red-400 hover:bg-red-500/10 transition-all"
                                       onClick={() => handleRemove(race.raceId, ref.refereeId)}
-                                      title="Hủy phân công"
+                                      title="Cancel phân công"
                                     >
                                       <Trash2 size={13} />
                                     </button>

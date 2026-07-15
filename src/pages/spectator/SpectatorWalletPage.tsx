@@ -17,11 +17,11 @@ const QUICK_AMTS = [5, 10, 20, 50];
 
 type TxType = 'deposit' | 'withdraw' | 'win' | 'loss' | 'bet';
 const TX_CONFIG: Record<TxType, { color: string; bg: string; label: string }> = {
-  deposit:  { color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', label: 'Nạp tiền' },
-  withdraw: { color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/20',       label: 'Rút tiền' },
-  win:      { color: 'text-gold',        bg: 'bg-gold/10 border-gold/20',               label: 'Thắng cược' },
-  loss:     { color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20',         label: 'Thua cược' },
-  bet:      { color: 'text-yellow-400',  bg: 'bg-yellow-500/10 border-yellow-500/20',   label: 'Đặt cược' },
+  deposit:  { color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', label: 'Deposit' },
+  withdraw: { color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/20',       label: 'Withdraw' },
+  win:      { color: 'text-gold',        bg: 'bg-gold/10 border-gold/20',               label: 'Won Bet' },
+  loss:     { color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20',         label: 'Lost Bet' },
+  bet:      { color: 'text-yellow-400',  bg: 'bg-yellow-500/10 border-yellow-500/20',   label: 'Place Bet' },
 };
 
 function normalizeType(t: string): TxType {
@@ -90,7 +90,7 @@ export function SpectatorWalletPage() {
     setDepositLoading(true); setDepositErr(''); setDepositMsg('');
     try {
       await deposit(coinsPreview);
-      setDepositMsg(`Nạp $${effectiveUsd} USD (${coinsPreview.toLocaleString()} coins) thành công!`);
+      setDepositMsg(`Deposit $${effectiveUsd} USD (${coinsPreview.toLocaleString()} coins) successful!`);
       setUsdInput(''); setQuickAmt(null);
       loadAll();
     } catch (err: unknown) {
@@ -103,12 +103,12 @@ export function SpectatorWalletPage() {
 
   async function handleWithdraw() {
     const amt = parseFloat(withdrawInput);
-    if (!amt || amt <= 0) { setWithdrawErr('Nhập số tiền hợp lệ.'); return; }
+    if (!amt || amt <= 0) { setWithdrawErr('Please enter a valid amount.'); return; }
     const coinsToWithdraw = amt * COINS_PER_USD;
     setWithdrawLoading(true); setWithdrawErr(''); setWithdrawMsg('');
     try {
       await withdraw(coinsToWithdraw);
-      setWithdrawMsg(`Rút $${amt} USD (${coinsToWithdraw.toLocaleString()} coins) thành công!`);
+      setWithdrawMsg(`Withdraw $${amt} USD (${coinsToWithdraw.toLocaleString()} coins) successful!`);
       setWithdrawInput('');
       loadAll();
     } catch (err: unknown) {
@@ -130,8 +130,8 @@ export function SpectatorWalletPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Ví của tôi"
-            subtitle="Nạp tiền, rút tiền và theo dõi giao dịch"
+            title="My Wallet"
+            subtitle="Deposit, withdraw, and track transactions"
             imageUrl="/images/hero-spectator.jpg"
             imagePosition="center 50%"
             badge={
@@ -154,7 +154,7 @@ export function SpectatorWalletPage() {
                   <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
                     <Wallet size={18} className="text-gold" />
                   </div>
-                  <div className="text-[10px] text-muted uppercase tracking-widest font-bold">Số dư khả dụng</div>
+                  <div className="text-[10px] text-muted uppercase tracking-widest font-bold">Available Balance</div>
                 </div>
                 {pageLoading ? (
                   <LoadingSkeleton />
@@ -164,15 +164,15 @@ export function SpectatorWalletPage() {
                       <span className="text-4xl font-serif font-bold text-white">{balance.toLocaleString()}</span>
                       <span className="text-lg text-gold font-bold mb-1">coins</span>
                     </div>
-                    <div className="text-sm text-muted">${(balance / COINS_PER_USD).toFixed(2)} USD tương đương</div>
+                    <div className="text-sm text-muted">${(balance / COINS_PER_USD).toFixed(2)} USD equivalent to</div>
                   </>
                 )}
               </div>
             </motion.div>
 
             {[
-              { label: 'Tổng giao dịch', value: transactions.length, icon: CheckCircle, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
-              { label: 'Cược đang chờ', value: transactions.filter(t => (t.status ?? '').toLowerCase() === 'pending').length, icon: Clock, color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20' },
+              { label: 'Total Transactions', value: transactions.length, icon: CheckCircle, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
+              { label: 'Pending Bets', value: transactions.filter(t => (t.status ?? '').toLowerCase() === 'pending').length, icon: Clock, color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20' },
             ].map((s, i) => (
               <motion.div key={i} variants={child} className="glass-panel rounded-xl p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
@@ -199,7 +199,7 @@ export function SpectatorWalletPage() {
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                     <Plus size={15} className="text-emerald-400" />
                   </div>
-                  <h2 className="text-base font-serif text-white">Nạp tiền</h2>
+                  <h2 className="text-base font-serif text-white">Deposit</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
 
@@ -216,7 +216,7 @@ export function SpectatorWalletPage() {
                 </div>
 
                 <div className="mb-4">
-                  <div className="text-[11px] text-muted font-medium mb-2 uppercase tracking-wider">Hoặc nhập thủ công</div>
+                  <div className="text-[11px] text-muted font-medium mb-2 uppercase tracking-wider">Or enter manually</div>
                   <div className="relative">
                     <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                     <input type="number" min="1" value={usdInput}
@@ -229,7 +229,7 @@ export function SpectatorWalletPage() {
                 {coinsPreview > 0 && (
                   <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 rounded-lg bg-gold/5 border border-gold/20">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted">Bạn sẽ nhận được</span>
+                      <span className="text-xs text-muted">You will receive</span>
                       <span className="text-sm font-bold text-gold">{coinsPreview.toLocaleString()} coins</span>
                     </div>
                   </motion.div>
@@ -240,7 +240,7 @@ export function SpectatorWalletPage() {
 
                 <button onClick={handleOpenVNPay} disabled={coinsPreview <= 0 || depositLoading}
                   className={`w-full py-2.5 rounded-lg text-sm font-bold transition-all ${coinsPreview > 0 ? 'btn-gold' : 'bg-white/5 text-muted cursor-not-allowed border border-glass-border'}`}>
-                  {depositLoading ? 'Đang nạp…' : coinsPreview > 0 ? `Nạp $${effectiveUsd} → ${coinsPreview.toLocaleString()} coins` : 'Chọn số tiền'}
+                  {depositLoading ? 'Depositing...' : coinsPreview > 0 ? `Deposit $${effectiveUsd} → ${coinsPreview.toLocaleString()} coins` : 'Select Amount'}
                 </button>
               </motion.div>
 
@@ -252,21 +252,21 @@ export function SpectatorWalletPage() {
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
                     <Minus size={15} className="text-blue-400" />
                   </div>
-                  <h2 className="text-base font-serif text-white">Rút tiền</h2>
+                  <h2 className="text-base font-serif text-white">Withdraw</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
 
                 <div className="relative mb-4">
                   <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input type="number" min="1" value={withdrawInput} onChange={e => setWithdrawInput(e.target.value)}
-                    placeholder="Số USD muốn rút"
+                    placeholder="USD amount to withdraw"
                     className="w-full bg-white/[0.04] border border-glass-border rounded-lg pl-8 pr-4 py-2.5 text-sm text-white placeholder:text-muted/50 outline-none focus:border-blue-400/40 transition-colors" />
                 </div>
 
                 {parseFloat(withdrawInput) > 0 && (
                   <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted">Số coins sẽ bị trừ</span>
+                      <span className="text-xs text-muted">Coins to deduct</span>
                       <span className="text-sm font-bold text-blue-400">{(parseFloat(withdrawInput) * COINS_PER_USD).toLocaleString()} coins</span>
                     </div>
                   </motion.div>
@@ -277,7 +277,7 @@ export function SpectatorWalletPage() {
 
                 <button onClick={handleWithdraw} disabled={withdrawLoading || !withdrawInput || parseFloat(withdrawInput) <= 0}
                   className="w-full py-2.5 rounded-lg text-sm font-bold bg-blue-500/10 border border-blue-500/25 text-blue-300 hover:bg-blue-500/20 transition-all disabled:opacity-50">
-                  {withdrawLoading ? 'Đang rút…' : parseFloat(withdrawInput) > 0 ? `Rút $${withdrawInput} → ${(parseFloat(withdrawInput) * COINS_PER_USD).toLocaleString()} coins` : 'Rút tiền'}
+                  {withdrawLoading ? 'Withdrawing...' : parseFloat(withdrawInput) > 0 ? `Withdraw $${withdrawInput} → ${(parseFloat(withdrawInput) * COINS_PER_USD).toLocaleString()} coins` : 'Withdraw'}
                 </button>
               </motion.div>
             </div>
@@ -288,10 +288,10 @@ export function SpectatorWalletPage() {
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-purple-500/10 to-transparent blur-[40px] pointer-events-none" />
               <div className="relative z-10 flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><History size={15} className="text-gold" /></div>
-                <h2 className="text-base font-serif text-white">Lịch sử giao dịch</h2>
+                <h2 className="text-base font-serif text-white">Transaction History</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 <div className="flex items-center gap-1 shrink-0">
-                  {([['all', 'Tất cả'], ['deposit', 'Nạp'], ['withdraw', 'Rút'], ['win', 'Thắng'], ['loss', 'Thua'], ['bet', 'Cược']] as [TxType | 'all', string][]).map(([f, label]) => (
+                  {([['all', 'All'], ['deposit', 'Deposit'], ['withdraw', 'Withdraw'], ['win', 'Win'], ['loss', 'Loss'], ['bet', 'Bet']] as [TxType | 'all', string][]).map(([f, label]) => (
                     <button key={f} onClick={() => setTxFilter(f)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${txFilter === f ? 'bg-gold/15 text-gold border border-gold/30' : 'text-muted hover:text-white'}`}>
                       {label}
@@ -325,7 +325,7 @@ export function SpectatorWalletPage() {
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[11px] text-muted">{tx.createdAt ?? tx.date ?? ''}</span>
                             {(tx.status ?? '').toLowerCase() === 'pending' && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">Chờ KQ</span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">Pending KQ</span>
                             )}
                           </div>
                         </div>
@@ -338,7 +338,7 @@ export function SpectatorWalletPage() {
                   {filtered.length === 0 && (
                     <div className="text-center py-12">
                       <div className="text-4xl opacity-40 mb-3">💰</div>
-                      <div className="text-muted text-sm">Không có giao dịch</div>
+                      <div className="text-muted text-sm">No transactions</div>
                       <div className="mx-auto mt-4 w-24 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
                     </div>
                   )}
@@ -358,13 +358,13 @@ export function SpectatorWalletPage() {
             <div className="px-6 py-4 border-b border-glass-border flex items-center justify-between bg-white/[0.01]">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <span className="text-xs font-bold text-champagne uppercase tracking-wider">Thanh Toán VNPAY (Giả lập)</span>
+                <span className="text-xs font-bold text-champagne uppercase tracking-wider">VNPAY Payment (Simulated)</span>
               </div>
               <button 
                 onClick={() => setShowVNPayModal(false)}
                 className="text-muted hover:text-white text-xs font-semibold uppercase cursor-pointer"
               >
-                Đóng
+                Close
               </button>
             </div>
 
@@ -379,53 +379,53 @@ export function SpectatorWalletPage() {
                     className="w-44 h-44 object-contain"
                   />
                 </div>
-                <span className="text-[10px] text-muted italic">Mã VietQR động tạo theo số tiền nạp</span>
+                <span className="text-[10px] text-muted italic">Dynamic VietQR generated by deposit amount</span>
               </div>
 
               {/* Transfer Details */}
               <div className="space-y-3 bg-white/[0.02] border border-glass-border rounded-xl p-4 text-xs">
                 <div className="flex justify-between py-1">
-                  <span className="text-muted">Ngân hàng:</span>
+                  <span className="text-muted">Bank:</span>
                   <span className="text-white font-semibold">VietinBank</span>
                 </div>
                 <div className="flex justify-between py-1 border-t border-glass-border/40">
-                  <span className="text-muted">Số tài khoản:</span>
+                  <span className="text-muted">Account Number:</span>
                   <span className="text-white font-semibold flex items-center gap-1.5">
                     1234567890
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText('1234567890');
-                        alert('Đã sao chép số tài khoản!');
+                        alert('Account number copied!');
                       }}
                       className="text-[10px] text-gold hover:text-white font-bold cursor-pointer"
                     >
-                      (Sao chép)
+                      (Copy)
                     </button>
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-t border-glass-border/40">
-                  <span className="text-muted">Chủ tài khoản:</span>
-                  <span className="text-white font-semibold">DỰ ÁN EQUESTRIA</span>
+                  <span className="text-muted">Account Holder:</span>
+                  <span className="text-white font-semibold">EQUESTRIA PROJECT</span>
                 </div>
                 <div className="flex justify-between py-1 border-t border-glass-border/40">
-                  <span className="text-muted">Số tiền nạp:</span>
+                  <span className="text-muted">Deposit Amount:</span>
                   <span className="text-gold font-bold text-sm">
                     {(effectiveUsd * 25000).toLocaleString('vi-VN')} VND
                     <span className="text-[10px] font-normal text-muted ml-1.5">(${effectiveUsd} USD)</span>
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-t border-glass-border/40">
-                  <span className="text-muted">Nội dung CK:</span>
+                  <span className="text-muted">Transfer Memo:</span>
                   <span className="text-white font-semibold flex items-center gap-1.5">
                     {`EQUESTRIA DEPOSIT USER ${user?.userId ?? 0}`}
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(`EQUESTRIA DEPOSIT USER ${user?.userId ?? 0}`);
-                        alert('Đã sao chép nội dung chuyển khoản!');
+                        alert('Transfer memo copied!');
                       }}
                       className="text-[10px] text-gold hover:text-white font-bold cursor-pointer"
                     >
-                      (Sao chép)
+                      (Copy)
                     </button>
                   </span>
                 </div>
@@ -435,7 +435,7 @@ export function SpectatorWalletPage() {
               <div className="p-3 bg-blue-500/10 border border-blue-500/25 rounded-lg flex gap-2.5 text-[11px] leading-relaxed text-blue-300">
                 <div className="shrink-0 pt-0.5">ℹ️</div>
                 <div>
-                  <strong>Giao dịch thử nghiệm:</strong> Vui lòng không thực hiện chuyển tiền thật. Hãy nhấn nút <strong>Xác nhận đã thanh toán</strong> bên dưới để hoàn tất giả lập nạp tiền vào ví.
+                  <strong>Test Transaction:</strong> Please do not transfer real money. Click <strong>Confirm Payment Sent</strong> below to complete the simulation.
                 </div>
               </div>
             </div>
@@ -446,13 +446,13 @@ export function SpectatorWalletPage() {
                 onClick={() => setShowVNPayModal(false)}
                 className="px-4 py-2 border border-glass-border hover:bg-white/[0.04] text-muted hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
               >
-                Hủy giao dịch
+                Cancel Transaction
               </button>
               <button
                 onClick={handleDeposit}
                 className="px-4 py-2 bg-gold hover:bg-gold-hover text-black rounded-lg text-xs font-extrabold shadow-lg shadow-gold/20 hover:shadow-gold/30 transition-all cursor-pointer"
               >
-                Xác nhận đã thanh toán
+                Confirm Payment Sent
               </button>
             </div>
           </div>

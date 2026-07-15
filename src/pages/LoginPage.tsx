@@ -20,7 +20,7 @@ const fadeUp: Variants = {
 /**
  * Hình ngựa + jockey trên trang đăng nhập.
  * ƯU TIÊN dùng ảnh thật: lưu ảnh vào  public/images/horse-lineart.png
- * → tự hiển thị ngay (F5). Chưa có file thì tạm dùng hình SVG vẽ tay bên dưới.
+ * → tự hiển thị ngay (F5). None file thì tạm dùng hình SVG vẽ tay bên dưới.
  */
 function HorseArt() {
   const [useFallback, setUseFallback] = useState(false);
@@ -28,7 +28,7 @@ function HorseArt() {
   return (
     <img
       src="/images/horse-lineart.png"
-      alt="Ngựa đua và nài ngựa"
+      alt="Racehorse and jockey"
       className="w-full h-full object-contain drop-shadow-[0_0_18px_rgba(212,175,55,0.35)] translate-x-[18%]"
       onError={() => setUseFallback(true)}
     />
@@ -40,7 +40,7 @@ function HorseSVG() {
   return (
     <svg viewBox="0 0 640 400" fill="none" xmlns="http://www.w3.org/2000/svg"
          className="w-full h-full drop-shadow-[0_0_18px_rgba(212,175,55,0.35)]">
-      <title>Ngựa đua và nài ngựa</title>
+      <title>Racehorse and jockey</title>
       <defs>
         <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#e9c46a"/>

@@ -11,7 +11,7 @@ import { parseApiError } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const STATUS_CONFIG = {
   upcoming: { label: 'Đã nhận', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-  pending:  { label: 'Chờ xác nhận', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+  pending:  { label: 'Pending xác nhận', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
 };
 
 export function JockeySchedulePage() {
@@ -44,7 +44,7 @@ export function JockeySchedulePage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Lịch thi đấu"
+            title="Race Schedule"
             subtitle="Lịch đua sắp tới của bạn"
             imageUrl="/images/hero-jockey.jpg"
             imagePosition="center 25%"
@@ -62,7 +62,7 @@ export function JockeySchedulePage() {
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="text-4xl opacity-40 mb-3">📅</div>
-              <div className="text-muted text-sm">Chưa có dữ liệu</div>
+              <div className="text-muted text-sm">No data available</div>
             </div>
           ) : (
             <div className="space-y-8">
@@ -102,7 +102,7 @@ export function JockeySchedulePage() {
                                   </div>
                                 </div>
                                 <button className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors shrink-0 font-medium">
-                                  Xem chi tiết <ChevronRight size={13} />
+                                  View details <ChevronRight size={13} />
                                 </button>
                               </div>
                             </div>

@@ -62,12 +62,12 @@ export function JockeyDashboardPage() {
       await respondContract(id, status);
       setContracts(prev => prev.map(c => c.id === id ? {...c, status} : c));
       showToast(
-        t(status === 'Accepted' ? 'Chấp nhận hợp đồng thành công' : 'Từ chối hợp đồng thành công'),
-        `${t('Hợp đồng')} #${id} ${t('đã được xử lý.')}`,
+        t(status === 'Accepted' ? 'Contract accepted successfully' : 'Contract declined successfully'),
+        `${t('Contract')} #${id} ${t('has been processed.')}`,
         'success'
       );
     } catch (err: unknown) {
-      showToast(t('Thất bại'), parseApiError(err as Error), 'error');
+      showToast(t('Failed'), parseApiError(err as Error), 'error');
     } finally {
       setRespondingId(null);
     }
@@ -98,22 +98,22 @@ export function JockeyDashboardPage() {
 
           {/* Hero */}
           <PageHero
-            title={<>{t('Chào mừng,')} <span className="italic text-champagne">{user?.fullName ?? t('Jockey')}</span></>}
-            subtitle={t('Quản lý lời mời hợp đồng và lịch thi đấu của bạn')}
+            title={<>{t('Welcome,')} <span className="italic text-champagne">{user?.fullName ?? t('Jockey')}</span></>}
+            subtitle={t('Manage your race invitations and racing schedule')}
             imageUrl="/images/hero-jockey.jpg"
             imagePosition="center 12%"
             badge={
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-[10px] font-bold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" /> {pending.length} {t('lời mời đang chờ')}
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" /> {pending.length} {t('pending invitations')}
               </div>
             }
             actions={
               <>
                 <button onClick={() => navigate('/jockey/invitations')} className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold">
-                  {t('Xem lời mời')} <Bell size={13} />
+                  {t('View Invitations')} <Bell size={13} />
                 </button>
                 <button onClick={() => navigate('/jockey/schedule')} className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
-                  {t('Lịch thi đấu')}
+                  {t('Race Schedule')}
                 </button>
               </>
             }
@@ -122,10 +122,10 @@ export function JockeyDashboardPage() {
           {/* Stats */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
-              { title: t('Lời mời mới'),    value: String(pending.length),    trend: t('Chờ phản hồi'), icon: Bell,     color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/jockey/invitations' },
-              { title: t('Cuộc đua sắp tới'), value: upcomingRacesCount > 0 ? String(upcomingRacesCount) : '—', trend: t('7 ngày tới'), icon: Calendar, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/jockey/schedule' },
-              { title: t('Số lần thắng'),   value: stats?.wins !== undefined ? String(stats.wins) : '—',                      trend: t('Mùa 2026'),     icon: Trophy,   color: 'text-gold',       bg: 'from-gold/15 to-amber-900/20',      path: '/jockey/stats' },
-              { title: t('Ngựa tham gia'),  value: t('Xem ngay'), trend: t('Cuộc đua của tôi'),icon: Flag,     color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20',path: '/jockey/races' },
+              { title: t('New Invitations'),    value: String(pending.length),    trend: t('Awaiting Response'), icon: Bell,     color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/jockey/invitations' },
+              { title: t('Upcoming Races'), value: upcomingRacesCount > 0 ? String(upcomingRacesCount) : '—', trend: t('Next 7 days'), icon: Calendar, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/jockey/schedule' },
+              { title: t('Total Wins'),   value: stats?.wins !== undefined ? String(stats.wins) : '—',                      trend: t('Season 2026'),     icon: Trophy,   color: 'text-gold',       bg: 'from-gold/15 to-amber-900/20',      path: '/jockey/stats' },
+              { title: t('Assigned Horses'),  value: t('View Now'), trend: t('My Races'),icon: Flag,     color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20',path: '/jockey/races' },
             ].map((m, i) => (
               <motion.div key={i} variants={child} onClick={() => navigate(m.path)}
                 className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer hover:border-gold/30 transition-all" style={{ height: '130px' }}>
@@ -151,11 +151,11 @@ export function JockeyDashboardPage() {
               <div className="relative z-10 flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Bell size={15} className="text-gold" /></div>
-                  <h2 className="text-lg font-serif text-white">{t('Lời mời đang chờ')}</h2>
+                  <h2 className="text-lg font-serif text-white">{t('Pending Invitations')}</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
                 <button onClick={() => navigate('/jockey/invitations')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0 ml-3">
-                  {t('Xem tất cả')} <ChevronRight size={14} />
+                  {t('View all')} <ChevronRight size={14} />
                 </button>
               </div>
               {loading ? (
@@ -163,7 +163,7 @@ export function JockeyDashboardPage() {
               ) : pending.length === 0 ? (
                 <div className="text-center py-8 text-muted text-sm">
                   <div className="text-4xl opacity-40 mb-3">🏇</div>
-                  {t('Không có lời mời nào đang chờ')}
+                  {t('No pending invitations')}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -172,9 +172,9 @@ export function JockeyDashboardPage() {
                       <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center font-serif font-bold text-champagne text-sm shrink-0">{i + 1}</div>
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/15 to-transparent border border-gold/20 ring-1 ring-gold/20 flex items-center justify-center text-2xl shrink-0">🐴</div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors">{c.horseName ?? `Ngựa #${c.horseId}`}</div>
+                        <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors">{c.horseName ?? `Horse #${c.horseId}`}</div>
                         <div className="text-xs text-muted">
-                          {t('Chủ:')} {c.ownerName ?? `Owner #${c.ownerId ?? '—'}`}
+                          {t('Owner:')} {c.ownerName ?? `Owner #${c.ownerId ?? '—'}`}
                           {c.startDate ? ` • ${c.startDate}` : ''}
                         </div>
                         {c.invitationExpiredAt && (
@@ -188,13 +188,13 @@ export function JockeyDashboardPage() {
                           disabled={respondingId === c.id}
                           onClick={() => handleRespond(c.id, 'Accepted')}
                           className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors disabled:opacity-50">
-                          {t('Nhận')}
+                          {t('Accept')}
                         </button>
                         <button
                           disabled={respondingId === c.id}
                           onClick={() => handleRespond(c.id, 'Rejected')}
                           className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50">
-                          {t('Từ chối')}
+                          {t('Decline')}
                         </button>
                       </div>
                     </div>
@@ -203,13 +203,13 @@ export function JockeyDashboardPage() {
               )}
             </motion.div>
 
-            {/* Thành tích gần đây */}
+            {/* Recent Achievements */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-panel rounded-xl p-6 relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/10 to-transparent blur-[40px] pointer-events-none" />
               <div className="relative z-10 flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Award size={15} className="text-gold" /></div>
-                <h2 className="text-lg font-serif text-white">{t('Thành tích gần đây')}</h2>
+                <h2 className="text-lg font-serif text-white">{t('Recent Achievements')}</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
               {loading ? (
@@ -218,7 +218,7 @@ export function JockeyDashboardPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📊</div>
-                  <div className="text-muted text-sm">{t('Chưa có dữ liệu')}</div>
+                  <div className="text-muted text-sm">{t('No data available')}</div>
                 </div>
               ) : (() => {
                 const total = completedRaces.length;
@@ -242,10 +242,10 @@ export function JockeyDashboardPage() {
                 }
 
                 const segments = [
-                  { label: t('Hạng 1'), count: firstCount, percentage: pct1, color: '#e2ba5e', glowColor: 'rgba(226, 186, 94, 0.4)' },
-                  { label: t('Hạng 2'), count: secondCount, percentage: pct2, color: '#94a3b8', glowColor: 'rgba(148, 163, 184, 0.4)' },
-                  { label: t('Hạng 3'), count: thirdCount, percentage: pct3, color: '#b45309', glowColor: 'rgba(180, 83, 9, 0.4)' },
-                  { label: t('Khác'), count: otherCount, percentage: pctOther, color: '#475569', glowColor: 'rgba(71, 85, 105, 0.4)' },
+                  { label: t('1st Place'), count: firstCount, percentage: pct1, color: '#e2ba5e', glowColor: 'rgba(226, 186, 94, 0.4)' },
+                  { label: t('2nd Place'), count: secondCount, percentage: pct2, color: '#94a3b8', glowColor: 'rgba(148, 163, 184, 0.4)' },
+                  { label: t('3rd Place'), count: thirdCount, percentage: pct3, color: '#b45309', glowColor: 'rgba(180, 83, 9, 0.4)' },
+                  { label: t('Other'), count: otherCount, percentage: pctOther, color: '#475569', glowColor: 'rgba(71, 85, 105, 0.4)' },
                 ].filter(s => s.count > 0);
 
                 const radius = 50;
@@ -300,10 +300,10 @@ export function JockeyDashboardPage() {
                       {/* Inner label */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none z-10">
                         <span className="text-[9px] uppercase tracking-wider text-muted font-bold">
-                          {hoveredIndex !== null ? segments[hoveredIndex].label : t("Tổng đua")}
+                          {hoveredIndex !== null ? segments[hoveredIndex].label : t("Total Races")}
                         </span>
                         <span className="text-lg font-bold text-white font-serif mt-0.5">
-                          {hoveredIndex !== null ? `${segments[hoveredIndex].percentage}%` : `${total} ${t('trận')}`}
+                          {hoveredIndex !== null ? `${segments[hoveredIndex].percentage}%` : `${total} ${t('races')}`}
                         </span>
                       </div>
                     </div>
@@ -326,7 +326,7 @@ export function JockeyDashboardPage() {
                             <span className="text-xs font-semibold text-white truncate">{s.label}</span>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="text-xs font-mono font-bold text-champagne">{s.count} {t('trận')}</span>
+                            <span className="text-xs font-mono font-bold text-champagne">{s.count} {t('races')}</span>
                             <span className="text-[10px] text-muted block leading-none mt-0.5">{s.percentage}%</span>
                           </div>
                         </div>

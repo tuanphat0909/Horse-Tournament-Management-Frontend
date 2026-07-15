@@ -79,7 +79,7 @@ export function AdminDashboardPage() {
       .catch(() => setRegistrations([]))
       .finally(() => setRegLoading(false));
 
-    // Hoạt động gần đây: dùng API thật GET /admin/activity-log (user mới, đăng ký, cược, thông báo, giao dịch ví)
+    // Active gần đây: dùng API thật GET /admin/activity-log (user mới, đăng ký, cược, thông báo, giao dịch ví)
     setActivitiesLoading(true);
     getActivityLog()
       .then((d: any) => {
@@ -117,11 +117,11 @@ export function AdminDashboardPage() {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return t("Vừa xong");
-    if (diffMins < 60) return `${diffMins} ${t("phút trước")}`;
-    if (diffHours < 24) return `${diffHours} ${t("giờ trước")}`;
-    if (diffDays === 1) return t("Hôm qua");
-    if (diffDays < 7) return `${diffDays} ${t("ngày trước")}`;
+    if (diffMins < 1) return t("Just now");
+    if (diffMins < 60) return `${diffMins} ${t("minutes ago")}`;
+    if (diffHours < 24) return `${diffHours} ${t("hours ago")}`;
+    if (diffDays === 1) return t("Yesterday");
+    if (diffDays < 7) return `${diffDays} ${t("days ago")}`;
     return date.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { month: 'short', day: 'numeric' });
   };
 
@@ -135,22 +135,22 @@ export function AdminDashboardPage() {
           {/* TODO: BE chưa có API thống kê cho dashboard */}
 
           <PageHero
-            title={<>{t("Chào mừng,")} <span className="italic text-champagne">{user?.fullName ?? 'Admin'}</span></>}
-            subtitle={`${t("Tổng quan hệ thống")} • ${t("Mùa giải 2026")}`}
+            title={<>{t("Welcome,")} <span className="italic text-champagne">{user?.fullName ?? 'Admin'}</span></>}
+            subtitle={`${t("System Overview")} • ${t("Season 2026")}`}
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             badge={
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/25 text-gold text-[10px] font-bold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> {t("Hệ thống đang hoạt động")}
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> {t("System is active")}
               </div>
             }
             actions={
               <>
                 <button onClick={() => navigate('/admin/registrations')} className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold font-sans">
-                  {t("Xem đăng ký")} <ChevronRight size={13} />
+                  {t("View registrations")} <ChevronRight size={13} />
                 </button>
                 <button onClick={() => navigate('/admin/races')} className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
-                  {t("Quản lý cuộc đua")}
+                  {t("Manage races")}
                 </button>
               </>
             }
@@ -159,10 +159,10 @@ export function AdminDashboardPage() {
           {/* STATS */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { title: t('Người dùng'), value: stats ? stats.totalUsers : '—', trend: t('Hoạt động'), icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
-              { title: t('Giải đấu'), value: stats ? stats.totalTournaments : '—', trend: t('Mùa giải 2026'), icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
-              { title: t('Lợi nhuận (VNĐ)'), value: stats ? new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US').format(stats.profit) : '—', trend: t('Doanh thu cược'), icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/results' },
-              { title: t('Cuộc đua (số nhiều)'), value: stats ? stats.activeRaces : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} ${t('tổng cộng')}` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
+              { title: t('Users'), value: stats ? stats.totalUsers : '—', trend: t('Active'), icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
+              { title: t('Tournaments'), value: stats ? stats.totalTournaments : '—', trend: t('Season 2026'), icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
+              { title: t('Profit (VND)'), value: stats ? new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US').format(stats.profit) : '—', trend: t('Betting Revenue'), icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/results' },
+              { title: t('Races'), value: stats ? stats.activeRaces : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} ${t('total')}` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
             ].map((m, i) => (
               <motion.div
                 key={i}
@@ -200,12 +200,12 @@ export function AdminDashboardPage() {
                     <ClipboardList size={16} className="text-gold" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-serif text-white">{t("Đăng ký chờ duyệt")}</h2>
-                    <p className="text-xs text-muted mt-0.5">{t("Cần xử lý trong 24h")}</p>
+                    <h2 className="text-lg font-serif text-white">{t("Pending registrations")}</h2>
+                    <p className="text-xs text-muted mt-0.5">{t("Needs processing within 24h")}</p>
                   </div>
                 </div>
                 <button onClick={() => navigate('/admin/registrations')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium">
-                  {t("Xem tất cả")} <ChevronRight size={14} />
+                  {t("View all")} <ChevronRight size={14} />
                 </button>
               </div>
               
@@ -216,7 +216,7 @@ export function AdminDashboardPage() {
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden w-full">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">📊</div>
-                    <div className="text-muted text-sm">{t("Chưa có dữ liệu")}</div>
+                    <div className="text-muted text-sm">{t("No data available")}</div>
                   </div>
                 </div>
               ) : (
@@ -224,11 +224,11 @@ export function AdminDashboardPage() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="sticky top-0 z-10 border-b border-glass-border bg-navy text-[11px] font-bold text-muted uppercase tracking-wider">
-                        <th className="px-4 py-3">{t("Mã")}</th>
-                        <th className="px-4 py-3">{t("Ngựa")}</th>
-                        <th className="px-4 py-3">{t("Chủ")}</th>
-                        <th className="px-4 py-3">{t("Giải đấu")}</th>
-                        <th className="px-4 py-3 text-right">{t("Hành động")}</th>
+                        <th className="px-4 py-3">{t("ID")}</th>
+                        <th className="px-4 py-3">{t("Horse")}</th>
+                        <th className="px-4 py-3">{t("Owner")}</th>
+                        <th className="px-4 py-3">{t("Tournaments")}</th>
+                        <th className="px-4 py-3 text-right">{t("Action")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-glass-border/40 text-xs text-white">
@@ -245,7 +245,7 @@ export function AdminDashboardPage() {
                               onClick={() => navigate('/admin/registrations')}
                               className="px-2.5 py-1 rounded bg-gold/10 border border-gold/30 text-[10px] text-gold hover:bg-gold/20 transition-all font-semibold uppercase tracking-wider"
                             >
-                              {t("Duyệt")}
+                              {t("Approve")}
                             </button>
                           </td>
                         </tr>
@@ -265,7 +265,7 @@ export function AdminDashboardPage() {
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                     <Activity size={15} className="text-gold" />
                   </div>
-                  <h2 className="text-lg font-serif text-white">{t("Hoạt động gần đây")}</h2>
+                  <h2 className="text-lg font-serif text-white">{t("Recent activity")}</h2>
                 </div>
                 <Activity size={16} className="text-muted" />
               </div>
@@ -277,7 +277,7 @@ export function AdminDashboardPage() {
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden w-full">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">📊</div>
-                    <div className="text-muted text-sm">{t("Chưa có dữ liệu")}</div>
+                    <div className="text-muted text-sm">{t("No data available")}</div>
                   </div>
                 </div>
               ) : (
@@ -341,10 +341,10 @@ export function AdminDashboardPage() {
           {/* QUICK LINKS */}
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: t('Tạo giải đấu mới'), desc: t('Thêm tournament mới vào hệ thống'), icon: Trophy, path: '/admin/tournaments', color: 'text-gold' },
-              { label: t('Phân công trọng tài'), desc: t('Gán referee cho các cuộc đua'), icon: UserCheck, path: '/admin/referees', color: 'text-cyan-400' },
-              { label: t('Lập lịch đua'), desc: t('Tạo và sắp xếp các cuộc đua'), icon: Calendar, path: '/admin/races', color: 'text-purple-400' },
-              { label: t('Công bố kết quả'), desc: t('Publish kết quả đã xác nhận'), icon: Megaphone, path: '/admin/results', color: 'text-emerald-400' },
+              { label: t('Create new tournament'), desc: t('Add new tournament to system'), icon: Trophy, path: '/admin/tournaments', color: 'text-gold' },
+              { label: t('Assign referees'), desc: t('Assign referees to races'), icon: UserCheck, path: '/admin/referees', color: 'text-cyan-400' },
+              { label: t('Schedule races'), desc: t('Create and schedule races'), icon: Calendar, path: '/admin/races', color: 'text-purple-400' },
+              { label: t('Publish results'), desc: t('Publish confirmed results'), icon: Megaphone, path: '/admin/results', color: 'text-emerald-400' },
             ].map((q, i) => (
               <motion.button
                 key={i}

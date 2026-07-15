@@ -104,11 +104,11 @@ export function RefereeReportsPage() {
     setSubmitError('');
     setSubmitSuccess('');
     if (!selectedRaceId) {
-      setSubmitError('Vui lòng chọn một cuộc đua.');
+      setSubmitError('Please select a race.');
       return;
     }
     if (!form.content.trim()) {
-      setSubmitError('Nội dung báo cáo không được để trống.');
+      setSubmitError('Report content cannot be empty.');
       return;
     }
 
@@ -122,7 +122,7 @@ export function RefereeReportsPage() {
       };
 
       await createReport(payload);
-      setSubmitSuccess('Đã gửi báo cáo thành công!');
+      setSubmitSuccess('Report sent successfully!');
       setForm({ content: '', violationNote: '', reportedHorseId: '' });
       await loadRaceData();
       await loadDashboard();
@@ -146,8 +146,8 @@ export function RefereeReportsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Báo cáo"
-            subtitle="Lịch sử báo cáo và tài liệu trọng tài"
+            title="Report"
+            subtitle="Report history and referee documents"
             imageUrl="/images/hero-referee.jpg"
             imagePosition="right 52%"
             actions={
@@ -160,7 +160,7 @@ export function RefereeReportsPage() {
                 className="btn-gold px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5"
                 disabled={!selectedRaceId}
               >
-                <Plus size={14} /> Tạo báo cáo
+                <Plus size={14} /> Create Report
               </button>
             }
           />
@@ -168,11 +168,11 @@ export function RefereeReportsPage() {
           {/* Select Race Dropdown */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <span className="text-sm text-muted font-bold shrink-0">Chọn cuộc đua:</span>
+              <span className="text-sm text-muted font-bold shrink-0">Chọn races:</span>
               {loadingRaces ? (
-                <span className="text-xs text-muted">Đang tải cuộc đua...</span>
+                <span className="text-xs text-muted">Loading races...</span>
               ) : races.length === 0 ? (
-                <span className="text-xs text-red-400">Không có cuộc đua nào được phân công</span>
+                <span className="text-xs text-red-400">No assigned races found</span>
               ) : (
                 <select
                   value={selectedRaceId}
@@ -196,7 +196,7 @@ export function RefereeReportsPage() {
               <div className="glass-panel p-5 rounded-xl border border-glass-border">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                   <FileText size={16} className="text-gold" />
-                  <span>Danh sách báo cáo cuộc đua</span>
+                  <span>Race Reports List</span>
                 </h3>
 
                 {loadingReports ? (
@@ -204,14 +204,14 @@ export function RefereeReportsPage() {
                 ) : reports.length === 0 ? (
                   <div className="text-center py-12 relative overflow-hidden">
                     <div className="text-4xl opacity-40 mb-3">📋</div>
-                    <div className="text-muted text-sm">Chưa có dữ liệu báo cáo nào được nộp cho trận này</div>
+                    <div className="text-muted text-sm">No report data submitted for this race yet</div>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {reports.map((rep) => (
                       <div key={rep.reportId} className="bg-white/[0.02] border border-glass-border/60 hover:border-gold/20 p-4 rounded-xl space-y-3 transition-all">
                         <div className="flex justify-between items-center border-b border-glass-border/30 pb-2">
-                          <span className="text-xs text-gold font-mono font-bold">Mã báo cáo: #{rep.reportId}</span>
+                          <span className="text-xs text-gold font-mono font-bold">Report ID: #{rep.reportId}</span>
                           <span className="text-xs text-muted/65 flex items-center gap-1">
                             <Calendar size={12} />
                             {new Date(rep.createdAt).toLocaleString()}
@@ -224,12 +224,12 @@ export function RefereeReportsPage() {
                           <div className="bg-red-500/[0.04] border border-red-500/10 p-3 rounded-lg text-xs space-y-1">
                             {rep.reportedHorseName && (
                               <div className="text-muted">
-                                Ngựa bị báo cáo: <span className="text-red-400 font-semibold">{rep.reportedHorseName}</span>
+                                Reported Horse: <span className="text-red-400 font-semibold">{rep.reportedHorseName}</span>
                               </div>
                             )}
                             {rep.violationNote && (
                               <div className="text-muted">
-                                Ghi chú vi phạm: <span className="text-red-400/90">{rep.violationNote}</span>
+                                Violation Notes: <span className="text-red-400/90">{rep.violationNote}</span>
                               </div>
                             )}
                           </div>
@@ -247,15 +247,15 @@ export function RefereeReportsPage() {
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-red-500/10 to-transparent blur-[40px] pointer-events-none" />
               <div className="flex items-center gap-3 mb-5 relative z-10">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Award size={15} className="text-gold" /></div>
-                <h3 className="text-base font-serif text-white">Tóm tắt mùa giải</h3>
+                <h3 className="text-base font-serif text-white">Season Summary</h3>
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
               <div className="space-y-3 relative z-10">
                 {[
-                  { label: 'Tổng báo cáo cần nộp', value: stats ? stats.assignedRaceCount : '—', color: 'text-white' },
-                  { label: 'Đã nộp', value: stats ? stats.completedReportCount : '—', color: 'text-emerald-400' },
-                  { label: 'Chờ nộp', value: stats ? stats.pendingReportCount : '—', color: 'text-yellow-400' },
-                  { label: 'Tổng vi phạm ghi nhận', value: stats ? stats.violationsCreatedCount : '—', color: 'text-red-400' },
+                  { label: 'Total Reports to Submit', value: stats ? stats.assignedRaceCount : '—', color: 'text-white' },
+                  { label: 'Submitted', value: stats ? stats.completedReportCount : '—', color: 'text-emerald-400' },
+                  { label: 'Pending Submission', value: stats ? stats.pendingReportCount : '—', color: 'text-yellow-400' },
+                  { label: 'Total Violations Recorded', value: stats ? stats.violationsCreatedCount : '—', color: 'text-red-400' },
                 ].map((s, i) => (
                   <div key={i} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group">
                     <div className="flex items-center gap-3 min-w-0">
@@ -278,14 +278,14 @@ export function RefereeReportsPage() {
                 
                 <div className="flex items-center gap-3 mb-5 relative z-10">
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><FileText size={15} className="text-gold" /></div>
-                  <h3 className="text-lg font-serif text-white">Tạo báo cáo mới</h3>
+                  <h3 className="text-lg font-serif text-white">Create New Report</h3>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
 
                 <div className="space-y-4 relative z-10">
                   
                   <div>
-                    <label className={LABEL}>Cuộc đua hiện tại</label>
+                    <label className={LABEL}>Current Race</label>
                     <input 
                       disabled 
                       value={races.find(r => r.raceId === selectedRaceId)?.raceName || ''} 
@@ -294,17 +294,17 @@ export function RefereeReportsPage() {
                   </div>
 
                   <div>
-                    <label className={LABEL}>Báo cáo ngựa vi phạm (Tùy chọn)</label>
+                    <label className={LABEL}>Report horse violation (Optional)</label>
                     <select 
                       value={form.reportedHorseId} 
                       onChange={e => setF('reportedHorseId', e.target.value)} 
                       className={INPUT}
                       style={{colorScheme: 'dark'}}
                     >
-                      <option value="">-- Chọn ngựa (nếu có) --</option>
+                      <option value="">-- Select Horse (Optional) --</option>
                       {horses.map((h: any) => (
                         <option key={h.horseId} value={h.horseId}>
-                          Làn {h.laneNo}: {h.horseName} ({h.jockeyName})
+                          Lane {h.laneNo}: {h.horseName} ({h.jockeyName})
                         </option>
                       ))}
                     </select>
@@ -312,23 +312,23 @@ export function RefereeReportsPage() {
 
                   {form.reportedHorseId && (
                     <div>
-                      <label className={LABEL}>Ghi chú vi phạm của ngựa *</label>
+                      <label className={LABEL}>Horse Violation Notes *</label>
                       <input 
                         value={form.violationNote} 
                         onChange={e => setF('violationNote', e.target.value)} 
-                        placeholder="Mô tả hành vi vi phạm..." 
+                        placeholder="Describe violating behavior..." 
                         className={INPUT} 
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className={LABEL}>Nội dung báo cáo chi tiết *</label>
+                    <label className={LABEL}>Detailed Report Content *</label>
                     <textarea 
                       rows={5} 
                       value={form.content} 
                       onChange={e => setF('content', e.target.value)} 
-                      placeholder="Mô tả chi tiết diễn biến cuộc đua, các sự cố và đánh giá của trọng tài..." 
+                      placeholder="Describe details of the race progress, incidents, and referee assessment..." 
                       className="w-full bg-[#0B1628] border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none resize-none focus:border-gold/40 transition-colors" 
                     />
                   </div>
@@ -354,7 +354,7 @@ export function RefereeReportsPage() {
                     disabled={submitLoading} 
                     className="px-5 py-2 rounded-lg text-sm text-muted border border-glass-border hover:text-white transition-colors"
                   >
-                    Hủy
+                    Cancel
                   </button>
                   <button 
                     onClick={handleSubmit} 
@@ -362,7 +362,7 @@ export function RefereeReportsPage() {
                     className="btn-gold px-6 py-2 rounded-lg text-sm font-bold disabled:opacity-50 flex items-center gap-1.5"
                   >
                     {submitLoading && <Loader size={12} className="animate-spin" />}
-                    Gửi báo cáo
+                    Submit Report
                   </button>
                 </div>
 

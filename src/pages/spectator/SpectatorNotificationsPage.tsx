@@ -164,9 +164,9 @@ export function SpectatorNotificationsPage() {
       const diffMins = Math.floor(diffMs / 60000);
       const diffHours = Math.floor(diffMins / 60);
 
-      if (diffMins < 1) return 'Vừa xong';
-      if (diffMins < 60) return `${diffMins} phút trước`;
-      if (diffHours < 24) return `${diffHours} giờ trước`;
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} minutes ago`;
+      if (diffHours < 24) return `${diffHours} hours ago`;
       
       return past.toLocaleDateString('vi-VN', { 
         month: 'long', 
@@ -183,13 +183,13 @@ export function SpectatorNotificationsPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const filtersList: { value: FilterType; label: string }[] = [
-    { value: 'all', label: 'Tất cả' },
-    { value: 'unread', label: 'Chưa đọc' },
-    { value: 'tournament', label: 'Giải đấu' },
-    { value: 'race', label: 'Cuộc đua' },
-    { value: 'bet', label: 'Vé cược' },
-    { value: 'wallet', label: 'Ví tiền' },
-    { value: 'system', label: 'Hệ thống' },
+    { value: 'all', label: 'All' },
+    { value: 'unread', label: 'Unread' },
+    { value: 'tournament', label: 'Tournaments' },
+    { value: 'race', label: 'Race' },
+    { value: 'bet', label: 'Bets' },
+    { value: 'wallet', label: 'Wallet' },
+    { value: 'system', label: 'System' },
   ];
 
   return (
@@ -201,8 +201,8 @@ export function SpectatorNotificationsPage() {
         
         <main className="max-w-[1200px] mx-auto px-8 py-6 space-y-6 relative z-10">
           <PageHero
-            title="Trung tâm thông báo"
-            subtitle="Theo dõi, quản lý và cập nhật các thông tin cá cược và giải đấu theo thời gian thực"
+            title="Notification Center"
+            subtitle="Track, manage, and update betting and tournament info in real time"
             imageUrl="/images/hero-spectator.jpg"
             imagePosition="center 50%"
           />
@@ -233,7 +233,7 @@ export function SpectatorNotificationsPage() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-champagne border border-gold-border/30 hover:border-gold hover:bg-gold/5 transition-all cursor-pointer"
               >
                 <CheckSquare size={13} />
-                Đánh dấu tất cả đã đọc
+                Mark all as read
               </button>
             </div>
           </div>
@@ -303,7 +303,7 @@ export function SpectatorNotificationsPage() {
                         {n.actionUrl && (
                           <button
                             onClick={() => handleViewDetails(n)}
-                            title="Đi tới chi tiết"
+                            title="Go to details"
                             className="p-2 rounded-lg text-champagne hover:text-white hover:bg-gold/10 border border-gold-border/20 hover:border-gold/40 transition-all cursor-pointer"
                           >
                             <Eye size={14} />
@@ -314,7 +314,7 @@ export function SpectatorNotificationsPage() {
                         {!isRead && (
                           <button
                             onClick={() => handleMarkRead(n.id)}
-                            title="Đánh dấu đã đọc"
+                            title="Mark as read"
                             className="p-2 rounded-lg text-muted hover:text-champagne hover:bg-white/[0.04] border border-glass-border hover:border-gold-border/30 transition-all cursor-pointer"
                           >
                             <Check size={14} />
@@ -324,7 +324,7 @@ export function SpectatorNotificationsPage() {
                         {/* Soft delete button */}
                         <button
                           onClick={() => handleDelete(n.id)}
-                          title="Xóa thông báo"
+                          title="Delete notification"
                           className="p-2 rounded-lg text-muted hover:text-red-400 hover:bg-red-500/10 border border-glass-border hover:border-red-500/25 transition-all cursor-pointer"
                         >
                           <Trash2 size={14} />
@@ -339,11 +339,11 @@ export function SpectatorNotificationsPage() {
                 <div className="glass-panel rounded-xl p-16 text-center border border-glass-border relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent pointer-events-none" />
                   <Bell size={40} className="mx-auto mb-4 text-gold opacity-30 animate-bounce" />
-                  <h4 className="text-white font-semibold text-sm mb-1">Không có thông báo nào</h4>
+                  <h4 className="text-white font-semibold text-sm mb-1">No notifications</h4>
                   <p className="text-xs text-muted max-w-sm mx-auto">
                     {activeFilter === 'unread' 
-                      ? 'Tuyệt vời! Bạn đã đọc hết tất cả các thông báo.'
-                      : 'Hộp thư của bạn hiện đang trống trong danh mục này.'}
+                      ? 'Great! You have read all notifications.'
+                      : 'Your inbox is currently empty in this category.'}
                   </p>
                 </div>
               )}

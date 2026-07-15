@@ -19,11 +19,11 @@ const INIT_EDIT   = { name: '', breed: '', age: '', gender: 'Male', healthStatus
 
 // Giá trị lưu bằng tiếng Anh cho khớp dữ liệu BE (Horse.HealthStatus mặc định "Healthy")
 const HEALTH_OPTIONS = [
-  { value: 'Healthy',    label: 'Khỏe mạnh (Healthy)' },
-  { value: 'Injured',    label: 'Chấn thương (Injured)' },
-  { value: 'Sick',       label: 'Bị bệnh (Sick)' },
-  { value: 'Recovering', label: 'Đang hồi phục (Recovering)' },
-  { value: 'Retired',    label: 'Ngừng thi đấu (Retired)' },
+  { value: 'Healthy',    label: 'Healthy (Healthy)' },
+  { value: 'Injured',    label: 'Injured (Injured)' },
+  { value: 'Sick',       label: 'Sick' },
+  { value: 'Recovering', label: 'Recovering (Recovering)' },
+  { value: 'Retired',    label: 'Retired (Retired)' },
 ];
 
 export function OwnerHorsesPage() {
@@ -69,7 +69,7 @@ export function OwnerHorsesPage() {
   async function handleCreate() {
     setCreateError('');
     if (!createForm.name || !createForm.breed || !createForm.age) {
-      setCreateError('Vui lòng điền đầy đủ thông tin.');
+      setCreateError('Please fill in all information.');
       return;
     }
     setCreateLoading(true);
@@ -77,7 +77,7 @@ export function OwnerHorsesPage() {
       await createHorse({ name: createForm.name, breed: createForm.breed, age: createForm.age, gender: createForm.gender });
       setShowCreate(false);
       setCreateForm(INIT_CREATE);
-      showToast('Thành công', 'Đã thêm ngựa mới thành công!');
+      showToast('Success', 'Đã thêm horse mới successful!');
       loadHorses();
     } catch (err: unknown) {
       setCreateError(parseApiError(err as Error));
@@ -99,7 +99,7 @@ export function OwnerHorsesPage() {
     try {
       await updateHorse(editHorse.id, { name: editForm.name, breed: editForm.breed, age: editForm.age, gender: editForm.gender, healthStatus: editForm.healthStatus });
       setEditHorse(null);
-      showToast('Thành công', 'Đã cập nhật thông tin ngựa thành công!');
+      showToast('Success', 'Đã cập nhật thông tin horse successful!');
       loadHorses();
     } catch (err: unknown) {
       setEditError(parseApiError(err as Error));
@@ -135,14 +135,14 @@ export function OwnerHorsesPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!window.confirm('Xác nhận xóa ngựa này?')) return;
+    if (!window.confirm('Confirm xóa horse này?')) return;
     setDeletingId(id);
     try {
       await deleteHorse(id);
       setHorses(prev => prev.filter(h => h.id !== id));
-      showToast('Thành công', 'Đã xóa ngựa thành công!', 'success');
+      showToast('Success', 'Đã xóa horse successful!', 'success');
     } catch (err: unknown) {
-      showToast('Thất bại', parseApiError(err as Error), 'error');
+      showToast('Failed', parseApiError(err as Error), 'error');
     } finally {
       setDeletingId(null);
     }
@@ -168,13 +168,13 @@ export function OwnerHorsesPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Quản lý ngựa"
-            subtitle="Danh sách ngựa trong chuồng của bạn"
+            title="Manage Horses"
+            subtitle="Horse List trong chuồng của bạn"
             imageUrl="/images/hero-owner.jpg"
             imagePosition="center 58%"
             actions={
               <button onClick={() => setShowCreate(true)} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
-                <Plus size={16} /> Thêm ngựa
+                <Plus size={16} /> Thêm horse
               </button>
             }
           />
@@ -182,7 +182,7 @@ export function OwnerHorsesPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border focus-within:border-gold/40 rounded-lg px-3 py-2 w-72 transition-colors">
               <Search size={15} className="text-gold/60 shrink-0" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm tên ngựa..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm tên horse..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
             </div>
             <div className="ml-auto flex items-center gap-2">
               <ArrowUpDown size={14} className="text-muted" />
@@ -192,9 +192,9 @@ export function OwnerHorsesPage() {
                 className="bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-gold/40 transition-colors"
                 style={{ colorScheme: 'dark' }}
               >
-                <option value="name">Tên A-Z</option>
+                <option value="name">Name A-Z</option>
                 <option value="ageAsc">Trẻ nhất</option>
-                <option value="ageDesc">Lớn tuổi nhất</option>
+                <option value="ageDesc">Lớn years old nhất</option>
               </select>
             </div>
           </div>
@@ -223,8 +223,8 @@ export function OwnerHorsesPage() {
                         <h3 className="text-lg font-serif text-white group-hover:text-champagne transition-colors">{h.name}</h3>
                         <p className="text-xs text-muted mt-1 flex items-center gap-1.5 flex-wrap">
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted">{h.breed}</span>
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne">{calculateAge(h.age)} tuổi</span>
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted">{h.gender === 'Male' ? 'Đực' : 'Cái'}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne">{calculateAge(h.age)} years old</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted">{h.gender === 'Male' ? 'Male' : 'Female'}</span>
                         </p>
                       </div>
                       <div className="flex gap-1.5">
@@ -235,7 +235,7 @@ export function OwnerHorsesPage() {
                     </div>
                     {h.healthStatus && (
                       <div className="flex justify-between items-center text-[11px] text-muted font-medium mt-1 pt-3 border-t border-glass-border/60">
-                        <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"><ShieldCheck size={10} /></span> Sức khỏe</span>
+                        <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"><ShieldCheck size={10} /></span> Health</span>
                         <span className="text-champagne font-semibold px-2 py-0.5 rounded-full bg-gold/[0.06] border border-gold/20">{h.healthStatus}</span>
                       </div>
                     )}
@@ -248,7 +248,7 @@ export function OwnerHorsesPage() {
                   <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
                   <div className="relative z-10">
                     <div className="text-4xl opacity-40 mb-3">🐴</div>
-                    {horses.length === 0 ? 'Chưa có ngựa nào. Nhấn "Thêm ngựa" để bắt đầu.' : 'Không tìm thấy ngựa phù hợp.'}
+                    {horses.length === 0 ? 'Chưa có horse nào. Nhấn "Thêm horse" để bắt đầu.' : 'Không tìm thấy horse phù hợp.'}
                     <div className="mx-auto mt-4 w-24 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
                   </div>
                 </div>
@@ -263,14 +263,14 @@ export function OwnerHorsesPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20">
-            <h2 className="text-xl font-serif text-white mb-6">Thêm ngựa mới</h2>
+            <h2 className="text-xl font-serif text-white mb-6">Thêm horse mới</h2>
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>Tên ngựa *</label>
+                <label className={LABEL}>Name horse *</label>
                 <input value={createForm.name} onChange={e => setCreateForm(p => ({...p, name: e.target.value}))} placeholder="VD: Thunder King" className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Giống ngựa *</label>
+                <label className={LABEL}>Giống horse *</label>
                 <input value={createForm.breed} onChange={e => setCreateForm(p => ({...p, breed: e.target.value}))} placeholder="VD: Thoroughbred" className={INPUT} />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -279,10 +279,10 @@ export function OwnerHorsesPage() {
                   <input type="date" value={createForm.age} onChange={e => setCreateForm(p => ({...p, age: e.target.value}))} className={INPUT} style={{colorScheme: 'dark'}} />
                 </div>
                 <div>
-                  <label className={LABEL}>Giới tính *</label>
+                  <label className={LABEL}>Gender *</label>
                   <select value={createForm.gender} onChange={e => setCreateForm(p => ({...p, gender: e.target.value}))} className={INPUT}>
-                    <option value="Male">Đực</option>
-                    <option value="Female">Cái</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
                   </select>
                 </div>
               </div>
@@ -290,10 +290,10 @@ export function OwnerHorsesPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => { setShowCreate(false); setCreateForm(INIT_CREATE); setCreateError(''); }}
-                className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
+                className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
               <button onClick={handleCreate} disabled={createLoading}
                 className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60">
-                {createLoading ? 'Đang lưu…' : 'Lưu'}
+                {createLoading ? 'Saving...' : 'Save'}
               </button>
             </div>
           </motion.div>
@@ -304,14 +304,14 @@ export function OwnerHorsesPage() {
       {editHorse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20">
-            <h2 className="text-xl font-serif text-white mb-6">Chỉnh sửa — {editHorse.name}</h2>
+            <h2 className="text-xl font-serif text-white mb-6">Edit — {editHorse.name}</h2>
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>Tên ngựa</label>
+                <label className={LABEL}>Name horse</label>
                 <input value={editForm.name} onChange={e => setEditForm(p => ({...p, name: e.target.value}))} className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Giống ngựa</label>
+                <label className={LABEL}>Giống horse</label>
                 <input value={editForm.breed} onChange={e => setEditForm(p => ({...p, breed: e.target.value}))} className={INPUT} />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -320,10 +320,10 @@ export function OwnerHorsesPage() {
                   <input type="date" value={editForm.age} onChange={e => setEditForm(p => ({...p, age: e.target.value}))} className={INPUT} style={{colorScheme: 'dark'}} />
                 </div>
                 <div>
-                  <label className={LABEL}>Giới tính</label>
+                  <label className={LABEL}>Gender</label>
                   <select value={editForm.gender} onChange={e => setEditForm(p => ({...p, gender: e.target.value}))} className={INPUT}>
-                    <option value="Male">Đực</option>
-                    <option value="Female">Cái</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
                   </select>
                 </div>
               </div>
@@ -341,10 +341,10 @@ export function OwnerHorsesPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => { setEditHorse(null); setEditError(''); }}
-                className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
+                className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
               <button onClick={handleEdit} disabled={editLoading}
                 className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60">
-                {editLoading ? 'Đang lưu…' : 'Lưu thay đổi'}
+                {editLoading ? 'Saving...' : 'Save thay đổi'}
               </button>
             </div>
           </motion.div>
@@ -378,7 +378,7 @@ export function OwnerHorsesPage() {
                         : 'border-transparent text-muted hover:text-white'
                     }`}
                   >
-                    Thông tin & Thống kê
+                    Information & Thống kê
                   </button>
                   <button
                     onClick={() => setActiveTab('history')}
@@ -388,7 +388,7 @@ export function OwnerHorsesPage() {
                         : 'border-transparent text-muted hover:text-white'
                     }`}
                   >
-                    Lịch sử thi đấu
+                    Race History
                   </button>
                 </div>
 
@@ -397,9 +397,9 @@ export function OwnerHorsesPage() {
                     <div className="space-y-1">
                       {[
                         { l: 'Ngày sinh', v: formatDateOnly(viewHorse.age) },
-                        { l: 'Tuổi', v: viewHorse.age != null ? `${calculateAge(viewHorse.age)} tuổi` : '—' },
-                        { l: 'Giới tính', v: viewHorse.gender === 'Male' ? 'Đực' : viewHorse.gender === 'Female' ? 'Cái' : '—' },
-                        { l: 'Sức khỏe', v: viewHorse.healthStatus ?? '—' },
+                        { l: 'Tuổi', v: viewHorse.age != null ? `${calculateAge(viewHorse.age)} years old` : '—' },
+                        { l: 'Gender', v: viewHorse.gender === 'Male' ? 'Male' : viewHorse.gender === 'Female' ? 'Female' : '—' },
+                        { l: 'Health', v: viewHorse.healthStatus ?? '—' },
                       ].map(row => (
                         <div key={row.l} className="flex justify-between py-2.5 border-b border-glass-border text-sm">
                           <span className="text-muted">{row.l}</span>
@@ -413,11 +413,11 @@ export function OwnerHorsesPage() {
                       <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Thống kê hiệu suất</h3>
                       <div className="grid grid-cols-3 gap-3 mb-3">
                         <div className="bg-white/[0.02] border border-glass-border rounded-xl p-3 text-center">
-                          <div className="text-[10px] uppercase tracking-wider text-muted font-bold mb-1">Tổng số trận</div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted font-bold mb-1">Tổng số races</div>
                           <div className="text-lg font-bold text-white font-mono">{viewHorse.statistic?.totalRaces ?? 0}</div>
                         </div>
                         <div className="bg-white/[0.02] border border-glass-border rounded-xl p-3 text-center">
-                          <div className="text-[10px] uppercase tracking-wider text-gold font-bold mb-1">Số lần thắng (🥇)</div>
+                          <div className="text-[10px] uppercase tracking-wider text-gold font-bold mb-1">Total Wins (🥇)</div>
                           <div className="text-lg font-bold text-gold font-mono">{viewHorse.statistic?.totalWins ?? 0}</div>
                         </div>
                         <div className="bg-white/[0.02] border border-glass-border rounded-xl p-3 text-center">
@@ -428,11 +428,11 @@ export function OwnerHorsesPage() {
 
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="flex justify-between p-2.5 rounded-lg bg-white/[0.01] border border-glass-border">
-                          <span className="text-slate-300">🥈 Về nhì (Hạng 2)</span>
+                          <span className="text-slate-300">🥈 Về nhì (2nd Place)</span>
                           <span className="font-bold text-white font-mono">{viewHorse.statistic?.totalSecondPlaces ?? 0} lần</span>
                         </div>
                         <div className="flex justify-between p-2.5 rounded-lg bg-white/[0.01] border border-glass-border">
-                          <span className="text-amber-600">🥉 Về ba (Hạng 3)</span>
+                          <span className="text-amber-600">🥉 Về ba (3rd Place)</span>
                           <span className="font-bold text-white font-mono">{viewHorse.statistic?.totalThirdPlaces ?? 0} lần</span>
                         </div>
                       </div>
@@ -445,7 +445,7 @@ export function OwnerHorsesPage() {
                     ) : horseRaces.length === 0 ? (
                       <div className="text-center py-12 text-muted text-sm">
                         <div className="text-3xl opacity-40 mb-2">📋</div>
-                        <div>Chưa tham gia cuộc đua nào.</div>
+                        <div>Chưa tham gia races nào.</div>
                       </div>
                     ) : (
                       horseRaces.map((r, idx) => (
@@ -462,7 +462,7 @@ export function OwnerHorsesPage() {
                                 r.finishPosition === 3 ? 'bg-amber-700/20 text-amber-600 border border-amber-700/30' :
                                 'bg-white/10 text-white'
                               }`}>
-                                Hạng {r.finishPosition}
+                                Rank {r.finishPosition}
                               </span>
                               <div className="text-[10px] text-muted font-mono mt-1 text-right">{r.finishTime ? `${r.finishTime}s` : '—'}</div>
                             </div>
@@ -480,7 +480,7 @@ export function OwnerHorsesPage() {
                 )}
 
                 <button onClick={() => setViewHorse(null)} className="w-full mt-6 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">
-                  Đóng
+                  Close
                 </button>
               </>
             )}

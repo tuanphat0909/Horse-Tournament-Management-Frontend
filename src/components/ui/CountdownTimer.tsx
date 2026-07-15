@@ -13,7 +13,7 @@ function formatRemaining(ms: number): string {
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
   const pad = (n: number) => String(n).padStart(2, '0');
-  return d > 0 ? `${d} ngày ${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(h)}:${pad(m)}:${pad(s)}`;
+  return d > 0 ? `${d} days ${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
 interface CountdownTimerProps {
@@ -22,12 +22,12 @@ interface CountdownTimerProps {
   utc?: boolean;
   /** Ẩn hẳn khi đã hết hạn (dùng cho danh sách có nhiều mục cũ). */
   hideWhenExpired?: boolean;
-  /** Nhãn trước đồng hồ. Mặc định "Còn lại:". */
+  /** Nhãn trước đồng hồ. Mặc định "Remaining:". */
   label?: string;
   className?: string;
 }
 
-export function CountdownTimer({ target, utc = true, hideWhenExpired = false, label = 'Còn lại:', className = '' }: CountdownTimerProps) {
+export function CountdownTimer({ target, utc = true, hideWhenExpired = false, label = 'Remaining:', className = '' }: CountdownTimerProps) {
   const targetDate = utc ? parseUtcDate(target) : (target ? new Date(target) : null);
   const validTarget = targetDate && !isNaN(targetDate.getTime()) ? targetDate : null;
   const [now, setNow] = useState(() => Date.now());
@@ -54,7 +54,7 @@ export function CountdownTimer({ target, utc = true, hideWhenExpired = false, la
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-bold tabular-nums whitespace-nowrap shrink-0 ${tone} ${className}`}>
       <Clock size={12} />
-      {expired ? 'Đã hết hạn' : <>{label} <span className="tracking-wide">{formatRemaining(diff)}</span></>}
+      {expired ? 'Expired' : <>{label} <span className="tracking-wide">{formatRemaining(diff)}</span></>}
     </span>
   );
 }

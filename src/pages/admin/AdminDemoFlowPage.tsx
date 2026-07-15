@@ -29,96 +29,96 @@ const STEPS: Step[] = [
   {
     num: 1,
     icon: Trophy,
-    title: 'Tạo giải đấu',
-    desc: 'Admin tạo giải đấu mới: đặt tên, mở/đóng đăng ký, ngày bắt đầu/kết thúc, số vòng đấu.',
+    title: 'Create Tournament',
+    desc: 'Admin creates a new tournament: names it, opens/closes registration, sets start/end dates, and specifies the number of rounds.',
     role: 'Admin',
     roleColor: 'text-gold bg-gold/10 border-gold/25',
     path: '/admin/tournaments',
-    actionLabel: 'Quản lý giải đấu',
-    tip: 'Đảm bảo thứ tự ngày: Mở ĐK < Đóng ĐK < Bắt đầu < Kết thúc',
+    actionLabel: 'Tournament Management',
+    tip: 'Ensure correct date order: Open Reg < Close Reg < Start < End',
   },
   {
     num: 2,
     icon: Flag,
-    title: 'Tạo cuộc đua & vòng đấu',
-    desc: 'Admin tạo các cuộc đua theo vòng, chỉ định ngày đua, cự ly và số làn (mặc định 12 làn). Nếu số ngựa đăng ký > 12 → tạo thêm nhiều cuộc đua cho cùng vòng.',
+    title: 'Create Races & Rounds',
+    desc: 'Admin creates races for each round, specifying the race date, distance, and lanes (default 12). If registrations exceed 12 horses, multiple races are created for the same round.',
     role: 'Admin',
     roleColor: 'text-gold bg-gold/10 border-gold/25',
     path: '/admin/races',
-    actionLabel: 'Quản lý cuộc đua',
-    tip: 'Tối đa 12 làn/race. 25 ngựa → cần 3 races (12+12+1)',
+    actionLabel: 'Manage races',
+    tip: 'Max 12 lanes per race. 25 horses → 3 races needed (12+12+1)',
   },
   {
     num: 3,
     icon: ClipboardList,
-    title: 'Chủ ngựa đăng ký tham gia',
-    desc: 'Owner chọn ngựa và giải đấu muốn tham gia, nộp đơn đăng ký. Đơn vào trạng thái Pending, chờ Admin duyệt.',
+    title: 'Owner Registers Entry',
+    desc: 'Horse Owner selects a horse and tournament to join, then submits the registration request. The status becomes Pending, waiting for Admin approval.',
     role: 'Owner',
     roleColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
     path: '/owner/registrations',
-    actionLabel: 'Trang đăng ký (Owner)',
+    actionLabel: 'Registration (Owner)',
   },
   {
     num: 4,
     icon: Users,
-    title: 'Owner mời Jockey ký hợp đồng',
-    desc: 'Owner chọn Jockey cho ngựa của mình trong từng giải, gửi lời mời hợp đồng. Jockey nhận và chấp nhận/từ chối.',
+    title: 'Owner Invites Jockey',
+    desc: 'Owner selects a Jockey for their horse in a tournament and sends a contract proposal. The Jockey receives and accepts/declines it.',
     role: 'Owner',
     roleColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
     path: '/owner/jockeys',
-    actionLabel: 'Mời Jockey (Owner)',
-    tip: 'Ngựa phải có jockey hợp lệ mới được Admin duyệt',
+    actionLabel: 'Invite Jockey (Owner)',
+    tip: 'Horse must have a valid jockey assignment to be approved by the Admin',
   },
   {
     num: 5,
     icon: UserCheck,
-    title: 'Jockey chấp nhận hợp đồng',
-    desc: 'Jockey xem lời mời và bấm Chấp nhận. Hợp đồng chuyển sang trạng thái Accepted — ngựa đủ điều kiện thi đấu.',
+    title: 'Jockey Accepts Contract',
+    desc: 'Jockey views contract invitations and clicks Accept. The contract status changes to Accepted — making the horse eligible to compete.',
     role: 'Jockey',
     roleColor: 'text-blue-400 bg-blue-500/10 border-blue-500/25',
     path: '/jockey/invitations',
-    actionLabel: 'Lời mời (Jockey)',
+    actionLabel: 'Invitations (Jockey)',
   },
   {
     num: 6,
     icon: CheckCircle2,
-    title: 'Admin duyệt đơn đăng ký',
-    desc: 'Admin xem xét các đơn Pending, xác nhận ngựa đã có jockey hợp lệ rồi bấm Duyệt. Đơn chuyển sang Approved.',
+    title: 'Admin Approves Registration',
+    desc: 'Admin reviews Pending requests, verifies the horse has a valid jockey assignment, and clicks Approve. Status changes to Approved.',
     role: 'Admin',
     roleColor: 'text-gold bg-gold/10 border-gold/25',
     path: '/admin/registrations',
-    actionLabel: 'Duyệt đăng ký',
+    actionLabel: 'Approve Registration',
   },
   {
     num: 7,
     icon: Flag,
-    title: 'Phân ngựa vào làn đua',
-    desc: 'Admin mở cuộc đua, ghép từng ngựa Approved vào một làn cụ thể. Admin có thể đổi làn cho ngựa (chức năng Đổi làn). Mỗi làn chỉ có một ngựa.',
+    title: 'Assign Lanes',
+    desc: 'Admin opens a race and assigns each Approved horse to a specific lane. The Admin can change lanes using the swap feature. Only one horse is allowed per lane.',
     role: 'Admin',
     roleColor: 'text-gold bg-gold/10 border-gold/25',
     path: '/admin/races',
-    actionLabel: 'Ghép làn đua',
-    tip: 'Dùng nút ⇄ Đổi để hoán đổi làn giữa hai ngựa',
+    actionLabel: 'Assign Lanes',
+    tip: 'Use the ⇄ Swap button to switch lanes between two horses',
   },
   {
     num: 8,
     icon: Play,
-    title: 'Trọng tài giám sát & ghi kết quả',
-    desc: 'Trọng tài kiểm tra ngựa trước xuất phát, giám sát cuộc đua, ghi vi phạm (nếu có) và xác nhận thứ tự về đích sau khi đua kết thúc.',
+    title: 'Referee Monitors & Records',
+    desc: 'Referee checks horses before start, monitors the race, records violations (if any), and confirms finishing positions when the race ends.',
     role: 'Referee',
     roleColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/25',
     path: '/referee/confirm-results',
-    actionLabel: 'Xác nhận kết quả (Referee)',
+    actionLabel: 'Confirm Results (Referee)',
   },
   {
     num: 9,
     icon: Megaphone,
-    title: 'Admin công bố kết quả',
-    desc: 'Admin xem kết quả trọng tài đã xác nhận, bấm Publish để công bố chính thức. Hệ thống tính điểm dự đoán, kích hoạt chi trả giải thưởng.',
+    title: 'Admin Publishes Results',
+    desc: 'Admin reviews the referee-confirmed results and clicks Publish. The system calculates prediction points and triggers prize payouts.',
     role: 'Admin',
     roleColor: 'text-gold bg-gold/10 border-gold/25',
     path: '/admin/results',
-    actionLabel: 'Công bố kết quả',
+    actionLabel: 'Publish Results',
   },
 ];
 
@@ -181,7 +181,7 @@ export function AdminDemoFlowPage() {
 
           <PageHero
             title="Demo Flow — End-to-End"
-            subtitle="Theo dõi tiến độ từng bước của quy trình: tạo giải → cấu hình → đăng ký → jockey → duyệt → phân làn → kết quả"
+            subtitle="Track the step-by-step process of the demo flow: create tournament → configure → register → jockey contract → approval → lane assignment → publish results"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
           />
@@ -195,19 +195,19 @@ export function AdminDemoFlowPage() {
             <div className="absolute top-0 left-6 right-6 h-px bg-linear-to-r from-transparent via-gold/30 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between mb-3">
               <div>
-                <span className="text-base font-serif font-bold text-white">Tiến độ demo</span>
-                <span className="ml-3 text-sm text-muted">{completedCount}/{totalCount} bước hoàn thành</span>
+                <span className="text-base font-serif font-bold text-white">Demo Progress</span>
+                <span className="ml-3 text-sm text-muted">{completedCount}/{totalCount} steps completed</span>
               </div>
               <div className="flex items-center gap-3">
                 {completedCount === totalCount && (
                   <span className="text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400">
-                    ✓ Hoàn thành toàn bộ!
+                    ✓ All completed!
                   </span>
                 )}
                 <button
                   onClick={() => setShowReset(true)}
                   className="flex items-center gap-1.5 text-xs text-muted hover:text-white transition-colors px-2.5 py-1.5 rounded-lg border border-glass-border hover:bg-white/5"
-                  title="Reset tiến độ"
+                  title="Reset progress"
                 >
                   <RotateCcw size={12} /> Reset
                 </button>
@@ -230,7 +230,7 @@ export function AdminDemoFlowPage() {
                 <button
                   key={s.num}
                   onClick={() => toggleDone(s.num)}
-                  title={`Bước ${s.num}: ${s.title}`}
+                  title={`Step ${s.num}: ${s.title}`}
                   className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
                     done.has(s.num) ? 'bg-emerald-500' : s.num === currentStep?.num ? 'bg-gold animate-pulse' : 'bg-white/10'
                   }`}
@@ -240,8 +240,8 @@ export function AdminDemoFlowPage() {
 
             <div className="text-[11px] text-muted mt-2">
               {currentStep
-                ? <>Bước tiếp theo: <span className="text-champagne font-semibold">Bước {currentStep.num} — {currentStep.title}</span></>
-                : <span className="text-emerald-400 font-semibold">Tất cả bước đã hoàn thành 🎉</span>}
+                ? <>Next Step: <span className="text-champagne font-semibold">Step {currentStep.num} — {currentStep.title}</span></>
+                : <span className="text-emerald-400 font-semibold">All steps completed 🎉</span>}
             </div>
           </motion.div>
 
@@ -254,9 +254,9 @@ export function AdminDemoFlowPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="glass-panel rounded-xl p-4 border border-red-500/25 bg-red-500/5 flex items-center gap-4"
               >
-                <div className="flex-1 text-sm text-white">Xác nhận reset toàn bộ tiến độ demo về 0?</div>
-                <button onClick={resetAll} className="px-4 py-1.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 text-sm font-bold hover:bg-red-500/30 transition-colors">Xác nhận</button>
-                <button onClick={() => setShowReset(false)} className="px-3 py-1.5 rounded-lg border border-glass-border text-muted hover:text-white text-sm transition-colors">Hủy</button>
+                <div className="flex-1 text-sm text-white">Are you sure you want to reset all demo progress to 0?</div>
+                <button onClick={resetAll} className="px-4 py-1.5 rounded-lg bg-red-500/20 border border-red-500/40 text-red-400 text-sm font-bold hover:bg-red-500/30 transition-colors">Confirm</button>
+                <button onClick={() => setShowReset(false)} className="px-3 py-1.5 rounded-lg border border-glass-border text-muted hover:text-white text-sm transition-colors">Cancel</button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -268,7 +268,7 @@ export function AdminDemoFlowPage() {
                 {role}
               </span>
             ))}
-            <span className="ml-auto text-xs text-muted">Bấm ✓ để đánh dấu hoàn thành · Bấm tên bước để điều hướng</span>
+            <span className="ml-auto text-xs text-muted">Click ✓ to mark completed · Click step name to navigate</span>
           </div>
 
           {/* Steps timeline */}
@@ -320,7 +320,7 @@ export function AdminDemoFlowPage() {
                         <div className="flex items-start gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="text-[10px] font-bold text-muted/60 font-mono">Bước {step.num}</span>
+                              <span className="text-[10px] font-bold text-muted/60 font-mono">Step {step.num}</span>
                               <h3 className={`text-sm font-semibold transition-colors ${isDone ? 'text-muted line-through' : 'text-white'}`}>
                                 {step.title}
                               </h3>
@@ -380,10 +380,10 @@ export function AdminDemoFlowPage() {
             <div className="flex items-start gap-3">
               <ShieldCheck size={16} className="text-yellow-400 shrink-0 mt-0.5" />
               <div className="text-xs text-muted leading-relaxed space-y-1">
-                <div className="text-white font-semibold">Lưu ý khi demo</div>
-                <div>Mỗi cuộc đua tối đa <b className="text-white">12 làn</b>. Nếu có 25 ngựa Approved → tạo <b className="text-white">3 cuộc đua</b> (12 + 12 + 1) trong cùng vòng đấu.</div>
-                <div>Badge giải đấu: <span className="text-red-400 font-bold">🔒 Đã đóng ĐK</span> · <span className="text-yellow-400 font-bold">⚡ Final</span> (≤12 ngày) · <span className="text-emerald-400 font-bold">✓ Đang mở</span></div>
-                <div>Validate ngày: Mở ĐK &lt; Đóng ĐK &lt; Bắt đầu &lt; Kết thúc — hệ thống cảnh báo real-time khi nhập sai thứ tự.</div>
+                <div className="text-white font-semibold">Save ý khi demo</div>
+                <div>Mỗi races tối đa <b className="text-white">12 lanes</b>. Nếu có 25 horse Approved → tạo <b className="text-white">3 races</b> (12 + 12 + 1) trong cùng rounds.</div>
+                <div>Badge tournaments: <span className="text-red-400 font-bold">🔒 Đã đóng ĐK</span> · <span className="text-yellow-400 font-bold">⚡ Final</span> (≤12 days) · <span className="text-emerald-400 font-bold">✓ Đang mở</span></div>
+                <div>Validate days: Mở ĐK &lt; Close ĐK &lt; Start &lt; Kết thúc — hệ thống cảnh báo real-time khi nhập sai thứ tự.</div>
                 <div className="mt-1 text-[11px]">Tiến độ bước được lưu vào <code className="text-champagne">localStorage</code> — reset bằng nút Reset ở đầu trang.</div>
               </div>
             </div>

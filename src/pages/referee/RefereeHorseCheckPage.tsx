@@ -26,23 +26,23 @@ interface HorseCheck {
   status: string;
 }
 
-// Nhãn + màu cho từng tình trạng sức khỏe chuẩn (đồng bộ với dropdown bên trang Chủ ngựa)
+// Nhãn + màu cho từng tình trạng sức khỏe chuẩn (đồng bộ với dropdown bên trang Owner horse)
 const HEALTH_META: Record<string, { label: string; ok: boolean }> = {
-  healthy:    { label: 'Khỏe mạnh',       ok: true },
-  good:       { label: 'Khỏe mạnh',       ok: true },
-  injured:    { label: 'Chấn thương',     ok: false },
-  sick:       { label: 'Bị bệnh',         ok: false },
-  recovering: { label: 'Đang hồi phục',   ok: false },
-  retired:    { label: 'Ngừng thi đấu',   ok: false },
+  healthy:    { label: 'Healthy',       ok: true },
+  good:       { label: 'Healthy',       ok: true },
+  injured:    { label: 'Injured',     ok: false },
+  sick:       { label: 'Sick',         ok: false },
+  recovering: { label: 'Recovering',   ok: false },
+  retired:    { label: 'Retired',   ok: false },
 };
 
 function healthMeta(medicalStatus?: string) {
   const key = (medicalStatus ?? '').toLowerCase();
-  return HEALTH_META[key] ?? { label: medicalStatus || 'Không rõ', ok: false };
+  return HEALTH_META[key] ?? { label: medicalStatus || 'Unknown', ok: false };
 }
 
-// Trạng thái kiểm tra SUY RA từ cả entry status lẫn sức khỏe — để 2 cột không mâu thuẫn:
-// ngựa sức khỏe không đạt thì KHÔNG thể hiển thị "Đã duyệt" dù entry đã Ready.
+// Status kiểm tra SUY RA từ cả entry status lẫn sức khỏe — để 2 cột không mâu thuẫn:
+// horse sức khỏe không đạt thì KHÔNG thể hiển thị "Đã duyệt" dù entry đã Ready.
 type CheckState = 'pending' | 'approved' | 'blocked' | 'rejected';
 function checkState(hc: HorseCheck): CheckState {
   const st = (hc.status ?? '').toLowerCase();
@@ -77,7 +77,7 @@ export function RefereeHorseCheckPage() {
       })
       .catch(err => {
         console.error(err);
-        setError('Không thể tải danh sách cuộc đua phân công');
+        setError('Cannot load assigned races list');
         setLoadingRaces(false);
       });
   }, []);
@@ -100,7 +100,7 @@ export function RefereeHorseCheckPage() {
       })
       .catch(err => {
         console.error(err);
-        setError('Không thể tải danh sách kiểm tra ngựa');
+        setError('Cannot load horse check list');
         setLoadingChecks(false);
       });
   }, [selectedRaceId]);
@@ -132,8 +132,8 @@ export function RefereeHorseCheckPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Kiểm tra ngựa"
-            subtitle="Xem xét và phê duyệt hồ sơ ngựa thi đấu theo cuộc đua"
+            title="Horse Inspection"
+            subtitle="Review and approve competing horse profiles by race"
             imageUrl="/images/hero-referee.jpg"
             imagePosition="right 52%"
           />
@@ -144,21 +144,21 @@ export function RefereeHorseCheckPage() {
             </div>
           )}
 
-          {/* Sức khỏe do Chủ ngựa quản lý (PUT /horses chỉ mở cho role HorseOwner) — trọng tài chưa sửa
-              trực tiếp được cho tới khi BE bổ sung API ghi horse-check. Ngựa không đủ sức khỏe sẽ tự
-              hiển thị "Không đủ điều kiện" ở cột Trạng thái. */}
+          {/* Health do Horse Owner quản lý (PUT /horses chỉ mở cho role HorseOwner) — trọng tài chưa sửa
+              trực tiếp được cho tới khi BE bổ sung API ghi horse-check. Horse unhealthy sẽ tự
+              hiển thị "Ineligible" ở cột Status. */}
           <div className="text-[11px] text-champagne/80 bg-gold/5 border border-gold/15 rounded-lg px-3 py-2 leading-relaxed">
-            ⓘ Tình trạng sức khỏe do <b>Chủ ngựa</b> cập nhật trên hồ sơ ngựa. Ngựa có sức khỏe không đạt sẽ tự động hiển thị <b>"Không đủ điều kiện"</b> dù đã được ghép làn — nếu phát hiện sai lệch thực tế, hãy yêu cầu chủ ngựa cập nhật hoặc ghi nhận vi phạm ở trang Xử lý vi phạm.
+            ⓘ Tình trạng sức khỏe do <b>Horse Owner</b> cập nhật trên hồ sơ horse. Horse có sức khỏe không đạt sẽ tự động hiển thị <b>"Ineligible"</b> dù đã được ghép lanes — nếu phát hiện sai lệch thực tế, hãy yêu cầu chủ horse cập nhật hoặc ghi nhận vi phạm ở trang Handle Violations.
           </div>
 
           {/* Select Race Dropdown + Search */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <span className="text-sm text-muted font-bold shrink-0">Chọn cuộc đua:</span>
+              <span className="text-sm text-muted font-bold shrink-0">Chọn races:</span>
               {loadingRaces ? (
-                <span className="text-xs text-muted">Đang tải cuộc đua...</span>
+                <span className="text-xs text-muted">Loading races...</span>
               ) : races.length === 0 ? (
-                <span className="text-xs text-red-400">Không có cuộc đua nào được phân công</span>
+                <span className="text-xs text-red-400">No assigned races found</span>
               ) : (
                 <select
                   value={selectedRaceId}
@@ -179,7 +179,7 @@ export function RefereeHorseCheckPage() {
               <input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)} 
-                placeholder="Tìm ngựa / chủ ngựa / nài..." 
+                placeholder="Search horse / owner / jockey..." 
                 className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" 
               />
             </div>
@@ -187,7 +187,7 @@ export function RefereeHorseCheckPage() {
 
           {/* Tabs */}
           <div className="flex items-center gap-1 border-b border-glass-border">
-            {([['all', 'Tất cả'], ['pending', 'Chờ kiểm tra'], ['approved', 'Đạt yêu cầu'], ['rejected', 'Không đạt']] as [Tab, string][]).map(([t, label]) => (
+            {([['all', 'All'], ['pending', 'Awaiting Inspection'], ['approved', 'Pass Requirements'], ['rejected', 'Fail']] as [Tab, string][]).map(([t, label]) => (
               <button 
                 key={t} 
                 onClick={() => setTab(t)}
@@ -205,7 +205,7 @@ export function RefereeHorseCheckPage() {
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="text-4xl opacity-40 mb-3">🐴</div>
-              <div className="text-muted text-sm">Chưa có dữ liệu kiểm tra ngựa nào của cuộc đua này</div>
+              <div className="text-muted text-sm">No horse inspection data for this race yet</div>
             </div>
           ) : (
             <div className="glass-panel rounded-xl overflow-hidden">
@@ -213,12 +213,12 @@ export function RefereeHorseCheckPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                      <th className="px-6 py-4">Làn</th>
-                      <th className="px-6 py-4">Tên ngựa</th>
-                      <th className="px-6 py-4">Chủ sở hữu</th>
-                      <th className="px-6 py-4">Nài ngựa</th>
-                      <th className="px-6 py-4">Sức khỏe</th>
-                      <th className="px-6 py-4">Trạng thái</th>
+                      <th className="px-6 py-4">Lane</th>
+                      <th className="px-6 py-4">Name horse</th>
+                      <th className="px-6 py-4">Owner</th>
+                      <th className="px-6 py-4">Jockey</th>
+                      <th className="px-6 py-4">Health</th>
+                      <th className="px-6 py-4">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -227,7 +227,7 @@ export function RefereeHorseCheckPage() {
                       const state = checkState(hc);
                       return (
                       <tr key={hc.raceEntryId} className="hover:bg-white/[0.01] transition-colors">
-                        <td className="px-6 py-4 font-mono text-gold font-bold">Làn #{hc.laneNo}</td>
+                        <td className="px-6 py-4 font-mono text-gold font-bold">Lane #{hc.laneNo}</td>
                         <td className="px-6 py-4 font-medium">{hc.horseName}</td>
                         <td className="px-6 py-4 text-muted">{hc.ownerName}</td>
                         <td className="px-6 py-4 text-muted">{hc.jockeyName}</td>
@@ -245,9 +245,9 @@ export function RefereeHorseCheckPage() {
                             state === 'blocked' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
                             'bg-red-500/10 text-red-400 border border-red-500/20'
                           }`}>
-                            {state === 'pending' ? 'Chờ kiểm tra' :
+                            {state === 'pending' ? 'Awaiting Inspection' :
                              state === 'approved' ? 'Đã duyệt' :
-                             state === 'blocked' ? '⚠ Không đủ điều kiện (sức khỏe)' : 'Bị loại'}
+                             state === 'blocked' ? '⚠ Ineligible (Health)' : 'Disqualified'}
                           </span>
                         </td>
                       </tr>

@@ -6,8 +6,8 @@ import { getTournaments } from '../../api/publicService';
 import { useLanguage } from '../../context/LanguageContext';
 
 /**
- * Giải đấu nổi bật — dữ liệu THẬT từ GET /public/tournaments.
- * Ưu tiên giải đang diễn ra (Active); không có thì lấy giải sắp diễn ra gần nhất;
+ * Tournaments nổi bật — dữ liệu THẬT từ GET /public/tournaments.
+ * Ưu tiên giải live now (Active); không có thì lấy giải sắp diễn ra gần nhất;
  * API lỗi/không có giải → ẩn cả section (không show data bịa).
  */
 
@@ -76,11 +76,11 @@ export const FeaturedTournamentSection = () => {
               <div className="flex-1 space-y-6">
                 {isLive ? (
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-widest">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> {t('Đang diễn ra')}
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> {t('Active')}
                   </div>
                 ) : (
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest">
-                    <span className="w-2 h-2 rounded-full bg-blue-400" /> {t('Sắp diễn ra')}
+                    <span className="w-2 h-2 rounded-full bg-blue-400" /> {t('Upcoming')}
                   </div>
                 )}
 
@@ -93,7 +93,7 @@ export const FeaturedTournamentSection = () => {
                     <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-gold" /> {fmtDate(tournament.startDate)} → {fmtDate(tournament.endDate) ?? '—'}</div>
                   )}
                   {rounds != null && (
-                    <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-gold" /> {rounds} {t('vòng đấu')}</div>
+                    <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-gold" /> {rounds} {t('rounds')}</div>
                   )}
                   <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-gold" /> ID giải #{tournament.tournamentId ?? tournament.id}</div>
                 </div>
@@ -105,12 +105,12 @@ export const FeaturedTournamentSection = () => {
 
               <div className="w-full lg:w-[400px] glass-panel p-8 rounded-2xl relative shadow-2xl">
                 <div className="absolute -top-4 -right-4 w-32 h-32 bg-gold/20 blur-3xl rounded-full pointer-events-none" />
-                <h3 className="text-lg font-serif text-white mb-6">{t('Cửa sổ đăng ký')}</h3>
+                <h3 className="text-lg font-serif text-white mb-6">{t('Registration window')}</h3>
 
                 {regProgress != null && (
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted font-medium">{regClosed ? t('Đã đóng đơn') : t('Thời gian đăng ký đã trôi qua')}</span>
+                      <span className="text-muted font-medium">{regClosed ? t('Registration closed') : t('Registration time elapsed')}</span>
                       <span className="font-bold text-white tabular">{regProgress}%</span>
                     </div>
                     <div className="h-2.5 bg-navy-light rounded-full overflow-hidden shadow-inner border border-glass-border">
@@ -128,18 +128,18 @@ export const FeaturedTournamentSection = () => {
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <div className="bg-navy/60 p-4 rounded-xl border border-glass-border text-center hover:border-gold/30 transition-colors">
                     <div className="text-3xl font-serif text-champagne mb-1 tabular">{regDays != null ? regDays : '—'}</div>
-                    <div className="text-[10px] uppercase text-muted tracking-wider font-bold">{t('Ngày còn để đăng ký')}</div>
+                    <div className="text-[10px] uppercase text-muted tracking-wider font-bold">{t('Days left to register')}</div>
                   </div>
                   <div className="bg-navy/60 p-4 rounded-xl border border-glass-border text-center hover:border-gold/30 transition-colors">
                     <div className="text-3xl font-serif text-champagne mb-1 tabular">{rounds ?? '—'}</div>
-                    <div className="text-[10px] uppercase text-muted tracking-wider font-bold">{t('Vòng đấu')}</div>
+                    <div className="text-[10px] uppercase text-muted tracking-wider font-bold">{t('Rounds')}</div>
                   </div>
                 </div>
 
                 <button
                   onClick={() => navigate('/register')}
                   className="btn-gold w-full py-4 rounded-lg flex items-center justify-center gap-2 text-sm shadow-[0_0_15px_rgba(201,168,76,0.2)] group">
-                  {regClosed ? t('Xem giải đấu') : t('Tham gia ngay')}
+                  {regClosed ? t('View tournament') : t('Join now')}
                   <span className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
                     <ArrowRight className="w-3.5 h-3.5" />
                   </span>

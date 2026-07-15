@@ -108,7 +108,7 @@ export function AdminUsersPage() {
       }
       const data: any = await createAccount(body);
       const newId = data?.result?.id ?? data?.result?.accountId ?? data?.result?.user?.id;
-      showToast('Thành công', newId != null ? `Đã tạo tài khoản thành công! ID = ${newId}` : 'Tạo tài khoản thành công!');
+      showToast('Success', newId != null ? `Đã tạo tài khoản successful! ID = ${newId}` : 'Tạo tài khoản successful!');
       closeModal();
       fetchAccounts();
     } catch (err: unknown) {
@@ -171,7 +171,7 @@ export function AdminUsersPage() {
 
           <PageHero
             title="Quản lý người dùng"
-            subtitle="Tất cả tài khoản trong hệ thống"
+            subtitle="All tài khoản trong hệ thống"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             actions={
@@ -194,7 +194,7 @@ export function AdminUsersPage() {
                 <div className="relative z-10 flex items-center gap-2 mb-1">
                   <Users size={14} className={filter === r ? 'text-gold' : 'text-muted'} />
                   <span className="text-[10px] uppercase tracking-wider text-muted font-bold">
-                    {r === 'all' ? 'Tất cả' : ROLE_LABELS[r]}
+                    {r === 'all' ? 'All' : ROLE_LABELS[r]}
                   </span>
                 </div>
                 <div className="relative z-10 text-xl font-serif font-bold text-white">
@@ -227,9 +227,9 @@ export function AdminUsersPage() {
                   className="bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-gold/40 transition-colors"
                   style={{ colorScheme: 'dark' }}
                 >
-                  <option value="newest">Mới nhất</option>
-                  <option value="oldest">Cũ nhất</option>
-                  <option value="name">Tên A-Z</option>
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="name">Name A-Z</option>
                 </select>
               </div>
             </div>
@@ -249,10 +249,10 @@ export function AdminUsersPage() {
                     <tr className="border-b border-glass-border text-xs text-muted uppercase font-bold tracking-wider">
                       <th className="py-4 px-6">Họ và tên</th>
                       <th className="py-4 px-6">Email</th>
-                      <th className="py-4 px-6">Vai trò</th>
-                      <th className="py-4 px-6">Trạng thái</th>
+                      <th className="py-4 px-6">Role</th>
+                      <th className="py-4 px-6">Status</th>
                       <th className="py-4 px-6">Ngày tạo</th>
-                      <th className="py-4 px-6 text-right">Thao tác</th>
+                      <th className="py-4 px-6 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-glass-border/30 text-sm">
@@ -339,13 +339,13 @@ export function AdminUsersPage() {
 
               {/* Password */}
               <div>
-                <label className={LABEL}>Mật khẩu *</label>
+                <label className={LABEL}>Password *</label>
                 <div className="relative">
                   <input
                     value={form.password}
                     onChange={e => set('password', e.target.value)}
                     type={showPwd ? 'text' : 'password'}
-                    placeholder="Tối thiểu 6 ký tự"
+                    placeholder="Dark thiểu 6 ký tự"
                     className={INPUT + ' pr-10'}
                   />
                   <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute inset-y-0 right-3 flex items-center text-muted hover:text-white">
@@ -366,7 +366,7 @@ export function AdminUsersPage() {
                     className={INPUT}
                     style={{ colorScheme: 'dark' }}
                   >
-                    <option value="">-- Chọn role --</option>
+                    <option value="">-- Select Role --</option>
                     {roles.map(r => (
                       <option key={r} value={r}>{r}</option>
                     ))}
@@ -382,7 +382,7 @@ export function AdminUsersPage() {
                     <input value={form.licenseNumber} onChange={e => set('licenseNumber', e.target.value)} placeholder="VD: LIC-2024-001" className={INPUT} />
                   </div>
                   <div>
-                    <label className={LABEL}>Số năm kinh nghiệm</label>
+                    <label className={LABEL}>Số years of experience</label>
                     <input value={form.experienceYears} onChange={e => set('experienceYears', e.target.value)} type="number" min="0" placeholder="VD: 5" className={INPUT} />
                   </div>
                 </>
@@ -399,10 +399,10 @@ export function AdminUsersPage() {
 
             <div className="flex gap-3 mt-6">
               <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">
-                Hủy
+                Cancel
               </button>
               <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? 'Đang tạo…' : 'Tạo tài khoản'}
+                {loading ? 'Creating...' : 'Tạo tài khoản'}
               </button>
             </div>
           </motion.div>

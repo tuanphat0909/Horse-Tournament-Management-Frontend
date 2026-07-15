@@ -64,8 +64,8 @@ export function SpectatorLiveResultsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Kết quả & Lịch đua"
-            subtitle="Theo dõi cuộc đua và lịch thi đấu sắp tới"
+            title="Results & Lịch đua"
+            subtitle="Track races and upcoming schedule"
             imageUrl="/images/hero-spectator.jpg"
             imagePosition="center 50%"
           />
@@ -76,11 +76,11 @@ export function SpectatorLiveResultsPage() {
             <div className="p-5 border-b border-glass-border flex items-center justify-between relative z-10">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/25 text-red-400 text-[11px] font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" /> TRỰC TIẾP
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" /> LIVE
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted">
-                <Clock size={12} /> Cập nhật liên tục
+                <Clock size={12} /> Continuous updates
               </div>
             </div>
             <div className="p-6">
@@ -90,7 +90,7 @@ export function SpectatorLiveResultsPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">🏁</div>
-                  <div className="text-muted text-sm">Chưa có trận nào đang diễn ra</div>
+                  <div className="text-muted text-sm">No races live now</div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -99,10 +99,10 @@ export function SpectatorLiveResultsPage() {
                       <div className="flex justify-between items-center">
                         <div className="font-bold text-white text-lg">{lr.raceName}</div>
                         <div className="text-xs text-red-400 font-bold uppercase tracking-wider px-2 py-1 bg-red-500/10 border border-red-500/20 rounded">
-                          Đang chạy
+                          In Progress
                         </div>
                       </div>
-                      <div className="text-sm text-muted mt-1">{lr.tournamentName || 'Giải đấu'} • Bắt đầu lúc: {new Date(lr.startTime).toLocaleTimeString('vi-VN')}</div>
+                      <div className="text-sm text-muted mt-1">{lr.tournamentName || 'Tournaments'} • Starts at: {new Date(lr.startTime).toLocaleTimeString('vi-VN')}</div>
                     </div>
                   ))}
                 </div>
@@ -114,7 +114,7 @@ export function SpectatorLiveResultsPage() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Calendar size={15} className="text-gold" /></div>
-              <h2 className="text-lg font-serif text-white">Lịch thi đấu sắp tới</h2>
+              <h2 className="text-lg font-serif text-white">Upcoming Schedule</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
             {tourLoading ? (
@@ -123,7 +123,7 @@ export function SpectatorLiveResultsPage() {
               <div className="glass-panel rounded-xl p-8 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                 <div className="text-4xl opacity-40 mb-3">📅</div>
-                <div className="text-muted text-sm">Chưa có giải đấu nào sắp diễn ra</div>
+                <div className="text-muted text-sm">No upcoming tournaments</div>
                 <div className="mx-auto mt-4 w-24 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
               </div>
             ) : (
@@ -147,13 +147,13 @@ export function SpectatorLiveResultsPage() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${isActive ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-blue-400 bg-blue-500/10 border-blue-500/20'}`}>
-                            {isActive ? 'Đang diễn ra' : 'Sắp diễn ra'}
+                            {isActive ? 'Active' : 'Upcoming'}
                           </span>
                           <button
                             onClick={() => navigate(`/spectator/tournaments/${tour.tournamentId}`)}
                             className="text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 hover:bg-gold/10 border border-glass-border hover:border-gold/30 text-champagne transition-colors"
                           >
-                            Chi tiết
+                            Detail
                           </button>
                         </div>
                       </div>
@@ -170,7 +170,7 @@ export function SpectatorLiveResultsPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Medal size={15} className="text-gold" /></div>
-                <h2 className="text-lg font-serif text-white">Xếp hạng Nài ngựa</h2>
+                <h2 className="text-lg font-serif text-white">Jockey Rankings</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
               <div className="glass-panel rounded-xl overflow-hidden relative">
@@ -181,7 +181,7 @@ export function SpectatorLiveResultsPage() {
                 ) : jockeyRankings.length === 0 ? (
                   <div className="p-8 text-center">
                     <div className="text-4xl opacity-40 mb-3">🏇</div>
-                    <div className="text-muted text-sm">Chưa có dữ liệu</div>
+                    <div className="text-muted text-sm">No data available</div>
                   </div>
                 ) : (
                   <div className="divide-y divide-glass-border">
@@ -197,7 +197,7 @@ export function SpectatorLiveResultsPage() {
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center font-serif font-bold text-sm border shrink-0 ${POS_STYLE[i + 1] ?? 'bg-white/5 text-muted border-glass-border'}`}>{i + 1}</div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-semibold text-white">{j.fullName ?? `Jockey #${j.jockeyId}`}</div>
-                              <div className="text-xs text-muted">{j.experienceYears ?? 0} năm kinh nghiệm</div>
+                              <div className="text-xs text-muted">{j.experienceYears ?? 0} years of experience</div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <div className="flex items-center gap-1 text-gold text-xs font-bold">
@@ -214,8 +214,8 @@ export function SpectatorLiveResultsPage() {
                               >
                                 <div className="px-5 py-3 bg-white/[0.02] border-t border-glass-border grid grid-cols-2 gap-2 text-xs text-muted">
                                   <span>Email: <span className="text-champagne">{j.email ?? '—'}</span></span>
-                                  <span>Điểm xếp hạng: <span className="text-gold font-bold">{j.rankingPoint ?? 0}</span></span>
-                                  <span>Kinh nghiệm: <span className="text-white">{j.experienceYears ?? 0} năm</span></span>
+                                  <span>Ranking Points: <span className="text-gold font-bold">{j.rankingPoint ?? 0}</span></span>
+                                  <span>Experience: <span className="text-white">{j.experienceYears ?? 0} years</span></span>
                                 </div>
                               </motion.div>
                             )}
@@ -232,7 +232,7 @@ export function SpectatorLiveResultsPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Trophy size={15} className="text-gold" /></div>
-                <h2 className="text-lg font-serif text-white">Xếp hạng Ngựa</h2>
+                <h2 className="text-lg font-serif text-white">Horse Rankings</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
               <div className="glass-panel rounded-xl overflow-hidden relative">
@@ -243,7 +243,7 @@ export function SpectatorLiveResultsPage() {
                 ) : horseRankings.length === 0 ? (
                   <div className="p-8 text-center">
                     <div className="text-4xl opacity-40 mb-3">🐎</div>
-                    <div className="text-muted text-sm">Chưa có dữ liệu</div>
+                    <div className="text-muted text-sm">No data available</div>
                   </div>
                 ) : (
                   <div className="divide-y divide-glass-border">
@@ -258,8 +258,8 @@ export function SpectatorLiveResultsPage() {
                           >
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center font-serif font-bold text-sm border shrink-0 ${POS_STYLE[i + 1] ?? 'bg-white/5 text-muted border-glass-border'}`}>{i + 1}</div>
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-semibold text-white">{h.name ?? `Ngựa #${h.horseId}`}</div>
-                              <div className="text-xs text-muted">{h.winsCount ?? 0} lần thắng</div>
+                              <div className="text-sm font-semibold text-white">{h.name ?? `Horse #${h.horseId}`}</div>
+                              <div className="text-xs text-muted">{h.winsCount ?? 0} wins</div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <div className="flex items-center gap-1 text-gold text-xs font-bold">
@@ -275,10 +275,10 @@ export function SpectatorLiveResultsPage() {
                                 transition={{ duration: 0.18 }} className="overflow-hidden"
                               >
                                 <div className="px-5 py-3 bg-white/[0.02] border-t border-glass-border grid grid-cols-2 gap-2 text-xs text-muted">
-                                  <span>Giống: <span className="text-champagne">{h.breed ?? '—'}</span></span>
-                                  <span>Chủ sở hữu: <span className="text-white">{h.ownerName ?? '—'}</span></span>
-                                  <span>Tuổi: <span className="text-white">{h.age ?? '—'}</span></span>
-                                  <span>Số lần thắng: <span className="text-gold font-bold">{h.winsCount ?? 0}</span></span>
+                                  <span>Breed: <span className="text-champagne">{h.breed ?? '—'}</span></span>
+                                  <span>Owner: <span className="text-white">{h.ownerName ?? '—'}</span></span>
+                                  <span>Age: <span className="text-white">{h.age ?? '—'}</span></span>
+                                  <span>Total Wins: <span className="text-gold font-bold">{h.winsCount ?? 0}</span></span>
                                 </div>
                               </motion.div>
                             )}
@@ -296,7 +296,7 @@ export function SpectatorLiveResultsPage() {
           <div>
             <div className="flex items-center gap-3 mb-4 mt-8">
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Trophy size={15} className="text-gold" /></div>
-              <h2 className="text-lg font-serif text-white">Kết quả đã xác nhận</h2>
+              <h2 className="text-lg font-serif text-white">Confirmed Results</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
             
@@ -308,7 +308,7 @@ export function SpectatorLiveResultsPage() {
                 <div className="glass-panel rounded-xl p-8 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">🏆</div>
-                  <div className="text-muted text-sm">Chưa có kết quả nào được công bố</div>
+                  <div className="text-muted text-sm">No results published yet</div>
                 </div>
               );
               return (
@@ -318,14 +318,14 @@ export function SpectatorLiveResultsPage() {
                       <div className="flex justify-between items-center mb-2">
                         <div className="font-bold text-white">{race.raceName || race.name}</div>
                         <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">
-                          Đã công bố
+                          Published
                         </span>
                       </div>
                       <div className="text-xs text-muted mb-4">{race.tournamentName} • {new Date(race.raceDate || race.startTime).toLocaleDateString('vi-VN')}</div>
                       
                       {/* For a fully robust view we would call getRaceResults(race.raceId) but we can just display the overview for now */}
                       <div className="text-sm px-4 py-3 bg-white/[0.02] border border-glass-border rounded-lg text-white/80">
-                        Chi tiết kết quả có thể được xem tại trang chi tiết trận đua.
+                        Detailed results can be viewed on the race details page.
                       </div>
                     </div>
                   ))}

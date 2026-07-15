@@ -159,7 +159,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       .build();
 
     newConnection.on('ReceiveNotification', (noti: NotificationItem) => {
-      showToast(noti.title || 'Thông báo mới', noti.content || noti.message, 'info');
+      showToast(noti.title || 'New Notification', noti.content || noti.message, 'info');
       fetchRecent();
     });
 
@@ -227,7 +227,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   onClick={() => setToast(null)}
                   className="text-muted hover:text-white text-[10px] uppercase font-semibold cursor-pointer"
                 >
-                  Đóng
+                  Close
                 </button>
               </div>
               <p className="text-xs text-white/90 leading-relaxed font-sans">{toast.content}</p>
