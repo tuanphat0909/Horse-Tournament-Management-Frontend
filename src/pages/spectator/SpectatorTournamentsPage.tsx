@@ -15,6 +15,14 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
   active: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   upcoming: { label: 'Upcoming', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
   completed: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
+  'registration open': { label: 'Registration Open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  'registration closed': { label: 'Registration Closed', color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20', dot: 'bg-zinc-400' },
+  'medical checking': { label: 'Medical Checking', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
+  'ready to arrange': { label: 'Ready To Arrange', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-400' },
+  'pre round': { label: 'Pre Round', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', dot: 'bg-purple-400' },
+  'final round': { label: 'Final Round', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20', dot: 'bg-pink-400' },
+  'prize distribution': { label: 'Prize Distribution', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400' },
+  'cancelled': { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
 };
 
 type StatusFilter = 'all' | 'active' | 'upcoming' | 'completed';
@@ -22,7 +30,19 @@ type SortKey = 'newest' | 'oldest' | 'name' | 'status';
 const FILTER_LABELS: Record<StatusFilter, string> = {
   all: 'All', active: 'Active', upcoming: 'Upcoming', completed: 'Completed',
 };
-const STATUS_ORDER: Record<string, number> = { Active: 0, Upcoming: 1, Completed: 2 };
+const STATUS_ORDER: Record<string, number> = {
+  'active': 0,
+  'registration open': 1,
+  'registration closed': 2,
+  'medical checking': 3,
+  'ready to arrange': 4,
+  'pre round': 5,
+  'final round': 6,
+  'prize distribution': 7,
+  'upcoming': 8,
+  'completed': 9,
+  'cancelled': 10
+};
 
 export function SpectatorTournamentsPage() {
   const navigate = useNavigate();
@@ -45,19 +65,34 @@ export function SpectatorTournamentsPage() {
 
   const statsCounts: Record<StatusFilter, number> = {
     all: tournaments.length,
-    active: tournaments.filter(t => t.status === 'Active').length,
-    upcoming: tournaments.filter(t => t.status === 'Upcoming').length,
-    completed: tournaments.filter(t => t.status === 'Completed').length,
+    active: tournaments.filter(t => {
+      const s = (t.status ?? '').toLowerCase();
+      return s === 'active' || s === 'registration open' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution';
+    }).length,
+    upcoming: tournaments.filter(t => (t.status ?? '').toLowerCase() === 'upcoming').length,
+    completed: tournaments.filter(t => {
+      const s = (t.status ?? '').toLowerCase();
+      return s === 'completed' || s === 'cancelled';
+    }).length,
   };
 
   const filtered = tournaments
     .filter(t => (t.name ?? '').toLowerCase().includes(search.toLowerCase()))
-    .filter(t => filter === 'all' || (t.status ?? '').toLowerCase() === filter)
+    .filter(t => {
+      if (filter === 'all') return true;
+      const s = (t.status ?? '').toLowerCase();
+      if (filter === 'active') {
+        return s === 'active' || s === 'registration open' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution';
+      }
+      if (filter === 'upcoming') return s === 'upcoming';
+      if (filter === 'completed') return s === 'completed' || s === 'cancelled';
+      return false;
+    })
     .sort((a, b) => {
       switch (sortBy) {
         case 'oldest': return new Date(a.startDate ?? 0).getTime() - new Date(b.startDate ?? 0).getTime();
         case 'name': return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
-        case 'status': return (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
+        case 'status': return (STATUS_ORDER[(a.status ?? '').toLowerCase()] ?? 11) - (STATUS_ORDER[(b.status ?? '').toLowerCase()] ?? 11);
         case 'newest':
         default: return new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime();
       }
