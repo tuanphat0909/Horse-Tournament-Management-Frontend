@@ -94,10 +94,10 @@ export function AdminResultsPage() {
   }
 
   async function handlePublish(raceId: number) {
-    if (!confirm(`Bạn có chắc muốn công bố kết quả cho trận đua #${raceId}?`)) return;
+    if (!confirm(`Bạn có chắc muốn công bố kết quả cho races đua #${raceId}?`)) return;
     try {
       await publishRaceResult(raceId);
-      alert('Đã công bố thành công!');
+      alert('Published successful!');
       fetchRaces();
     } catch (err: unknown) {
       alert(parseApiError(err as Error));
@@ -139,7 +139,7 @@ export function AdminResultsPage() {
   async function handleCreatePrizes() {
     setPrizesError(''); setPrizesSuccess('');
     if (!prizes.tournamentId || !prizes.firstPlacePrize || !prizes.secondPlacePrize || !prizes.thirdPlacePrize) {
-      setPrizesError('Vui lòng điền đầy đủ tất cả các trường.');
+      setPrizesError('Please fill in all fields.');
       return;
     }
     setPrizesLoading(true);
@@ -150,7 +150,7 @@ export function AdminResultsPage() {
         secondPlacePrize: Number(prizes.secondPlacePrize),
         thirdPlacePrize: Number(prizes.thirdPlacePrize),
       });
-      alert(`Thiết lập giải thưởng thành công cho giải đấu #${prizes.tournamentId}!`);
+      alert(`Thiết lập giải thưởng thành công cho tournaments #${prizes.tournamentId}!`);
       closePrizesModal();
       fetchTournaments();
     } catch (err: unknown) {
@@ -190,19 +190,19 @@ export function AdminResultsPage() {
         <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-6 relative z-10">
 
           <PageHero
-            title="Kết quả & Công bố"
-            subtitle="Xác nhận và công bố kết quả chính thức"
+            title="Results & Công bố"
+            subtitle="Confirm and publish official results"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
           />
 
-          {/* Tìm kiếm cuộc đua */}
+          {/* Search races */}
           <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border focus-within:border-gold/40 transition-colors rounded-lg px-3 py-2 w-64">
             <Search size={14} className="text-muted shrink-0" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm cuộc đua, giải đấu..."
+              placeholder="Tìm races, tournaments..."
               className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
             />
           </div>
@@ -240,7 +240,7 @@ export function AdminResultsPage() {
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-white">Kích hoạt chi trả</div>
-                  <div className="text-xs text-muted">Chọn trận đấu đã công bố kết quả để chi trả tiền cược</div>
+                  <div className="text-xs text-muted">Chọn races đấu đã công bố kết quả để chi trả tiền cược</div>
                 </div>
               </div>
               <div className="relative z-10 flex gap-2">
@@ -250,7 +250,7 @@ export function AdminResultsPage() {
                   className="flex-1 bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors cursor-pointer"
                   style={{ colorScheme: 'dark' }}
                 >
-                  <option value="" className="text-muted/60">-- Chọn trận đấu --</option>
+                  <option value="" className="text-muted/60">-- Select Match --</option>
                   {races
                     .filter((r: any) => r.status === 'Published' || r.status === 'Finished')
                     .map((r: any) => (
@@ -279,7 +279,7 @@ export function AdminResultsPage() {
                 <Megaphone size={15} className="text-yellow-400" />
               </div>
               <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-              <h2 className="text-base font-medium font-serif text-white">Chờ công bố</h2>
+              <h2 className="text-base font-medium font-serif text-white">Pending công bố</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-yellow-400/30 via-glass-border to-transparent" />
             </div>
             
@@ -294,7 +294,7 @@ export function AdminResultsPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📋</div>
-                  <div className="text-muted text-sm">Chưa có dữ liệu chờ công bố</div>
+                  <div className="text-muted text-sm">No data awaiting publication</div>
                 </div>
               );
               return (
@@ -313,7 +313,7 @@ export function AdminResultsPage() {
                               onClick={() => toggleExpandRace(race.raceId)}
                               className="px-2.5 py-1.5 rounded-lg border border-glass-border text-xs text-muted hover:text-white hover:bg-white/5 transition-all"
                             >
-                              {isExpanded ? 'Ẩn' : 'Chi tiết'}
+                              {isExpanded ? 'Ẩn' : 'Detail'}
                             </button>
                             <button onClick={() => handlePublish(race.raceId)} className="btn-gold px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-gold/20">
                               Công bố
@@ -324,22 +324,22 @@ export function AdminResultsPage() {
                         {isExpanded && (
                           <div className="border-t border-glass-border/30 bg-navy/60 p-4 text-xs space-y-3">
                             <div className="font-bold text-[10px] text-muted uppercase tracking-wider">
-                              Kết quả ghi nhận từ hệ thống (Dùng để xác thực):
+                              Results ghi nhận từ hệ thống (Dùng để xác thực):
                             </div>
                             {loadingEntries ? (
                               <LoadingSkeleton />
                             ) : raceEntries.length === 0 ? (
-                              <div className="text-muted/60 italic py-2">Không có dữ liệu lượt đua</div>
+                              <div className="text-muted/60 italic py-2">No race entry data</div>
                             ) : (
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                   <thead>
                                     <tr className="border-b border-glass-border/30 text-[10px] text-muted uppercase">
-                                      <th className="py-2 pr-3">Hạng</th>
-                                      <th className="py-2 pr-3">Làn</th>
-                                      <th className="py-2 pr-3">Ngựa</th>
-                                      <th className="py-2 pr-3">Kỵ sĩ</th>
-                                      <th className="py-2 text-right">Thời gian</th>
+                                      <th className="py-2 pr-3">Rank</th>
+                                      <th className="py-2 pr-3">Lane</th>
+                                      <th className="py-2 pr-3">Horse</th>
+                                      <th className="py-2 pr-3">Jockey</th>
+                                      <th className="py-2 text-right">Time</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-glass-border/20 text-white/90">
@@ -376,7 +376,7 @@ export function AdminResultsPage() {
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                 <CheckCircle size={14} className="text-emerald-400" />
               </div>
-              <h2 className="text-base font-medium font-serif text-white">Đã công bố</h2>
+              <h2 className="text-base font-medium font-serif text-white">Published</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-emerald-400/30 via-glass-border to-transparent" />
             </div>
             
@@ -391,7 +391,7 @@ export function AdminResultsPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📋</div>
-                  <div className="text-muted text-sm">Chưa có trận nào được công bố</div>
+                  <div className="text-muted text-sm">None races nào được công bố</div>
                 </div>
               );
               return (
@@ -410,10 +410,10 @@ export function AdminResultsPage() {
                               onClick={() => toggleExpandRace(race.raceId)}
                               className="px-2.5 py-1.5 rounded-lg border border-glass-border text-xs text-muted hover:text-white hover:bg-white/5 transition-all"
                             >
-                              {isExpanded ? 'Ẩn' : 'Chi tiết'}
+                              {isExpanded ? 'Ẩn' : 'Detail'}
                             </button>
                             <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
-                              <CheckCircle size={12} /> Đã công bố
+                              <CheckCircle size={12} /> Published
                             </span>
                           </div>
                         </div>
@@ -421,22 +421,22 @@ export function AdminResultsPage() {
                         {isExpanded && (
                           <div className="border-t border-glass-border/30 bg-navy/60 p-4 text-xs space-y-3">
                             <div className="font-bold text-[10px] text-muted uppercase tracking-wider">
-                              Kết quả chính thức:
+                              Results chính thức:
                             </div>
                             {loadingEntries ? (
                               <LoadingSkeleton />
                             ) : raceEntries.length === 0 ? (
-                              <div className="text-muted/60 italic py-2">Không có dữ liệu lượt đua</div>
+                              <div className="text-muted/60 italic py-2">No race entry data</div>
                             ) : (
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                   <thead>
                                     <tr className="border-b border-glass-border/30 text-[10px] text-muted uppercase">
-                                      <th className="py-2 pr-3">Hạng</th>
-                                      <th className="py-2 pr-3">Làn</th>
-                                      <th className="py-2 pr-3">Ngựa</th>
-                                      <th className="py-2 pr-3">Kỵ sĩ</th>
-                                      <th className="py-2 text-right">Thời gian</th>
+                                      <th className="py-2 pr-3">Rank</th>
+                                      <th className="py-2 pr-3">Lane</th>
+                                      <th className="py-2 pr-3">Horse</th>
+                                      <th className="py-2 pr-3">Jockey</th>
+                                      <th className="py-2 text-right">Time</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-glass-border/20 text-white/90">
@@ -477,7 +477,7 @@ export function AdminResultsPage() {
             <button 
               onClick={closePrizesModal} 
               className="absolute top-4 right-4 p-1 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-all z-20"
-              title="Đóng"
+              title="Close"
             >
               <X size={18} />
             </button>
@@ -493,14 +493,14 @@ export function AdminResultsPage() {
 
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>Chọn giải đấu *</label>
+                <label className={LABEL}>Chọn tournaments *</label>
                 <select
                   value={prizes.tournamentId}
                   onChange={e => handleTournamentChange(e.target.value)}
                   className={INPUT + ' cursor-pointer'}
                   style={{ colorScheme: 'dark' }}
                 >
-                  <option value="" className="text-muted/60">-- Chọn giải đấu --</option>
+                  <option value="" className="text-muted/60">-- Select Tournament --</option>
                   {tournaments.map((t: any) => (
                     <option key={t.tournamentId} value={t.tournamentId} className="bg-navy text-white">
                       {t.name} (ID: {t.tournamentId})
@@ -514,11 +514,11 @@ export function AdminResultsPage() {
                 const hasPrizes = tour && tour.prizes && tour.prizes.length > 0;
                 return hasPrizes ? (
                   <div className="text-xs px-3 py-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium leading-relaxed">
-                    ✓ Giải đấu đã được cấu hình giải thưởng. Số tiền cấu hình trước đó đã được tự động hiển thị bên dưới. Bạn có thể sửa đổi nếu muốn.
+                    ✓ Tournaments đã được cấu hình giải thưởng. Số tiền cấu hình trước đó đã được tự động hiển thị bên dưới. Bạn có thể sửa đổi nếu muốn.
                   </div>
                 ) : (
                   <div className="text-xs px-3 py-2 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-medium leading-relaxed">
-                    ⚠ Giải đấu này chưa được cấu hình giải thưởng. Vui lòng thiết lập mới bên dưới.
+                    ⚠ Tournaments này chưa được cấu hình giải thưởng. Vui lòng thiết lập mới bên dưới.
                   </div>
                 );
               })()}
@@ -540,9 +540,9 @@ export function AdminResultsPage() {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button onClick={closePrizesModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Hủy</button>
+              <button onClick={closePrizesModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
               <button onClick={handleCreatePrizes} disabled={prizesLoading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
-                {prizesLoading ? 'Đang lưu…' : 'Lưu giải thưởng'}
+                {prizesLoading ? 'Saving...' : 'Save giải thưởng'}
               </button>
             </div>
           </motion.div>

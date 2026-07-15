@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Flag, Trophy, Calendar, BarChart3,
   Bell, LogOut, Users, ClipboardList,
   ShieldCheck, FileText, Target, Star, Activity,
   Megaphone, UserCheck, AlertTriangle, Wallet,
-  Settings, Sun, Moon, GitBranch,
+  Settings, GitBranch,
 } from 'lucide-react';
 import { getCurrentUser } from '../../api/authService';
 import { useAuth } from '../../context/AuthContext';
@@ -91,23 +91,9 @@ export function Sidebar() {
   const navItems = NAV_BY_ROLE[roleKey] ?? NAV_BY_ROLE.spectator;
 
   const { setUser } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
 
   const [showSettings, setShowSettings] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
-  });
-
-  useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.documentElement.classList.remove('light');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
 
   function handleLogout() {
     setUser(null);                       // clear React state + localStorage atomically
@@ -183,58 +169,6 @@ export function Sidebar() {
               >
                 {t("Close")}
               </button>
-            </div>
-
-            {/* Theme Selector */}
-            <div className="space-y-2">
-              <span className="text-xs text-muted font-medium block">{t("Giao diện (Theme)")}</span>
-              <div className="grid grid-cols-2 gap-2 bg-black/25 p-1 rounded-lg border border-glass-border">
-                <button
-                  onClick={() => setTheme('dark')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-semibold transition-all ${theme === 'dark'
-                    ? 'bg-gold/20 text-champagne border border-gold/20 shadow'
-                    : 'text-muted hover:text-white'
-                    }`}
-                >
-                  <Moon size={13} />
-                  <span>{t("Dark")}</span>
-                </button>
-                <button
-                  onClick={() => setTheme('light')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-semibold transition-all ${theme === 'light'
-                    ? 'bg-gold/20 text-champagne border border-gold/20 shadow'
-                    : 'text-muted hover:text-white'
-                    }`}
-                >
-                  <Sun size={13} />
-                  <span>{t("Light")}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Language Selector */}
-            <div className="space-y-2">
-              <span className="text-xs text-muted font-medium block">{t("Ngôn ngữ (Language)")}</span>
-              <div className="grid grid-cols-2 gap-2 bg-black/25 p-1 rounded-lg border border-glass-border">
-                <button
-                  onClick={() => setLanguage('vi')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-semibold transition-all ${language === 'vi'
-                    ? 'bg-gold/20 text-champagne border border-gold/20 shadow'
-                    : 'text-muted hover:text-white'
-                    }`}
-                >
-                  <span>{t('Tiếng Việt')}</span>
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-xs font-semibold transition-all ${language === 'en'
-                    ? 'bg-gold/20 text-champagne border border-gold/20 shadow'
-                    : 'text-muted hover:text-white'
-                    }`}
-                >
-                  <span>{t('English')}</span>
-                </button>
-              </div>
             </div>
 
             {/* Logout Action */}

@@ -9,7 +9,7 @@ export const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  // ── Dữ liệu THẬT cho hero: số ngựa/giải + top bảng xếp hạng + cuộc đua live ──
+  // ── Dữ liệu THẬT cho hero: số horse/giải + top bảng xếp hạng + cuộc đua live ──
   const [horseCount, setHorseCount] = useState<number | null>(null);
   const [tournamentCount, setTournamentCount] = useState<number | null>(null);
   const [topHorses, setTopHorses] = useState<any[]>([]);
@@ -100,11 +100,11 @@ export const HeroSection = () => {
             transition={{ delay: 1.2 }}
           >
             <div className="flex items-center gap-2">
-              <span className="text-white tabular">{horseCount ?? '—'}</span> {t('ngựa đua trên bảng xếp hạng')}
+              <span className="text-white tabular">{horseCount ?? '—'}</span> {t('horses on the leaderboard')}
             </div>
             <div className="w-1 h-1 rounded-full bg-glass-border" />
             <div className="flex items-center gap-2">
-              <span className="text-white tabular">{tournamentCount ?? '—'}</span> {t('giải đấu')}
+              <span className="text-white tabular">{tournamentCount ?? '—'}</span> {t('tournaments')}
             </div>
           </motion.div>
         </motion.div>
@@ -117,15 +117,15 @@ export const HeroSection = () => {
           >
             <div className="flex justify-between items-start mb-6">
               <div className="min-w-0">
-                <h3 className="font-serif text-xl text-white mb-1 truncate">{liveRace ? (liveRace.name ?? `${t('Cuộc đua')} #${liveRace.raceId ?? liveRace.id}`) : t('Trường đua Equestria')}</h3>
-                <p className="text-xs text-muted truncate">{liveRace?.tournamentName ?? t('Lịch thi đấu cập nhật liên tục')}</p>
+                <h3 className="font-serif text-xl text-white mb-1 truncate">{liveRace ? (liveRace.name ?? `${t('Race')} #${liveRace.raceId ?? liveRace.id}`) : t('Equestria Racecourse')}</h3>
+                <p className="text-xs text-muted truncate">{liveRace?.tournamentName ?? t('Race schedule updated continuously')}</p>
               </div>
               {liveRace ? (
                 <div className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] uppercase font-bold rounded flex items-center gap-1 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> {t('Live')}
                 </div>
               ) : (
-                <div className="px-2 py-1 bg-blue-500/15 text-blue-400 text-[10px] uppercase font-bold rounded shrink-0">{t('Sắp diễn ra')}</div>
+                <div className="px-2 py-1 bg-blue-500/15 text-blue-400 text-[10px] uppercase font-bold rounded shrink-0">{t('Upcoming')}</div>
               )}
             </div>
 
@@ -134,11 +134,11 @@ export const HeroSection = () => {
                 <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-navy/50 border border-glass-border hover:border-gold/30 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="font-bold text-gold w-6 shrink-0">#{i + 1}</span>
-                    <span className="text-sm font-medium text-white truncate">{h.horseName ?? h.name ?? `${t('Ngựa')} #${h.horseId}`}</span>
+                    <span className="text-sm font-medium text-white truncate">{h.horseName ?? h.name ?? `${t('Horse')} #${h.horseId}`}</span>
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-xs font-mono text-white tabular">{h.winsCount ?? 0} pts</div>
-                    <div className="text-[10px] text-muted">{h.totalRaces != null ? `${h.totalRaces} ${t('trận')}` : ''}</div>
+                    <div className="text-[10px] text-muted">{h.totalRaces != null ? `${h.totalRaces} ${t('races')}` : ''}</div>
                   </div>
                 </div>
               )) : (
@@ -147,7 +147,7 @@ export const HeroSection = () => {
             </div>
 
             <button onClick={() => navigate('/login')} className="w-full py-3 rounded text-xs font-bold text-champagne bg-gold/10 hover:bg-gold/20 transition-colors border border-gold/30">
-              {t('Xem kết quả trực tiếp')}
+              {t('View live results')}
             </button>
           </motion.div>
 
@@ -167,7 +167,7 @@ export const HeroSection = () => {
             <div className="space-y-2">
               {topHorses.slice(0, 2).length > 0 ? topHorses.slice(0, 2).map((h: any, i: number) => (
                 <div key={i} className="flex justify-between items-center text-xs px-2 py-1.5 rounded bg-navy/60 border border-glass-border">
-                  <span className="text-white font-medium truncate">{h.horseName ?? h.name ?? `Ngựa #${h.horseId}`}</span>
+                  <span className="text-white font-medium truncate">{h.horseName ?? h.name ?? `Horse #${h.horseId}`}</span>
                   <span className="text-gold font-bold tabular shrink-0">{h.winsCount ?? 0} pts</span>
                 </div>
               )) : (

@@ -48,7 +48,7 @@ export function JockeyViolationsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Vi phạm của tôi"
+            title="Violation của tôi"
             subtitle="Các đơn vi phạm và khiếu nại ghi nhận của bạn"
             imageUrl="/images/hero-jockey.jpg"
             imagePosition="center 25%"
@@ -60,8 +60,8 @@ export function JockeyViolationsPage() {
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/10 to-transparent blur-[40px] pointer-events-none" />
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 ring-1 ring-gold/20 flex items-center justify-center shrink-0 relative z-10"><Clock size={15} className="text-blue-400" /></div>
             <div className="text-xs text-muted leading-relaxed space-y-1 relative z-10">
-              <div>Khi trọng tài ghi nhận vi phạm, bạn có <span className="text-white font-bold">30 phút</span> để gửi khiếu nại — trước khi kết quả cuộc đua được công bố chính thức.</div>
-              <div>Trọng tài sẽ xem lại footage và ra phán quyết cuối cùng. Với án <span className="text-red-400 font-bold">truất quyền</span>, bạn có thêm <span className="text-white font-bold">48 giờ</span> để kháng cáo lên Ban tổ chức.</div>
+              <div>Khi trọng tài ghi nhận vi phạm, bạn có <span className="text-white font-bold">30 minutes</span> để gửi khiếu nại — trước khi kết quả races được công bố chính thức.</div>
+              <div>Referee sẽ xem lại footage và ra phán quyết cuối cùng. Với án <span className="text-red-400 font-bold">truất quyền</span>, bạn có thêm <span className="text-white font-bold">48 giờ</span> để kháng cáo lên Ban tổ chức.</div>
             </div>
           </div>
 
@@ -98,11 +98,11 @@ export function JockeyViolationsPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                      <th className="px-6 py-4">Mã</th>
-                      <th className="px-6 py-4">Cuộc đua</th>
+                      <th className="px-6 py-4">ID</th>
+                      <th className="px-6 py-4">Race</th>
                       <th className="px-6 py-4">Loại vi phạm</th>
-                      <th className="px-6 py-4">Chi tiết</th>
-                      <th className="px-6 py-4">Hình phạt</th>
+                      <th className="px-6 py-4">Detail</th>
+                      <th className="px-6 py-4">Penalty</th>
                       <th className="px-6 py-4">Ngày ghi nhận</th>
                     </tr>
                   </thead>

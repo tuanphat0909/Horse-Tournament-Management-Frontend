@@ -54,10 +54,10 @@ export const StatsSection = () => {
   }, []);
 
   const items = [
-    { value: stats.horses, label: t('Ngựa trên bảng xếp hạng'), sub: undefined as string | undefined },
-    { value: stats.tournaments, label: t('Giải đấu'), sub: liveCount > 0 ? `${liveCount} ${t('đang diễn ra')}` : undefined },
-    { value: stats.races, label: t('Cuộc đua trong lịch'), sub: undefined },
-    { value: stats.jockeys, label: t('Nài ngựa chuyên nghiệp'), sub: undefined },
+    { value: stats.horses, label: t('Horses on leaderboard'), sub: undefined as string | undefined },
+    { value: stats.tournaments, label: t('Tournaments'), sub: liveCount > 0 ? `${liveCount} ${t('live now')}` : undefined },
+    { value: stats.races, label: t('Races in schedule'), sub: undefined },
+    { value: stats.jockeys, label: t('Professional jockeys'), sub: undefined },
   ];
 
   return (
@@ -92,7 +92,7 @@ export const StatsSection = () => {
             </motion.div>
           ))}
         </div>
-        <p className="text-center text-[11px] text-muted/50 mt-6">{t('Số liệu trực tiếp từ hệ thống Equestria')}</p>
+        <p className="text-center text-[11px] text-muted/50 mt-6">{t('Live data from Equestria system')}</p>
       </div>
     </section>
   );

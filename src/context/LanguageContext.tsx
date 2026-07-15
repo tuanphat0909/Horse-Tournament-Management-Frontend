@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
 
 type Language = 'en' | 'vi';
 
@@ -307,6 +307,14 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "Chưa có dự đoán nào": "No predictions yet",
     "Đúng": "Correct",
     "Sai": "Incorrect",
+    "Đang mở đăng ký": "Registration Open",
+    "Đã đóng đăng ký": "Registration Closed",
+    "Kiểm tra y tế": "Medical Checking",
+    "Sẵn sàng xếp lịch": "Ready To Arrange",
+    "Vòng loại": "Pre Round",
+    "Vòng chung kết": "Final Round",
+    "Trao giải": "Prize Distribution",
+    "Giải đấu đang ở trạng thái Đang mở đăng ký (Registration Open).": "Tournament is now in Registration Open status.",
   },
   vi: {
     // English to Vietnamese
@@ -431,26 +439,33 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "View your upcoming race assignments, study track conditions, and analyze your win probabilities.": "Xem các cuộc đua sắp tới, nghiên cứu điều kiện đường đua và phân tích xác suất chiến thắng.",
     "Input official times, manage disputes, and finalize race results with secure verification.": "Nhập thời gian chính thức, xử lý tranh chấp và hoàn thiện kết quả cuộc đua với xác minh bảo mật.",
     "View tournament schedules, follow live race results and rankings, submit predictions, and receive reward notifications for correct forecasts.": "Xem lịch giải đấu, theo dõi kết quả và bảng xếp hạng trực tiếp, gửi dự đoán và nhận thông báo phần thưởng cho dự đoán chính xác.",
+    "Registration Open": "Đang mở đăng ký",
+    "Registration Closed": "Đã đóng đăng ký",
+    "Medical Checking": "Kiểm tra y tế",
+    "Ready To Arrange": "Sẵn sàng xếp lịch",
+    "Pre Round": "Vòng loại",
+    "Final Round": "Vòng chung kết",
+    "Prize Distribution": "Trao giải",
+    "Completed": "Đã hoàn thành",
+    "Cancelled": "Đã hủy",
+    "Tournament is now in Registration Open status.": "Giải đấu đang ở trạng thái Đang mở đăng ký (Registration Open).",
   }
 };
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    return (localStorage.getItem('language') as Language) || 'vi';
-  });
+  const language: Language = 'en';
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem('language', lang);
+  const setLanguage = (_lang: Language) => {
+    // Language is locked to English, changing is disabled
   };
 
   const t = (key: string): string => {
     if (!key) return '';
     
     // Check if translation exists in current language config
-    const translations = TRANSLATIONS[language];
+    const translations = TRANSLATIONS['en'];
     if (translations && translations[key]) {
       return translations[key];
     }

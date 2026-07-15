@@ -31,7 +31,7 @@ export function RefereeConfirmResultsPage() {
     if (form.raceId) {
       const race = races.find(r => r.raceId === Number(form.raceId));
       if (race && (race.status === 'Completed' || race.status === 'Finished')) {
-        setError('Cuộc đua này đã có kết quả — không thể nộp lại.');
+        setError('This race already has results — cannot resubmit.');
       } else {
         setError('');
       }
@@ -94,13 +94,13 @@ export function RefereeConfirmResultsPage() {
       if (winnerEntry) {
         setF('winner', winnerEntry.horseName || winnerEntry.horseId.toString());
         setF('winningTime', String(winnerEntry.finishTime));
-        setF('remarks', 'Đã ghi nhận kết quả.');
+        setF('remarks', 'Results recorded.');
       } else {
-        setF('remarks', 'Trọng tài ghi nhận kết quả thủ công.');
+        setF('remarks', 'Referee recorded results manually.');
       }
     } catch (err) {
       console.error(err);
-      setError('Không thể tải danh sách ngựa cho cuộc đua.');
+      setError('Cannot load horse list for the race.');
     } finally {
       setLoadingEntries(false);
     }
@@ -131,29 +131,29 @@ export function RefereeConfirmResultsPage() {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!form.raceId) {
-      setError('Vui lòng chọn trận đua.');
+      setError('Please select a race.');
       return;
     }
 
     if (isCompleted) {
-      setError('Cuộc đua này đã có kết quả — không thể nộp lại.');
+      setError('This race already has results — cannot resubmit.');
       return;
     }
 
     const invalidEntry = raceEntries.find(e => e.finishPosition == null || e.finishTime == null);
     if (invalidEntry) {
-      setError('Vui lòng nhập đầy đủ hạng và thời gian cho tất cả ngựa.');
+      setError('Please enter rank and time for all horses.');
       return;
     }
 
     const winners = raceEntries.filter(e => Number(e.finishPosition) === 1);
     if (winners.length !== 1) {
-      setError('Vui lòng chọn duy nhất một ngựa đạt Hạng 1.');
+      setError('Please select exactly one horse for 1st Place.');
       return;
     }
 
     if (!form.winner || !form.winningTime) {
-      setError('Thiếu thông tin người chiến thắng.');
+      setError('Missing winner information.');
       return;
     }
 
@@ -170,7 +170,7 @@ export function RefereeConfirmResultsPage() {
           finishTime: Number(e.finishTime)
         }))
       });
-      setSuccess('Ghi nhận kết quả thành công!');
+      setSuccess('Results recorded successfully!');
       setForm({ raceId: '', winner: '', winningTime: '', remarks: '' });
       setRaceEntries([]);
     } catch (err: unknown) {
@@ -189,8 +189,8 @@ export function RefereeConfirmResultsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Xác nhận kết quả"
-            subtitle="Xác nhận và công bố kết quả chính thức"
+            title="Confirm Results"
+            subtitle="Confirm and publish official results"
             imageUrl="/images/hero-referee.jpg"
             imagePosition="right 52%"
           />
@@ -198,16 +198,16 @@ export function RefereeConfirmResultsPage() {
           <div className={`grid grid-cols-1 ${form.raceId ? 'lg:grid-cols-2' : 'max-w-2xl'} gap-6 mx-auto transition-all duration-300`}>
             {/* Form Column */}
             <div className="glass-panel rounded-xl p-8 border border-glass-border h-fit">
-              <h2 className="text-xl font-serif text-white mb-6">Nhập kết quả cuộc đua</h2>
+              <h2 className="text-xl font-serif text-white mb-6">Enter Race Results</h2>
               
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className={LABEL}>Trận đua *</label>
+                  <label className={LABEL}>Race *</label>
                   {loadingRaces ? (
                     <LoadingSkeleton />
                   ) : (
                     <select value={form.raceId} onChange={e => handleRaceChange(e.target.value)} className={INPUT} style={{colorScheme: 'dark'}}>
-                      <option value="">-- Chọn trận đua --</option>
+                      <option value="">-- Select Race --</option>
                       {races.map(r => (
                         <option key={r.raceId} value={r.raceId}>ID {r.raceId}: {r.raceName} ({r.status})</option>
                       ))}
@@ -216,17 +216,17 @@ export function RefereeConfirmResultsPage() {
                 </div>
                 
                 <div>
-                  <label className={LABEL}>Ngựa chiến thắng *</label>
-                  {/* Dropdown từ danh sách ngựa THẬT của cuộc đua — không bắt gõ tên/ID tay nữa */}
+                  <label className={LABEL}>Winning Horse *</label>
+                  {/* Dropdown từ danh sách horse THẬT của races — không bắt gõ tên/ID tay nữa */}
                   <select value={form.winner} onChange={e => setF('winner', e.target.value)}
                     disabled={!form.raceId || loadingEntries || !!isCompleted}
                     className={INPUT} style={{ colorScheme: 'dark' }}>
-                    <option value="">{!form.raceId ? '-- Chọn cuộc đua trước --' : loadingEntries ? '-- Đang tải ngựa… --' : '-- Chọn ngựa thắng --'}</option>
+                    <option value="">{!form.raceId ? '-- Select Previous Race --' : loadingEntries ? '-- Loading horses... --' : '-- Select Winning Horse --'}</option>
                     {raceEntries.map((e: any, i: number) => {
                       const name = e.horseName ?? String(e.horseId);
                       return (
                         <option key={e.raceEntryId ?? i} value={name}>
-                          {`Làn ${e.laneNo ?? '?'}: ${name}${e.jockeyName ? ` (${e.jockeyName})` : ''}${e.finishPosition != null ? ` — hạng ${e.finishPosition}` : ''}`}
+                          {`Lane ${e.laneNo ?? '?'}: ${name}${e.jockeyName ? ` (${e.jockeyName})` : ''}${e.finishPosition != null ? ` — rank ${e.finishPosition}` : ''}`}
                         </option>
                       );
                     })}
@@ -234,13 +234,13 @@ export function RefereeConfirmResultsPage() {
                 </div>
                 
                 <div>
-                  <label className={LABEL}>Thời gian hoàn thành (Winning Time) *</label>
+                  <label className={LABEL}>Time completed (Winning Time) *</label>
                   <input disabled={!!isCompleted} value={form.winningTime} onChange={e => setF('winningTime', e.target.value)} placeholder="VD: 01:23.45" className={INPUT} />
                 </div>
                 
                 <div>
-                  <label className={LABEL}>Ghi chú thêm</label>
-                  <textarea disabled={!!isCompleted} rows={3} value={form.remarks} onChange={e => setF('remarks', e.target.value)} placeholder="Ví dụ: Về đích sát sao, kỷ lục mới..." className={INPUT + " resize-none"} />
+                  <label className={LABEL}>Notes</label>
+                  <textarea disabled={!!isCompleted} rows={3} value={form.remarks} onChange={e => setF('remarks', e.target.value)} placeholder="E.g., Close finish, new record..." className={INPUT + " resize-none"} />
                 </div>
 
                 {error && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>}
@@ -248,7 +248,7 @@ export function RefereeConfirmResultsPage() {
 
                 <div className="pt-2">
                   <button type="submit" disabled={loading || !!isCompleted} className="btn-red w-full py-3 rounded-lg font-bold disabled:opacity-60 disabled:cursor-not-allowed">
-                    {loading ? 'Đang gửi...' : isCompleted ? 'Đã có kết quả' : 'Xác nhận kết quả'}
+                    {loading ? 'Sending...' : isCompleted ? 'Results Available' : 'Confirm Results'}
                   </button>
                 </div>
               </form>
@@ -257,21 +257,21 @@ export function RefereeConfirmResultsPage() {
             {/* Standings/Entries Column */}
             {form.raceId && (
               <div className="glass-panel rounded-xl p-8 border border-glass-border flex flex-col h-fit">
-                <h2 className="text-xl font-serif text-white mb-6">Bảng xếp hạng lượt đua</h2>
+                <h2 className="text-xl font-serif text-white mb-6">Race Leaderboard</h2>
                 {loadingEntries ? (
                   <LoadingSkeleton />
                 ) : raceEntries.length === 0 ? (
-                  <div className="text-sm text-muted py-6 italic">Không có dữ liệu lượt đua</div>
+                  <div className="text-sm text-muted py-6 italic">No race entry data</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-glass-border/30 text-[10px] text-muted uppercase">
-                          <th className="py-2 pr-3">Làn</th>
-                          <th className="py-2 pr-3">Ngựa</th>
-                          <th className="py-2 pr-3">Kỵ sĩ</th>
-                          <th className="py-2 pr-3 w-28">Hạng (Position)</th>
-                          <th className="py-2 text-right w-36">Thời gian (Giây)</th>
+                          <th className="py-2 pr-3">Lane</th>
+                          <th className="py-2 pr-3">Horse</th>
+                          <th className="py-2 pr-3">Jockey</th>
+                          <th className="py-2 pr-3 w-28">Rank (Position)</th>
+                          <th className="py-2 text-right w-36">Time (Seconds)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-glass-border/20 text-white/90">

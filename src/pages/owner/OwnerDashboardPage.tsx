@@ -61,22 +61,22 @@ export function OwnerDashboardPage() {
 
           {/* ROW 1: HERO */}
           <PageHero
-            title={<>{t('Chào mừng,')} <span className="italic text-champagne">{user?.fullName ?? t('Chủ ngựa')}</span></>}
-            subtitle={t('Tổng quan chuồng ngựa của bạn')}
+            title={<>{t('Welcome,')} <span className="italic text-champagne">{user?.fullName ?? t('Horse Owner')}</span></>}
+            subtitle={t('Your stable overview')}
             imageUrl="/images/hero-owner.jpg"
             imagePosition="center 5%"
             badge={
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/25 text-gold text-[10px] font-bold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> {t('Mùa giải đang diễn ra')}
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> {t('Season in progress')}
               </div>
             }
             actions={
               <>
                 <button onClick={() => navigate('/owner/horses')} className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold">
-                  {t('Quản lý ngựa')} <ChevronRight size={14} />
+                  {t('Manage Horses')} <ChevronRight size={14} />
                 </button>
                 <button onClick={() => navigate('/owner/registrations')} className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
-                  {t('Đăng ký thi đấu')}
+                  {t('Race Registration')}
                 </button>
               </>
             }
@@ -85,10 +85,10 @@ export function OwnerDashboardPage() {
           {/* ROW 2: STATS */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
-              { title: t('Ngựa của tôi'), value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0], to: '/owner/horses' },
-              { title: t('Đang thi đấu'), value: '—', trend: '+1', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1], to: '/owner/registrations' },
-              { title: t('Sắp thi đấu'), value: scheduleLoading ? '…' : String(schedule.length), trend: t('3 ngày nữa'), icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2], to: '/owner/tournaments' },
-              { title: t('Tiền thưởng'), value: '—', trend: '+18%', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3], to: '/owner/results' },
+              { title: t('My Horses'), value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0], to: '/owner/horses' },
+              { title: t('Competing'), value: '—', trend: '+1', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1], to: '/owner/registrations' },
+              { title: t('Upcoming'), value: scheduleLoading ? '…' : String(schedule.length), trend: t('3 days left'), icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2], to: '/owner/tournaments' },
+              { title: t('Prize Money'), value: '—', trend: '+18%', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3], to: '/owner/results' },
             ].map((m, i) => (
               <motion.div key={i} variants={child} onClick={() => navigate(m.to)} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer hover:border-gold/30 transition-colors" style={{ height: '140px' }}>
                 <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
@@ -128,18 +128,18 @@ export function OwnerDashboardPage() {
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                     <Star size={15} className="text-gold" />
                   </div>
-                  <h2 className="text-lg font-serif text-white whitespace-nowrap">{t('Ngựa của tôi')}</h2>
+                  <h2 className="text-lg font-serif text-white whitespace-nowrap">{t('My Horses')}</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
                 <button onClick={() => navigate('/owner/horses')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">
-                  {t('Xem tất cả')} <ChevronRight size={14} />
+                  {t('View all')} <ChevronRight size={14} />
                 </button>
               </div>
               <div className="relative z-10 flex-1 space-y-2 overflow-y-auto">
                 {horsesLoading ? (
                   <LoadingSkeleton />
                 ) : horses.length === 0 ? (
-                  <div className="text-center py-10"><div className="text-4xl opacity-40 mb-3">🐴</div><div className="text-muted text-sm">{t('Chưa có ngựa nào trong chuồng')}</div></div>
+                  <div className="text-center py-10"><div className="text-4xl opacity-40 mb-3">🐴</div><div className="text-muted text-sm">{t('No horses in your stable yet')}</div></div>
                 ) : horses.map((h, i) => (
                   <div key={h.id ?? i} onClick={() => navigate('/owner/horses')} className="flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
                     <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center font-serif font-bold text-champagne text-sm shrink-0">{i + 1}</div>
@@ -148,16 +148,16 @@ export function OwnerDashboardPage() {
                       <div className="text-sm font-semibold text-white group-hover:text-champagne transition-colors truncate">{h.name}</div>
                       <div className="text-[11px] text-muted flex items-center gap-1.5 mt-0.5">
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted">{h.breed}</span>
-                        <span>{calculateAge(h.age)} {t('tuổi')}</span>
+                        <span>{calculateAge(h.age)} {t('years old')}</span>
                       </div>
                     </div>
                     <div className="text-right shrink-0 hidden sm:block">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-muted/60 flex items-center gap-1 justify-end"><Flag size={9} className="text-gold/50" /> {t('Giới tính')}</div>
-                      <div className="text-xs text-champagne font-semibold">{h.gender === 'Male' ? t('Đực') : h.gender === 'Female' ? t('Cái') : '—'}</div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-muted/60 flex items-center gap-1 justify-end"><Flag size={9} className="text-gold/50" /> {t('Gender')}</div>
+                      <div className="text-xs text-champagne font-semibold">{h.gender === 'Male' ? t('Male') : h.gender === 'Female' ? t('Female') : '—'}</div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <div className="text-right">
-                        <div className="flex items-center gap-1 text-xs font-bold text-champagne"><ShieldCheck size={11} /> {h.healthStatus ?? t('Khỏe mạnh')}</div>
+                        <div className="flex items-center gap-1 text-xs font-bold text-champagne"><ShieldCheck size={11} /> {h.healthStatus ?? t('Healthy')}</div>
                       </div>
                       <ChevronRight size={14} className="text-muted/30 group-hover:text-gold transition-colors" />
                     </div>
@@ -174,10 +174,10 @@ export function OwnerDashboardPage() {
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                     <Calendar size={15} className="text-gold" />
                   </div>
-                  <h2 className="text-lg font-serif text-white whitespace-nowrap">{t('Lịch thi đấu sắp tới')}</h2>
+                  <h2 className="text-lg font-serif text-white whitespace-nowrap">{t('Upcoming Schedule')}</h2>
                 </div>
                 <button onClick={() => navigate('/owner/tournaments')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0">
-                  {t('Xem lịch')} <ChevronRight size={14} />
+                  {t('View Schedule')} <ChevronRight size={14} />
                 </button>
               </div>
               <div className="relative z-10 flex-1 space-y-3">
@@ -187,7 +187,7 @@ export function OwnerDashboardPage() {
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">📅</div>
-                    <div className="text-muted text-sm">{t('Chưa có dữ liệu')}</div>
+                    <div className="text-muted text-sm">{t('No data available')}</div>
                   </div>
                 ) : schedule.map((r, i) => (
                   <div key={r.id ?? i} onClick={() => navigate('/owner/tournaments')} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">

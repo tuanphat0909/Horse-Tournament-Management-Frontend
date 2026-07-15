@@ -28,14 +28,10 @@ function GlobalWave() {
 
 export default function App() {
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    if (savedTheme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.documentElement.classList.remove('light');
-    }
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.add('light');
+    localStorage.removeItem('theme');
+    localStorage.removeItem('language');
   }, []);
 
   return (

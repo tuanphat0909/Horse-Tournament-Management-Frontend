@@ -11,12 +11,12 @@ import { useLanguage } from '../../context/LanguageContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  live: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  ongoing: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  running: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  scheduled: { label: 'Sắp diễn ra', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
-  finished: { label: 'Đã kết thúc', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
-  cancelled: { label: 'Đã hủy', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
+  live: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  ongoing: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  running: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  scheduled: { label: 'Upcoming', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
+  finished: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
+  cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
 };
 
 export function SpectatorTournamentDetailPage() {
@@ -45,7 +45,7 @@ export function SpectatorTournamentDetailPage() {
     })
     .catch(err => {
       console.error(err);
-      setError(t('Không thể tải thông tin giải đấu.'));
+      setError(t('Failed to load tournament info.'));
     })
     .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -60,7 +60,7 @@ export function SpectatorTournamentDetailPage() {
         
         <main className="relative z-10 max-w-[1200px] mx-auto px-8 py-6 space-y-6">
           <Link to="/spectator/tournaments" className="inline-flex items-center gap-2 text-sm text-muted hover:text-white transition-colors">
-            <ArrowLeft size={16} /> {t("Quay lại danh sách giải đấu")}
+            <ArrowLeft size={16} /> {t("Back to tournaments list")}
           </Link>
 
           {loading ? (
@@ -68,7 +68,7 @@ export function SpectatorTournamentDetailPage() {
           ) : error ? (
              <div className="glass-panel p-8 text-center text-red-400">{error}</div>
           ) : !tournament ? (
-             <div className="glass-panel p-8 text-center text-muted">{t("Không tìm thấy giải đấu.")}</div>
+             <div className="glass-panel p-8 text-center text-muted">{t("Tournament not found.")}</div>
           ) : (
             <>
               {/* Tournament Header */}
@@ -78,22 +78,22 @@ export function SpectatorTournamentDetailPage() {
                 <div className="flex items-center gap-6 text-sm text-muted mt-4">
                   <div className="flex items-center gap-2">
                     <Calendar size={16} className="text-gold" />
-                    {t("Bắt đầu:")} {formatDateTime(tournament.startDate)}
+                    {t("Start:")} {formatDateTime(tournament.startDate)}
                   </div>
                   <div className="flex items-center gap-2">
                     <Flag size={16} className="text-gold" />
-                    {t("Kết thúc:")} {formatDateTime(tournament.endDate)}
+                    {t("End:")} {formatDateTime(tournament.endDate)}
                   </div>
                 </div>
               </div>
 
               {/* Races List */}
-              <h2 className="text-xl font-serif font-bold text-white">{t("Danh sách Cuộc Đua")} ({races.length})</h2>
+              <h2 className="text-xl font-serif font-bold text-white">{t("Races List")} ({races.length})</h2>
               
               {races.length === 0 ? (
                 <div className="glass-panel rounded-xl p-12 text-center">
                   <div className="text-4xl opacity-40 mb-3">🏁</div>
-                  <div className="text-muted text-sm">{t("Chưa có cuộc đua nào trong giải đấu này.")}</div>
+                  <div className="text-muted text-sm">{t("No races in this tournament yet.")}</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -114,20 +114,20 @@ export function SpectatorTournamentDetailPage() {
                           <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                           </span>
-                          <span className="text-xs text-gold font-bold">{t("Vòng")} {r.roundNumber}</span>
+                          <span className="text-xs text-gold font-bold">{t("Round")} {r.roundNumber}</span>
                         </div>
                         <h3 className="text-lg font-serif font-bold text-white mb-3">{r.name}</h3>
                         <div className="space-y-2 text-xs text-muted mb-4 flex-1">
                           <div className="flex justify-between">
-                            <span>{t("Bắt đầu lúc:")}</span>
+                            <span>{t("Starts at:")}</span>
                             <span className="text-white">{formatDateTime(r.raceDate)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>{t("Đường đua:")}</span>
+                            <span>{t("Track distance:")}</span>
                             <span className="text-white">{r.distanceMeter}m</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>{t("Làn tối đa:")}</span>
+                            <span>{t("Max lanes:")}</span>
                             <span className="text-white">{r.maxLanes}</span>
                           </div>
                         </div>
@@ -137,14 +137,14 @@ export function SpectatorTournamentDetailPage() {
                             onClick={() => navigate(`/spectator/races/${r.raceId}`)}
                             className="flex-1 text-center text-xs font-bold bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg transition-colors border border-glass-border"
                           >
-                            {t("Xem Chi Tiết")}
+                            {t("View Details")}
                           </button>
                           {canBet && (
                             <button 
                               onClick={() => navigate(`/spectator/races/${r.raceId}`)}
                               className="flex-1 text-center text-xs font-bold bg-gold hover:bg-gold-light text-navy px-4 py-2 rounded-lg transition-colors"
                             >
-                              {t("Cược Ngay")}
+                              {t("Bet Now")}
                             </button>
                           )}
                         </div>

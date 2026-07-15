@@ -33,7 +33,7 @@ export function JockeyStatsPage() {
     ])
       .catch(err => {
         console.error(err);
-        setError('Không thể tải thống kê thành tích nài ngựa');
+        setError('Không thể tải thống kê thành tích nài horse');
       })
       .finally(() => {
         setLoading(false);
@@ -47,9 +47,9 @@ export function JockeyStatsPage() {
   const rankingPoint = stats?.rankingPoint ?? 0;
 
   const statsDisplay = [
-    { label: 'Số lần thắng', value: loading ? '...' : wins, icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
-    { label: 'Tổng cuộc đua', value: loading ? '...' : totalRaces, icon: Flag, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20' },
-    { label: 'Tỉ lệ thắng', value: loading ? '...' : `${winRate}%`, icon: TrendingUp, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
+    { label: 'Total Wins', value: loading ? '...' : wins, icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
+    { label: 'Tổng races', value: loading ? '...' : totalRaces, icon: Flag, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20' },
+    { label: 'Win Rate', value: loading ? '...' : `${winRate}%`, icon: TrendingUp, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
     { label: 'Top 3', value: loading ? '...' : top3, icon: Award, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20' },
   ];
 
@@ -62,7 +62,7 @@ export function JockeyStatsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Thành tích"
+            title="Achievements"
             subtitle="Thống kê và hiệu suất thi đấu cá nhân"
             imageUrl="/images/hero-jockey.jpg"
             imagePosition="center 25%"
@@ -107,13 +107,13 @@ export function JockeyStatsPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📊</div>
-                  <div className="text-muted text-sm">Chưa tham gia cuộc đua nào</div>
+                  <div className="text-muted text-sm">Chưa tham gia races nào</div>
                 </div>
               ) : (
                 <div className="space-y-4 py-2">
                   <div>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-white">Số lần Về Nhất (Hạng 1)</span>
+                      <span className="text-white">Số lần Về Nhất (1st Place)</span>
                       <span className="text-gold font-bold">{wins} / {totalRaces}</span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
@@ -140,7 +140,7 @@ export function JockeyStatsPage() {
               <div className="text-4xl font-serif font-bold text-white mb-1">
                 {loading ? '—' : rankingPoint > 0 ? `#${Math.max(1, 20 - Math.floor(rankingPoint / 10))}` : 'Chưa xếp hạng'}
               </div>
-              <div className="text-sm text-muted mb-4">Hạng cá nhân tạm thời</div>
+              <div className="text-sm text-muted mb-4">Rank cá nhân tạm thời</div>
               <div className="w-full p-3 rounded-xl bg-gold/5 border border-gold/20">
                 <div className="text-xs text-muted mb-1">Điểm tích lũy</div>
                 <div className="text-2xl font-bold text-gold">{loading ? '—' : rankingPoint}</div>
@@ -154,7 +154,7 @@ export function JockeyStatsPage() {
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/10 to-transparent blur-[40px] pointer-events-none" />
             <div className="p-5 border-b border-glass-border relative z-10 flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><History size={15} className="text-gold" /></div>
-              <h2 className="text-base font-serif text-white">Lịch sử cuộc đua tham gia</h2>
+              <h2 className="text-base font-serif text-white">History races tham gia</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
             <div className="p-6">
@@ -164,19 +164,19 @@ export function JockeyStatsPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📊</div>
-                  <div className="text-muted text-sm">Chưa có lịch sử thi đấu</div>
+                  <div className="text-muted text-sm">None lịch sử thi đấu</div>
                 </div>
               ) : (
                 <div className="text-sm text-white space-y-4">
                   <div className="p-4 bg-white/[0.02] border border-glass-border rounded-lg flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-gold">Đã tham gia {totalRaces} cuộc đua chính thức</div>
+                      <div className="font-semibold text-gold">Đã tham gia {totalRaces} races chính thức</div>
                       <div className="text-xs text-muted">Tỉ lệ về Nhất đạt {winRate}%</div>
                     </div>
                     <div className="font-mono text-sm text-gold">+{wins * 10} điểm thưởng</div>
                   </div>
 
-                  {/* Danh sách các cuộc đua đã hoàn thành */}
+                  {/* Danh sách các races đã completed */}
                   <div className="space-y-2.5">
                     {races
                       .filter(r => {
@@ -196,7 +196,7 @@ export function JockeyStatsPage() {
                               r.finishPosition === 3 ? 'bg-amber-700/20 text-amber-600' :
                               'bg-white/5 text-muted'
                             }`}>
-                              Hạng {r.finishPosition ?? '—'}
+                              Rank {r.finishPosition ?? '—'}
                             </div>
                             {r.finishTime && (
                               <div className="text-xs font-mono text-champagne mt-1">{r.finishTime}s</div>

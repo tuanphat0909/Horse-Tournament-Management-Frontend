@@ -66,9 +66,9 @@ export function Topbar() {
       const diffMins = Math.floor(diffMs / 60000);
       const diffHours = Math.floor(diffMins / 60);
 
-      if (diffMins < 1) return t('Vừa xong');
-      if (diffMins < 60) return `${diffMins} ${t('phút trước')}`;
-      if (diffHours < 24) return `${diffHours} ${t('giờ trước')}`;
+      if (diffMins < 1) return t('Just now');
+      if (diffMins < 60) return `${diffMins} ${t('minutes ago')}`;
+      if (diffHours < 24) return `${diffHours} ${t('hours ago')}`;
 
       return past.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { month: 'numeric', day: 'numeric' });
     } catch {
@@ -82,7 +82,7 @@ export function Topbar() {
         <Search size={16} className="text-muted" />
         <input
           type="text"
-          placeholder={t("Tìm kiếm ngựa, cuộc đua, giải đấu...")}
+          placeholder={t("Search horses, races, tournaments...")}
           className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
         />
       </div>
@@ -105,14 +105,14 @@ export function Topbar() {
         {dropdownOpen && (
           <div className="absolute right-0 top-12 w-80 glass-panel-elevated rounded-xl shadow-2xl border border-gold-border/40 overflow-hidden z-50 flex flex-col animate-in fade-in slide-in-from-top-2 duration-200 bg-[#0A1220]/95">
             <div className="px-4 py-3 border-b border-glass-border flex items-center justify-between bg-white/[0.01]">
-              <span className="text-xs font-bold text-champagne uppercase tracking-wider">{t("Thông báo")}</span>
+              <span className="text-xs font-bold text-champagne uppercase tracking-wider">{t("Notifications")}</span>
               {unreadCount > 0 && (
                 <button
                   onClick={() => markAllAsRead()}
                   className="flex items-center gap-1 text-[10px] font-bold text-gold hover:text-white transition-colors"
-                  title={t("Đánh dấu tất cả đã đọc")}
+                  title={t("Mark all as read")}
                 >
-                  <CheckCheck size={12} /> {t("Đánh dấu đã đọc")} ({unreadCount})
+                  <CheckCheck size={12} /> {t("Mark as read")} ({unreadCount})
                 </button>
               )}
             </div>
@@ -154,7 +154,7 @@ export function Topbar() {
                 ))
               ) : (
                 <div className="px-4 py-8 text-center text-xs text-muted">
-                  {t("Không có thông báo nào")}
+                  {t("No notifications")}
                 </div>
               )}
             </div>
@@ -168,7 +168,7 @@ export function Topbar() {
                 }}
                 className="w-full py-2.5 text-[11px] font-bold text-champagne hover:text-white transition-colors cursor-pointer"
               >
-                {t("Xem tất cả thông báo")} &rarr;
+                {t("View all notifications")} &rarr;
               </button>
             </div>
           </div>

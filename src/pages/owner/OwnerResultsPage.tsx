@@ -37,7 +37,7 @@ export function OwnerResultsPage() {
       })
       .catch(err => {
         console.error(err);
-        setError('Không thể tải kết quả thi đấu');
+        setError('Cannot load race results');
         setLoading(false);
       });
   }, []);
@@ -51,8 +51,8 @@ export function OwnerResultsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Kết quả thi đấu"
-            subtitle="Kết quả và thành tích mùa giải của các ngựa thuộc sở hữu"
+            title="Race Results"
+            subtitle="Race results and season achievements of owned horses"
             imageUrl="/images/hero-owner.jpg"
             imagePosition="center 58%"
           />
@@ -72,7 +72,7 @@ export function OwnerResultsPage() {
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                 <Trophy size={15} className="text-gold" />
               </div>
-              <h2 className="text-base font-serif text-white whitespace-nowrap">Lịch sử thi đấu</h2>
+              <h2 className="text-base font-serif text-white whitespace-nowrap">Race History</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
 
@@ -83,21 +83,21 @@ export function OwnerResultsPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📋</div>
-                  <div className="text-muted text-sm">Chưa có kết quả thi đấu nào của ngựa của bạn</div>
+                  <div className="text-muted text-sm">No race results for your horses yet.</div>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                        <th className="px-6 py-4">Mã</th>
-                        <th className="px-6 py-4">Giải đấu</th>
-                        <th className="px-6 py-4">Cuộc đua</th>
-                        <th className="px-6 py-4">Tên ngựa</th>
-                        <th className="px-6 py-4">Hạng</th>
-                        <th className="px-6 py-4">Thời gian</th>
-                        <th className="px-6 py-4">Điểm số</th>
-                        <th className="px-6 py-4 text-right">Tiền thưởng</th>
+                        <th className="px-6 py-4">ID</th>
+                        <th className="px-6 py-4">Tournaments</th>
+                        <th className="px-6 py-4">Race</th>
+                        <th className="px-6 py-4">Name horse</th>
+                        <th className="px-6 py-4">Rank</th>
+                        <th className="px-6 py-4">Time</th>
+                        <th className="px-6 py-4">Score</th>
+                        <th className="px-6 py-4 text-right">Prize Money</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -115,15 +115,15 @@ export function OwnerResultsPage() {
                                 'bg-amber-600/15 text-amber-500 border border-amber-600/30'
                               }`}>
                                 {res.finishPosition === 1 && <Award size={12} />}
-                                Hạng {res.finishPosition}
+                                Rank {res.finishPosition}
                               </span>
                             ) : res.status === 'Live' || res.status === 'Running' || res.status === 'InProgress' ? (
                               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 animate-pulse">
-                                Đang diễn ra
+                                Active
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-slate-500/15 text-slate-400 border border-slate-500/30">
-                                Chưa diễn ra
+                                Not Started
                               </span>
                             )}
                           </td>

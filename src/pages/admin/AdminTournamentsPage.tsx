@@ -17,9 +17,17 @@ import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type StatusFilter = 'all' | 'upcoming' | 'active' | 'completed';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  active: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  upcoming: { label: 'Sắp diễn ra', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
-  completed: { label: 'Đã kết thúc', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
+  active: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  upcoming: { label: 'Upcoming', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
+  completed: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
+  'registration open': { label: 'Registration Open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  'registration closed': { label: 'Registration Closed', color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20', dot: 'bg-zinc-400' },
+  'medical checking': { label: 'Medical Checking', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
+  'ready to arrange': { label: 'Ready To Arrange', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-400' },
+  'pre round': { label: 'Pre Round', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', dot: 'bg-purple-400' },
+  'final round': { label: 'Final Round', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20', dot: 'bg-pink-400' },
+  'prize distribution': { label: 'Prize Distribution', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400' },
+  'cancelled': { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
 };
 
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
@@ -44,7 +52,7 @@ export function AdminTournamentsPage() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  // Sắp xếp danh sách giải đấu
+  // Sắp xếp danh sách tournaments
   type SortKey = 'newest' | 'oldest' | 'name' | 'status';
   const [sortBy, setSortBy] = useState<SortKey>('newest');
 
@@ -88,7 +96,7 @@ export function AdminTournamentsPage() {
       const regStartVal = new Date(form.registrationStartDate);
       const regEndVal = new Date(form.registrationEndDate);
       if (regEndVal <= regStartVal) {
-        setError(t('Thời gian kết thúc đăng ký phải sau thời gian bắt đầu đăng ký.'));
+        setError(t('Registration end date must be after registration start date.'));
         return;
       }
     }
@@ -97,7 +105,7 @@ export function AdminTournamentsPage() {
     if (form.registrationStartDate) {
       const regStartVal = new Date(form.registrationStartDate);
       if (regStartVal.getTime() < now.getTime() - 5 * 60 * 1000) {
-        setError(t('Thời gian bắt đầu đăng ký không thể ở quá khứ.'));
+        setError(t('Registration start date cannot be in the past.'));
         return;
       }
     }
@@ -107,7 +115,7 @@ export function AdminTournamentsPage() {
       const startVal = new Date(form.startDate);
       const regEndVal = new Date(form.registrationEndDate);
       if (startVal < regEndVal) {
-        setError(t('Thời gian bắt đầu giải đấu phải sau hoặc bằng thời hạn kết thúc đăng ký.'));
+        setError(t('Tournament start date must be on or after registration end date.'));
         return;
       }
     }
@@ -117,7 +125,7 @@ export function AdminTournamentsPage() {
       const startVal = new Date(form.startDate);
       const endVal = new Date(form.endDate);
       if (endVal <= startVal) {
-        setError(t('Thời gian kết thúc giải đấu phải sau thời gian bắt đầu giải đấu.'));
+        setError(t('Tournament end date must be after tournament start date.'));
         return;
       }
     }
@@ -129,7 +137,7 @@ export function AdminTournamentsPage() {
 
   async function handleCreate() {
     if (!form.name || !form.registrationStartDate || !form.registrationEndDate || !form.startDate || !form.endDate) {
-      setError(t('Vui lòng điền đầy đủ tất cả các trường thông tin bắt buộc.'));
+      setError(t('Please fill in all required fields.'));
       return;
     }
 
@@ -165,9 +173,9 @@ export function AdminTournamentsPage() {
         prizes: prizes
       });
       const newId = data?.result?.id ?? data?.result?.tournamentId;
-      showToast(t('Thành công'), newId != null
-        ? `${t('Tạo giải đấu thành công!')} ID = ${newId}. ${t('Giải đấu đang ở trạng thái Sắp diễn ra (Upcoming).')}`
-        : t('Tạo giải đấu thành công!'));
+      showToast(t('Success'), newId != null
+        ? `${t('Tournament created successfully!')} ID = ${newId}. ${t('Tournament is now in Registration Open status.')}`
+        : t('Tournament created successfully!'));
       setForm(INIT_FORM);
       setShowModal(false);
       loadTournaments();
@@ -189,7 +197,7 @@ export function AdminTournamentsPage() {
     setError('');
     try {
       await closeTournamentRegistration(tournamentId);
-      showToast(t('Thành công'), t('Đã đóng thời hạn đăng ký giải đấu thành công!'));
+      showToast(t('Success'), t('Registration deadline closed successfully!'));
       await loadTournaments();
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
@@ -203,7 +211,7 @@ export function AdminTournamentsPage() {
     setError('');
     try {
       await generateTournamentRaces(tournamentId);
-      showToast(t('Thành công'), t('Đã tự động sắp xếp cuộc đua cho giải đấu.'));
+      showToast(t('Success'), t('Races auto-assigned for tournament.'));
       await loadTournaments();
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
@@ -217,7 +225,7 @@ export function AdminTournamentsPage() {
     setError('');
     try {
       await generateFinalRace(tournamentId);
-      showToast(t('Thành công'), t('Đã tự động sắp xếp bảng Chung kết (Top 12) thành công.'));
+      showToast(t('Success'), t('Final bracket (Top 12) auto-assigned successfully.'));
       await loadTournaments();
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
@@ -228,22 +236,52 @@ export function AdminTournamentsPage() {
 
   const statsCounts: Record<StatusFilter, number> = {
     all: tournaments.length,
-    active: tournaments.filter(t => t.status === 'Active').length,
-    upcoming: tournaments.filter(t => t.status === 'Upcoming').length,
-    completed: tournaments.filter(t => t.status === 'Completed').length,
+    active: tournaments.filter(t => {
+      const s = (t.status ?? '').toLowerCase();
+      return s === 'active' || s === 'registration open' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution';
+    }).length,
+    upcoming: tournaments.filter(t => (t.status ?? '').toLowerCase() === 'upcoming').length,
+    completed: tournaments.filter(t => {
+      const s = (t.status ?? '').toLowerCase();
+      return s === 'completed' || s === 'cancelled';
+    }).length,
   };
 
   const filteredTournaments = tournaments.filter(t => {
     const matchesSearch = (t.name ?? '').toLowerCase().includes(search.toLowerCase());
     if (filter === 'all') return matchesSearch;
-    if (filter === 'active') return matchesSearch && t.status === 'Active';
-    if (filter === 'upcoming') return matchesSearch && t.status === 'Upcoming';
-    if (filter === 'completed') return matchesSearch && t.status === 'Completed';
+    const s = (t.status ?? '').toLowerCase();
+    if (filter === 'active') {
+      return matchesSearch && (
+        s === 'active' ||
+        s === 'registration open' ||
+        s === 'registration closed' ||
+        s === 'medical checking' ||
+        s === 'ready to arrange' ||
+        s === 'pre round' ||
+        s === 'final round' ||
+        s === 'prize distribution'
+      );
+    }
+    if (filter === 'upcoming') return matchesSearch && s === 'upcoming';
+    if (filter === 'completed') return matchesSearch && (s === 'completed' || s === 'cancelled');
     return matchesSearch;
   });
 
-  // Sắp xếp theo lựa chọn: mới nhất / cũ nhất (theo ngày bắt đầu), tên A-Z, trạng thái
-  const STATUS_ORDER: Record<string, number> = { Active: 0, Upcoming: 1, Completed: 2 };
+  // Sắp xếp theo lựa chọn: mới nhất / cũ nhất (theo days bắt đầu), tên A-Z, trạng thái
+  const STATUS_ORDER: Record<string, number> = {
+    'active': 0,
+    'registration open': 1,
+    'registration closed': 2,
+    'medical checking': 3,
+    'ready to arrange': 4,
+    'pre round': 5,
+    'final round': 6,
+    'prize distribution': 7,
+    'upcoming': 8,
+    'completed': 9,
+    'cancelled': 10
+  };
   const sortedTournaments = [...filteredTournaments].sort((a, b) => {
     switch (sortBy) {
       case 'oldest':
@@ -251,7 +289,7 @@ export function AdminTournamentsPage() {
       case 'name':
         return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
       case 'status':
-        return (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
+        return (STATUS_ORDER[(a.status ?? '').toLowerCase()] ?? 11) - (STATUS_ORDER[(b.status ?? '').toLowerCase()] ?? 11);
       case 'newest':
       default:
         return new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime();
@@ -288,17 +326,17 @@ export function AdminTournamentsPage() {
 
     let statusLabel = '';
     if (regNotStarted) {
-      statusLabel = 'Chưa mở đăng ký';
+      statusLabel = 'Registration not open';
     } else if (regOpen) {
       statusLabel = 'Đang mở đăng ký';
     } else if (rounds.length === 0) {
-      statusLabel = 'Chờ Auto Arrange';
+      statusLabel = 'Pending Auto Arrange';
     } else if (hasPre && !preFinished) {
-      statusLabel = 'Đang thi đấu vòng Pre';
+      statusLabel = 'Competing in Pre-round';
     } else if (canGenerateFinal) {
-      statusLabel = 'Chờ xếp Final';
+      statusLabel = 'Pending xếp Final';
     } else if (hasFinal) {
-      statusLabel = 'Đang thi đấu Chung kết';
+      statusLabel = 'Competing in Finals';
     }
 
     return {
@@ -321,13 +359,13 @@ export function AdminTournamentsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title={t("Quản lý giải đấu")}
-            subtitle={t("Tạo và quản lý các giải đấu")}
+            title={t("Tournament Management")}
+            subtitle={t("Create and manage tournaments")}
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             actions={
               <button onClick={() => setShowModal(true)} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold font-sans">
-                <Plus size={16} /> {t("Tạo giải đấu")}
+                <Plus size={16} /> {t("Create Tournament")}
               </button>
             }
           />
@@ -342,7 +380,7 @@ export function AdminTournamentsPage() {
                   filter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
-                {s === 'all' ? t('Tất cả') : t(STATUS_CONFIG[s].label)}
+                {s === 'all' ? t('All') : t(STATUS_CONFIG[s].label)}
                 <span className="ml-2 text-[11px] font-bold text-current opacity-60">
                   {statsCounts[s] ?? 0}
                 </span>
@@ -350,7 +388,7 @@ export function AdminTournamentsPage() {
             ))}
             <div className="ml-auto flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-64">
               <Search size={14} className="text-muted shrink-0" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("Tìm giải đấu...")} className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none focus:outline-none focus:ring-0 border-0 w-full" style={{ boxShadow: 'none' }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("Search tournaments...")} className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none focus:outline-none focus:ring-0 border-0 w-full" style={{ boxShadow: 'none' }} />
             </div>
             <div className="flex items-center gap-2">
               <ArrowUpDown size={14} className="text-muted" />
@@ -360,10 +398,10 @@ export function AdminTournamentsPage() {
                 className="bg-navy/50 border border-glass-border rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-gold/40 transition-colors"
                 style={{ colorScheme: 'dark' }}
               >
-                <option value="newest">Mới nhất</option>
-                <option value="oldest">Cũ nhất</option>
-                <option value="name">Tên A-Z</option>
-                <option value="status">Trạng thái</option>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name">Name A-Z</option>
+                <option value="status">Status</option>
               </select>
             </div>
           </div>
@@ -380,7 +418,7 @@ export function AdminTournamentsPage() {
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="text-4xl opacity-40 mb-3">🏆</div>
-              <div className="text-muted text-sm">{t("Chưa có dữ liệu")}</div>
+              <div className="text-muted text-sm">{t("No data available")}</div>
             </div>
           ) : (
             <div className="overflow-y-auto pr-1.5 -mr-1.5 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 330px)' }}>
@@ -406,7 +444,7 @@ export function AdminTournamentsPage() {
                           <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                         </span>
                       </div>
-                      {/* Hàng 2: badge loại vòng đấu + đếm ngược thời gian */}
+                      {/* Hàng 2: badge loại rounds + đếm ngược thời gian */}
                       <div className="flex items-center gap-2 flex-wrap">
                         {(() => {
                           const now = Date.now();
@@ -424,45 +462,45 @@ export function AdminTournamentsPage() {
                           );
                         })()}
                         {raceState.regNotStarted && tour.registrationStartDate ? (
-                          <CountdownTimer target={tour.registrationStartDate} utc={false} label="Mở ĐK sau:" />
+                          <CountdownTimer target={tour.registrationStartDate} utc={false} label="Reg. opens in:" />
                         ) : tour.registrationEndDate ? (
                           <CountdownTimer target={tour.registrationEndDate} utc={false} hideWhenExpired />
                         ) : null}
                       </div>
                     </div>
                     <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-1 line-clamp-1">{tour.name}</h3>
-                    <p className="text-xs text-muted/80 line-clamp-2 min-h-[32px] mb-3">{tour.description || t("Chưa có mô tả chi tiết.")}</p>
+                    <p className="text-xs text-muted/80 line-clamp-2 min-h-[32px] mb-3">{tour.description || t("No detailed description available.")}</p>
                     <div className="space-y-1.5 text-xs text-muted pt-3 border-t border-glass-border/40">
                       <div className="flex justify-between">
-                        <span>{t("Mở đăng ký:")}</span>
+                        <span>{t("Reg. opens:")}</span>
                         <span className="text-white font-medium">{formatDateTime(tour.registrationStartDate)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Đóng đăng ký:")}</span>
+                        <span>{t("Reg. closes:")}</span>
                         <span className="text-white font-medium">{formatDateTime(tour.registrationEndDate)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Ngày bắt đầu:")}</span>
+                        <span>{t("Start Date:")}</span>
                         <span className="text-white font-medium">{formatDateTime(tour.startDate)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Ngày kết thúc:")}</span>
+                        <span>{t("End Date:")}</span>
                         <span className="text-white font-medium">{formatDateTime(tour.endDate)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Vòng thi đấu:")}</span>
+                        <span>{t("Round thi đấu:")}</span>
                         <span className="text-gold font-bold">Pre + Final</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Trạng thái đua:")}</span>
+                        <span>{t("Status đua:")}</span>
                         <span className="text-gold font-bold">{t(raceState.statusLabel)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Cuộc đua đã tạo:")}</span>
+                        <span>{t("Race đã tạo:")}</span>
                         <span className="text-white font-medium">{raceState.totalRaces}</span>
                       </div>
                       <div className="flex flex-col gap-1 pt-2.5 mt-2 border-t border-glass-border/30">
-                        <span className="font-bold text-white text-[11px] uppercase tracking-wider">{t("Giải thưởng:")}</span>
+                        <span className="font-bold text-white text-[11px] uppercase tracking-wider">{t("Prizes:")}</span>
                         {tour.prizes && tour.prizes.length > 0 ? (
                           <div className="grid grid-cols-3 gap-1.5 text-center mt-1">
                             {tour.prizes
@@ -470,13 +508,13 @@ export function AdminTournamentsPage() {
                               .sort((a: any, b: any) => a.rankPosition - b.rankPosition)
                               .map((p: any) => (
                                 <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
-                                  <div className="text-[9px] text-muted font-semibold">Hạng {p.rankPosition}</div>
+                                  <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
                                   <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('vi-VN')} đ</div>
                                 </div>
                               ))}
                           </div>
                         ) : (
-                          <span className="text-red-400 font-semibold italic text-[11px] mt-0.5">{t("Chưa cấu hình giải thưởng")}</span>
+                          <span className="text-red-400 font-semibold italic text-[11px] mt-0.5">{t("Prizes not configured yet")}</span>
                         )}
                       </div>
                     </div>
@@ -488,7 +526,7 @@ export function AdminTournamentsPage() {
                           className="px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
                         >
                           {isGenerating ? <Loader size={13} className="animate-spin" /> : <Clock size={13} />}
-                          {isGenerating ? t('Đang đóng…') : t('Đóng đăng ký')}
+                          {isGenerating ? t('Closing...') : t('Close Registration')}
                         </button>
                       )}
                       {raceState.canAutoArrange && (
@@ -498,7 +536,7 @@ export function AdminTournamentsPage() {
                           className="px-3 py-2 rounded-lg text-xs font-bold text-blue-400 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
                         >
                           {isGenerating ? <Loader size={13} className="animate-spin" /> : <Shuffle size={13} />}
-                          {isGenerating ? t('Đang sắp xếp…') : t('Auto xếp làn Pre')}
+                          {isGenerating ? t('Assigning...') : t('Auto Assign Pre-lanes')}
                         </button>
                       )}
                       {raceState.canGenerateFinal && (
@@ -508,7 +546,7 @@ export function AdminTournamentsPage() {
                           className="px-3 py-2 rounded-lg text-xs font-bold text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
                         >
                           {isGenerating ? <Loader size={13} className="animate-spin" /> : <Trophy size={13} />}
-                          {isGenerating ? t('Đang sắp xếp…') : t('Auto xếp Final')}
+                          {isGenerating ? t('Assigning...') : t('Auto Assign Final')}
                         </button>
                       )}
                       {!raceState.regOpen && !raceState.canAutoArrange && !raceState.canGenerateFinal && raceState.statusLabel && (
@@ -545,19 +583,19 @@ export function AdminTournamentsPage() {
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                 <Trophy size={15} className="text-gold" />
               </div>
-              <h2 className="text-xl font-serif text-white">{t("Tạo giải đấu mới")}</h2>
+              <h2 className="text-xl font-serif text-white">{t("Create new tournament")}</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>{t("Tên giải đấu *")}</label>
-                <input value={form.name} onChange={e => set('name', e.target.value)} placeholder={t("VD: Giải Đua Mùa Thu 2026")} className={INPUT} />
+                <label className={LABEL}>{t("Tournament Name *")}</label>
+                <input value={form.name} onChange={e => set('name', e.target.value)} placeholder={t("E.g.: Autumn Race 2026")} className={INPUT} />
               </div>
 
               <div>
-                <label className={LABEL}>{t("Mô tả giải đấu")}</label>
-                <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder={t("Nhập mô tả chi tiết về giải đấu...")} className={`${INPUT} h-20 resize-none`} />
+                <label className={LABEL}>{t("Description tournaments")}</label>
+                <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder={t("Enter detailed tournament description...")} className={`${INPUT} h-20 resize-none`} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -572,7 +610,7 @@ export function AdminTournamentsPage() {
                   />
                 </div>
                 <div>
-                  <label className={LABEL}>{t("Đóng đăng ký *")}</label>
+                  <label className={LABEL}>{t("Close Registration *")}</label>
                   <input
                     type="datetime-local"
                     value={form.registrationEndDate}
@@ -585,7 +623,7 @@ export function AdminTournamentsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={LABEL}>{t("Bắt đầu giải đấu *")}</label>
+                  <label className={LABEL}>{t("Bắt đầu tournaments *")}</label>
                   <input
                     type="datetime-local"
                     value={form.startDate}
@@ -595,7 +633,7 @@ export function AdminTournamentsPage() {
                   />
                 </div>
                 <div>
-                  <label className={LABEL}>{t("Kết thúc giải đấu *")}</label>
+                  <label className={LABEL}>{t("Kết thúc tournaments *")}</label>
                   <input
                     type="datetime-local"
                     value={form.endDate}
@@ -614,11 +652,11 @@ export function AdminTournamentsPage() {
                     <input type="number" value={form.firstPrize} onChange={e => set('firstPrize', e.target.value)} className={INPUT} />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-muted mb-1">Hạng 2 *</label>
+                    <label className="block text-[10px] text-muted mb-1">2nd Place *</label>
                     <input type="number" value={form.secondPrize} onChange={e => set('secondPrize', e.target.value)} className={INPUT} />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-muted mb-1">Hạng 3 *</label>
+                    <label className="block text-[10px] text-muted mb-1">3rd Place *</label>
                     <input type="number" value={form.thirdPrize} onChange={e => set('thirdPrize', e.target.value)} className={INPUT} />
                   </div>
                 </div>
@@ -628,9 +666,9 @@ export function AdminTournamentsPage() {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">{t("Hủy")}</button>
+              <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">{t("Cancel")}</button>
               <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? t('Đang tạo…') : t('Tạo giải đấu')}
+                {loading ? t('Creating...') : t('Create Tournament')}
               </button>
             </div>
           </motion.div>

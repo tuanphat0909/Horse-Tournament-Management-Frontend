@@ -93,7 +93,7 @@ export function AdminPredictionsPage() {
 
   const statsDisplay = [
     { label: 'Tổng dự đoán', value: loading ? '...' : (stats?.totalPredictions ?? 0), icon: Target, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20' },
-    { label: 'Dự đoán đúng', value: loading ? '...' : (stats?.correctPredictions ?? 0), icon: CheckCircle, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
+    { label: 'Predictions đúng', value: loading ? '...' : (stats?.correctPredictions ?? 0), icon: CheckCircle, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
     { label: 'Điểm trả thưởng', value: loading ? '...' : totalRewardedPoints, icon: DollarSign, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
     { label: 'Tỉ lệ chính xác', value: loading ? '...' : `${stats?.accuracyRate?.toFixed(1) ?? '0'}%`, icon: TrendingUp, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20' },
   ];
@@ -146,7 +146,7 @@ export function AdminPredictionsPage() {
           <div className="flex items-center gap-2 border-b border-glass-border pb-0">
             {(['all', 'pending', 'correct', 'incorrect'] as TabType[]).map(t => {
               const count = getTabCount(t);
-              const label = t === 'all' ? 'Tất cả' : t === 'pending' ? 'Chờ kết quả' : t === 'correct' ? 'Đúng' : 'Sai';
+              const label = t === 'all' ? 'All' : t === 'pending' ? 'Pending' : t === 'correct' ? 'Correct' : 'Incorrect';
               return (
                 <button
                   key={t}
@@ -163,7 +163,7 @@ export function AdminPredictionsPage() {
               <input 
                 value={search} 
                 onChange={e => { setSearch(e.target.value); setPage(1); }} 
-                placeholder="Tìm khán giả, ngựa..." 
+                placeholder="Tìm khán giả, horse..." 
                 className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" 
               />
             </div>
@@ -176,7 +176,7 @@ export function AdminPredictionsPage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="text-4xl opacity-40 mb-3">🎯</div>
-              <div className="text-muted text-sm">Chưa có dữ liệu dự đoán nào</div>
+              <div className="text-muted text-sm">No predictions data yet</div>
             </motion.div>
           ) : (
             <motion.div 
@@ -188,12 +188,12 @@ export function AdminPredictionsPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                      <th className="px-6 py-4">Mã</th>
-                      <th className="px-6 py-4">Khán giả</th>
-                      <th className="px-6 py-4">Cuộc đua</th>
-                      <th className="px-6 py-4">Ngựa dự đoán</th>
+                      <th className="px-6 py-4">ID</th>
+                      <th className="px-6 py-4">Spectator</th>
+                      <th className="px-6 py-4">Race</th>
+                      <th className="px-6 py-4">Horse dự đoán</th>
                       <th className="px-6 py-4">Điểm đặt</th>
-                      <th className="px-6 py-4">Kết quả</th>
+                      <th className="px-6 py-4">Results</th>
                       <th className="px-6 py-4">Ngày dự đoán</th>
                     </tr>
                   </thead>
@@ -211,7 +211,7 @@ export function AdminPredictionsPage() {
                             pred.isCorrect === true ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                             'bg-red-500/10 text-red-400 border border-red-500/20'
                           }`}>
-                            {pred.isCorrect === null ? 'Chờ kết quả' : pred.isCorrect === true ? 'Chính xác' : 'Sai biệt'}
+                            {pred.isCorrect === null ? 'Pending' : pred.isCorrect === true ? 'Correct' : 'Incorrect biệt'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-xs text-muted">

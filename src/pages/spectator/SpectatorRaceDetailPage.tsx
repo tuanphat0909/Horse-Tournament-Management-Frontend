@@ -11,12 +11,12 @@ import { formatDateTime, formatWinProbability } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  live: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  ongoing: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  running: { label: 'Đang diễn ra', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  scheduled: { label: 'Sắp diễn ra', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
-  finished: { label: 'Đã kết thúc', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
-  cancelled: { label: 'Đã hủy', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
+  live: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  ongoing: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  running: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  scheduled: { label: 'Upcoming', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
+  finished: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
+  cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
 };
 
 export function SpectatorRaceDetailPage() {
@@ -64,7 +64,7 @@ export function SpectatorRaceDetailPage() {
       setBalance(balanceRes?.result?.balance ?? 0);
     } catch (err) {
       console.error(err);
-      setError('Không thể tải dữ liệu cuộc đua.');
+      setError('Failed to load race data.');
     } finally {
       setLoading(false);
     }
@@ -74,9 +74,9 @@ export function SpectatorRaceDetailPage() {
     setBetError('');
     setBetSuccess('');
 
-    if (!selectedEntry) return setBetError('Vui lòng chọn ngựa để cược.');
-    if (amount <= 0) return setBetError('Số tiền cược phải lớn hơn 0.');
-    if (amount > balance) return setBetError('Số dư ví không đủ.');
+    if (!selectedEntry) return setBetError('Please select a horse to bet on.');
+    if (amount <= 0) return setBetError('Bet amount must be greater than 0.');
+    if (amount > balance) return setBetError('Insufficient wallet balance.');
 
     setBetLoading(true);
     try {
@@ -85,7 +85,7 @@ export function SpectatorRaceDetailPage() {
         amount: amount
       });
       
-      setBetSuccess('Đặt cược thành công!');
+      setBetSuccess('Bet placed successfully!');
       setSelectedEntry(null);
       setAmountStr('');
       
@@ -93,7 +93,7 @@ export function SpectatorRaceDetailPage() {
       const bal = await getBalance();
       setBalance(bal?.result?.balance ?? 0);
     } catch (err: any) {
-      setBetError(err.response?.data?.message || err.message || 'Lỗi đặt cược');
+      setBetError(err.response?.data?.message || err.message || 'Betting error');
     } finally {
       setBetLoading(false);
     }
@@ -110,7 +110,7 @@ export function SpectatorRaceDetailPage() {
   if (error || !race) {
     return (
       <div className="min-h-screen flex items-center justify-center text-red-400" style={{backgroundColor: '#0b101e'}}>
-        {error || 'Không tìm thấy cuộc đua.'}
+        {error || 'Race not found.'}
       </div>
     );
   }
@@ -135,7 +135,7 @@ export function SpectatorRaceDetailPage() {
           
           <div className="flex-1 space-y-6">
             <Link to={`/spectator/tournaments/${race.round?.tournamentId || ''}`} className="inline-flex items-center gap-2 text-sm text-muted hover:text-white transition-colors">
-              <ArrowLeft size={16} /> Quay lại danh sách cuộc đua
+              <ArrowLeft size={16} /> Back to Races List
             </Link>
 
             {/* Race Header */}
@@ -145,39 +145,39 @@ export function SpectatorRaceDetailPage() {
                 <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${config.color} flex items-center gap-1.5`}>
                   <span className={`w-2 h-2 rounded-full ${config.dot}`} /> {config.label}
                 </span>
-                <span className="text-sm font-medium text-gold">Vòng {race.round?.roundNumber || '—'}</span>
+                <span className="text-sm font-medium text-gold">Round {race.round?.roundNumber || '—'}</span>
               </div>
               <p className="text-muted text-sm mb-1">{race.round?.tournament?.name || 'Tournament Name'}</p>
               <h1 className="text-3xl font-serif font-bold text-white mb-4">{race.name}</h1>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-glass-border/40">
                 <div className="space-y-1">
-                  <div className="text-xs text-muted">Bắt đầu</div>
+                  <div className="text-xs text-muted">Start</div>
                   <div className="text-sm text-white font-medium flex items-center gap-1.5">
                     <Clock size={14} className="text-gold" />
                     {formatDateTime(race.raceDate)}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs text-muted">Đường đua</div>
+                  <div className="text-xs text-muted">Race Track</div>
                   <div className="text-sm text-white font-medium flex items-center gap-1.5">
                     <MapPin size={14} className="text-gold" />
                     {race.distanceMeter}m
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs text-muted">Làn tối đa</div>
-                  <div className="text-sm text-white font-medium">{race.maxLanes} làn</div>
+                  <div className="text-xs text-muted">Max Lanes</div>
+                  <div className="text-sm text-white font-medium">{race.maxLanes} lanes</div>
                 </div>
               </div>
             </div>
 
             {/* Horses List */}
-            <h2 className="text-xl font-serif font-bold text-white mt-8 mb-4">Danh sách ngựa ({entries.length})</h2>
+            <h2 className="text-xl font-serif font-bold text-white mt-8 mb-4">Horse List ({entries.length})</h2>
             
             {entries.length === 0 ? (
                <div className="glass-panel rounded-xl p-12 text-center text-muted">
-                 Chưa có ngựa tham gia cuộc đua này.
+                 No horses participating in this race.
                </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -194,10 +194,10 @@ export function SpectatorRaceDetailPage() {
                       } ${isSelected ? 'border-gold bg-gold/5 ring-1 ring-gold/20' : 'border-glass-border'}`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-bold text-navy bg-gold px-2 py-0.5 rounded-sm">Làn {e.laneNo}</span>
+                        <span className="text-xs font-bold text-navy bg-gold px-2 py-0.5 rounded-sm">Lane {e.laneNo}</span>
                         <div className="text-right">
                           <div className="text-lg font-bold text-champagne tabular-nums">x{e.currentOdds?.toFixed(2) || '1.00'}</div>
-                          <div className="text-[10px] text-muted">Tỉ lệ cược</div>
+                          <div className="text-[10px] text-muted">Odds</div>
                         </div>
                       </div>
                       
@@ -224,7 +224,7 @@ export function SpectatorRaceDetailPage() {
 
                       {e.winningProbability != null && (
                         <div className="flex justify-between items-center pt-3 border-t border-glass-border/40">
-                          <span className="text-xs text-muted">Xác suất thắng dự kiến:</span>
+                          <span className="text-xs text-muted">Expected Win Probability:</span>
                           <span className="text-xs text-emerald-400 font-bold">{formatWinProbability(e.winningProbability)}</span>
                         </div>
                       )}
@@ -247,15 +247,15 @@ export function SpectatorRaceDetailPage() {
                 <div className="glass-panel rounded-2xl p-6 border border-gold/30 sticky top-6">
                   <h3 className="text-xl font-serif font-bold text-white mb-6 flex items-center gap-2">
                     <CheckCircle className="text-gold" />
-                    Phiếu Đặt Cược
+                    Betting Slip
                   </h3>
 
                   {!isBettingAllowed && (
                     <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
                       <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                       {invalidTournamentStatuses.includes(tournamentStatusKey) 
-                        ? 'Tournament đã kết thúc, không thể đặt cược.'
-                        : 'Cuộc đua này không trong thời gian cho phép đặt cược.'}
+                        ? 'Tournament has ended, betting is disabled.'
+                        : 'Betting is not allowed for this race currently.'}
                     </div>
                   )}
 
@@ -274,35 +274,35 @@ export function SpectatorRaceDetailPage() {
                   )}
 
                   <div className="bg-navy/40 rounded-lg p-4 mb-5 border border-glass-border/50">
-                    <div className="text-xs text-muted mb-1">Bạn đang chọn:</div>
+                    <div className="text-xs text-muted mb-1">You are choosing:</div>
                     <div className="font-bold text-white mb-2">{selectedEntry.horseName}</div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted">Làn đua:</span>
+                      <span className="text-muted">Lane:</span>
                       <span className="text-white">{selectedEntry.laneNo}</span>
                     </div>
                     <div className="flex justify-between text-sm mt-1">
-                      <span className="text-muted">Tỉ lệ:</span>
+                      <span className="text-muted">Odds:</span>
                       <span className="text-champagne font-bold tabular-nums">x{odds.toFixed(2)}</span>
                     </div>
                   </div>
 
                   <div className="space-y-4 mb-6">
                     <div>
-                      <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-2">Số tiền cược (Coins)</label>
+                      <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-2">Bet Amount (Coins)</label>
                       <input 
                         type="number"
                         min="0"
                         step="100"
                         value={amountStr}
                         onChange={e => setAmountStr(e.target.value)}
-                        placeholder="Ví dụ: 1000"
+                        placeholder="Example: 1000"
                         disabled={!isBettingAllowed}
                         className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-3 text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
 
                     <div className="flex justify-between items-center px-1">
-                      <span className="text-xs text-muted">Số dư ví:</span>
+                      <span className="text-xs text-muted">Wallet Balance:</span>
                       <span className={`text-sm font-bold tabular-nums ${amount > balance ? 'text-red-400' : 'text-emerald-400'}`}>
                         {balance.toLocaleString()} coins
                       </span>
@@ -311,15 +311,15 @@ export function SpectatorRaceDetailPage() {
 
                   <div className="space-y-3 pt-4 border-t border-glass-border/40 mb-6">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted">Tiền cược:</span>
+                      <span className="text-muted">Bet Amount:</span>
                       <span className="text-white tabular-nums">{amount.toLocaleString()} coins</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted">Lợi nhuận dự kiến:</span>
+                      <span className="text-muted">Expected Payout:</span>
                       <span className="text-emerald-400 font-medium tabular-nums">+{potentialProfit.toLocaleString()} coins</span>
                     </div>
                     <div className="flex justify-between text-base font-bold">
-                      <span className="text-white">Tổng nhận về:</span>
+                      <span className="text-white">Total Return:</span>
                       <span className="text-gold tabular-nums">{totalReturn.toLocaleString()} coins</span>
                     </div>
                   </div>
@@ -329,12 +329,12 @@ export function SpectatorRaceDetailPage() {
                     disabled={!isBettingAllowed || betLoading || amount <= 0 || amount > balance}
                     className="w-full bg-gradient-to-r from-gold to-gold-light text-navy font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    {betLoading ? 'Đang xử lý...' : 'Xác Nhận Đặt Cược'}
+                    {betLoading ? 'Processing...' : 'Confirm Bet'}
                   </button>
 
                   <div className="mt-4 text-center">
                     <Link to="/spectator/wallet" className="text-xs text-gold/80 hover:text-gold underline underline-offset-2">
-                      Nạp thêm tiền vào ví
+                      Deposit more funds
                     </Link>
                   </div>
                 </div>

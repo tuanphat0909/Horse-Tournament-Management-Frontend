@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 
 /**
- * Sơ đồ làn đua 3D (CSS 3D transforms — không cần thư viện ngoài).
+ * Sơ đồ lanes đua 3D (CSS 3D transforms — không cần thư viện ngoài).
  *
- * 3 trạng thái theo `status` của cuộc đua:
- *  - scheduled : đường đua phối cảnh 3D, ngựa đứng ở cổng xuất phát theo làn
- *  - live      : như scheduled + ngựa phi (animation) và nhãn LIVE
- *  - finished  : bục trao giải 3D — ngựa & jockey xếp theo thứ hạng (finishPosition)
+ * 3 trạng thái theo `status` của races:
+ *  - scheduled : đường đua phối cảnh 3D, horse đứng ở cổng xuất phát theo lanes
+ *  - live      : như scheduled + horse phi (animation) và nhãn LIVE
+ *  - finished  : bục trao giải 3D — horse & jockey xếp theo thứ hạng (finishPosition)
  *
  * entries: [{ laneNo, horseName, horseId, jockeyName, finishPosition }]
  */
@@ -28,18 +28,18 @@ function normStatus(s?: string): 'scheduled' | 'live' | 'finished' {
   return 'scheduled';
 }
 
-const horseLabel = (e: Entry) => e.horseName ?? (e.horseId != null ? `Ngựa #${e.horseId}` : '—');
+const horseLabel = (e: Entry) => e.horseName ?? (e.horseId != null ? `Horse #${e.horseId}` : '—');
 
-/* ───────────────────── Đường đua 3D (scheduled / live) ───────────────────── */
+/* ───────────────────── Race Track 3D (scheduled / live) ───────────────────── */
 
 function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry[]; live: boolean }) {
   const lanes = Array.from({ length: maxLanes }, (_, i) => i + 1);
-  // Độ nghiêng nhẹ để các làn đầu (1, 2) vẫn cao, tên ngựa/jockey dễ đọc
+  // Độ nghiêng nhẹ để các lanes đầu (1, 2) vẫn cao, tên horse/jockey dễ đọc
   const TILT = 20;
   const PERSP = 800;
 
   // rotateX chỉ xoay hình ảnh, KHÔNG thu gọn chiều cao layout → phần đỉnh đường đua
-  // co lại theo phối cảnh và để lại khoảng trống phía trên. Đo trực tiếp kích thước
+  // co lại theo phối cảnh và để lại khoảng empty phía trên. Đo trực tiếp kích thước
   // đã render (getBoundingClientRect có tính transform, cạnh đáy cố định tại gốc xoay)
   // rồi kéo khối lên bằng margin âm cho khít khung — chạy 2 lần vì tâm phối cảnh
   // phụ thuộc chiều cao khung, đổi margin xong hình chiếu thay đổi nhẹ.
@@ -65,7 +65,7 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
         </span>
       )}
 
-      {/* Mặt đường đua nghiêng 3D — marginTop âm (đo runtime) cắt bỏ khoảng trống do phép nghiêng tạo ra */}
+      {/* Mặt đường đua nghiêng 3D — marginTop âm (đo runtime) cắt bỏ khoảng empty do phép nghiêng tạo ra */}
       <div ref={trackRef} className="relative mx-auto" style={{ transform: `rotateX(${TILT}deg)`, transformStyle: 'preserve-3d', transformOrigin: 'center bottom' }}>
         {/* Vạch đích phía xa */}
         <div className="h-3 mb-1 rounded-sm opacity-80"
@@ -76,11 +76,11 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
             <div key={laneNo}
               className={`relative flex items-center h-11 border-b border-dashed ${e ? 'border-white/25' : 'border-white/10'}`}
               style={{ background: laneNo % 2 ? 'rgba(50, 90, 55, 0.45)' : 'rgba(38, 72, 44, 0.45)' }}>
-              {/* số làn */}
+              {/* số lanes */}
               <span className="w-8 shrink-0 text-center text-[10px] font-bold text-white/60 border-r border-white/15">{laneNo}</span>
               {e ? (
                 <div className="flex items-center gap-2 pl-2 min-w-0">
-                  {/* chú ngựa */}
+                  {/* chú horse */}
                   <motion.span
                     className="text-2xl drop-shadow-[0_3px_4px_rgba(0,0,0,0.6)]"
                     style={{ display: 'inline-block', transform: 'scaleX(-1)' }}
@@ -94,11 +94,11 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
                   </motion.span>
                   <div className="min-w-0 leading-tight" style={{ transform: 'rotateX(-20deg)' }}>
                     <div className="text-[11px] font-bold text-white truncate max-w-40">{horseLabel(e)}</div>
-                    <div className="text-[9px] text-white/60 truncate max-w-40">{e.jockeyName ? `🏻 ${e.jockeyName}` : 'Chưa có jockey'}</div>
+                    <div className="text-[9px] text-white/60 truncate max-w-40">{e.jockeyName ? `🏻 ${e.jockeyName}` : 'No jockey'}</div>
                   </div>
                 </div>
               ) : (
-                <span className="pl-3 text-[10px] italic text-white/30">Làn trống</span>
+                <span className="pl-3 text-[10px] italic text-white/30">Empty lane</span>
               )}
             </div>
           );
@@ -107,7 +107,7 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
         <div className="h-1.5 bg-gradient-to-r from-transparent via-white/40 to-transparent rounded-full mt-0.5" />
       </div>
       <div className="text-center text-[10px] text-white/40 mt-2">
-        {live ? 'Cuộc đua đang diễn ra' : 'Ngựa đã vào vị trí cổng xuất phát'} • vạch đích phía xa
+        {live ? 'Race is live' : 'Horses are at the starting gates'} • vạch đích phía xa
       </div>
     </div>
   );
@@ -116,7 +116,7 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
 /* ───────────────────── Bục trao giải 3D (finished) ───────────────────── */
 
 function Podium3D({ entries }: { entries: Entry[] }) {
-  // Xếp theo finishPosition (1 → N). Ngựa không có hạng đứng cuối.
+  // Xếp theo finishPosition (1 → N). Horse không có hạng đứng cuối.
   const ranked = [...entries].sort((a, b) => (a.finishPosition ?? 999) - (b.finishPosition ?? 999));
   const top3 = ranked.filter(e => (e.finishPosition ?? 999) <= 3).slice(0, 3);
   const rest = ranked.filter(e => !top3.includes(e));
@@ -134,7 +134,7 @@ function Podium3D({ entries }: { entries: Entry[] }) {
       {/* đèn sân khấu */}
       <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-72 h-40 bg-gold/15 blur-3xl rounded-full pointer-events-none" />
       <div className="relative flex items-center justify-center gap-1.5 mb-3 text-gold text-xs font-bold uppercase tracking-widest">
-        <Trophy size={13} /> Lễ trao giải
+        <Trophy size={13} /> Award Ceremony
       </div>
 
       <div className="relative flex items-end justify-center gap-3" style={{ perspective: '600px' }}>
@@ -175,7 +175,7 @@ function Podium3D({ entries }: { entries: Entry[] }) {
       {/* Các hạng còn lại */}
       {rest.length > 0 && (
         <div className="mt-4 pt-3 border-t border-white/10">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-1.5 text-center">Các vị trí khác</div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-1.5 text-center">Other positions</div>
           <div className="flex flex-wrap justify-center gap-1.5">
             {rest.map((e, i) => (
               <span key={i} className="text-[10px] px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/70">
@@ -195,15 +195,15 @@ export function RaceTrack3D({ status, maxLanes, entries }: { status?: string; ma
   const st = normStatus(status);
   if (st === 'finished') {
     if (entries.length === 0) {
-      return <div className="rounded-xl border border-glass-border p-8 text-center text-muted text-xs italic">Cuộc đua đã kết thúc nhưng chưa có dữ liệu kết quả.</div>;
+      return <div className="rounded-xl border border-glass-border p-8 text-center text-muted text-xs italic">The race has finished but no results are available yet.</div>;
     }
     return <Podium3D entries={entries} />;
   }
   if (maxLanes <= 0) {
-    return <div className="rounded-xl border border-glass-border p-8 text-center text-muted text-xs italic">Cuộc đua chưa khai báo số làn.</div>;
+    return <div className="rounded-xl border border-glass-border p-8 text-center text-muted text-xs italic">Lanes have not been declared for this race yet.</div>;
   }
 
-  // DỮ LIỆU LỖI: entry có laneNo vượt quá số làn của cuộc đua (vd 9 ngựa / 8 làn)
+  // DỮ LIỆU LỖI: entry có laneNo vượt quá số lanes của races (vd 9 horse / 8 lanes)
   // → không vẽ lên đường đua, hiển thị cảnh báo đỏ để admin xử lý.
   const overflow = entries.filter(e => (e.laneNo ?? 0) > maxLanes);
   const valid = entries.filter(e => (e.laneNo ?? 0) <= maxLanes);
@@ -214,17 +214,17 @@ export function RaceTrack3D({ status, maxLanes, entries }: { status?: string; ma
       {overflow.length > 0 && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2.5">
           <div className="text-[11px] font-bold text-red-400 mb-1">
-            ⚠ Dữ liệu sai: {overflow.length} ngựa được ghép VƯỢT quá số làn ({maxLanes} làn)
+            ⚠ Data error: {overflow.length} horses assigned exceeds maximum lanes ({maxLanes} lanes)
           </div>
           <div className="flex flex-wrap gap-1.5">
             {overflow.map((e, i) => (
               <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300">
-                Làn {e.laneNo} • {horseLabel(e)}{e.jockeyName ? ` • ${e.jockeyName}` : ''}
+                Lane {e.laneNo} • {horseLabel(e)}{e.jockeyName ? ` • ${e.jockeyName}` : ''}
               </span>
             ))}
           </div>
           <div className="text-[10px] text-red-300/70 mt-1.5">
-            Lỗi này đến từ dữ liệu backend (entry được tạo với số làn lớn hơn maxLanes). Cần xóa cuộc đua tạo lại hoặc nhóm BE bổ sung API xóa entry.
+            This error is caused by backend data inconsistency (entry laneNo &gt; maxLanes). Please recreate the race or contact backend support.
           </div>
         </div>
       )}

@@ -23,7 +23,7 @@ export function Pager({ page, totalPages, onChange, total }: {
   return (
     <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-glass-border/60">
       <span className="text-[11px] text-muted">
-        {total != null ? `${total} mục • ` : ''}Trang {page}/{totalPages}
+        {total != null ? `${total} items • ` : ''}Page {page}/{totalPages}
       </span>
       <div className="flex items-center gap-1.5">
         <button onClick={() => onChange(page - 1)} disabled={page <= 1}

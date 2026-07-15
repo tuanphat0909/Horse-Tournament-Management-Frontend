@@ -47,16 +47,16 @@ export function RefereeDashboardPage() {
       })
       .catch(err => {
         console.error(err);
-        setError(t('Không thể tải thông tin dashboard trọng tài'));
+        setError(t('Failed to load referee dashboard'));
         setLoading(false);
       });
   }, []);
 
   const statsDisplay = [
-    { title: t('Tổng cuộc đua giám sát'), value: loading ? '...' : (data?.assignedRaceCount ?? 0), trend: t('Mùa giải 2026'), icon: Flag, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/referee/confirm-results' },
-    { title: t('Báo cáo chờ lập'), value: loading ? '...' : (data?.pendingReportCount ?? 0), trend: t('Chờ thực hiện'), icon: ShieldCheck, color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/referee/horse-check' },
-    { title: t('Vi phạm ghi nhận'), value: loading ? '...' : (data?.violationsCreatedCount ?? 0), trend: t('Cần xem xét'), icon: AlertTriangle, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', path: '/referee/violations' },
-    { title: t('Báo cáo đã gửi'), value: loading ? '...' : (data?.completedReportCount ?? 0), trend: t('Đã hoàn thành'), icon: FileText, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/referee/reports' },
+    { title: t('Total Supervised Races'), value: loading ? '...' : (data?.assignedRaceCount ?? 0), trend: t('Season 2026'), icon: Flag, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/referee/confirm-results' },
+    { title: t('Reports Pending'), value: loading ? '...' : (data?.pendingReportCount ?? 0), trend: t('To Be Done'), icon: ShieldCheck, color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/referee/horse-check' },
+    { title: t('Violations Recorded'), value: loading ? '...' : (data?.violationsCreatedCount ?? 0), trend: t('Needs Review'), icon: AlertTriangle, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', path: '/referee/violations' },
+    { title: t('Reports Submitted'), value: loading ? '...' : (data?.completedReportCount ?? 0), trend: t('Completed'), icon: FileText, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/referee/reports' },
   ];
 
   return (
@@ -68,22 +68,22 @@ export function RefereeDashboardPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title={<>{t('Chào mừng,')} <span className="italic text-champagne">{user?.fullName ?? t('Trọng tài')}</span></>}
-            subtitle={`${t('Trọng tài')} — ${t('Mùa giải 2026')}`}
+            title={<>{t('Welcome,')} <span className="italic text-champagne">{user?.fullName ?? t('Referee')}</span></>}
+            subtitle={`${t('Referee')} — ${t('Season 2026')}`}
             imageUrl="/images/hero-referee.jpg"
             imagePosition="right 28%"
             badge={
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/25 text-red-400 text-[10px] font-bold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" /> {t('Nhiệm vụ giám sát')}
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" /> {t('Monitoring Duty')}
               </div>
             }
             actions={
               <>
                 <button onClick={() => navigate('/referee/horse-check')} className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold">
-                  {t('Kiểm tra ngựa')} <ShieldCheck size={13} />
+                  {t('Horse Inspection')} <ShieldCheck size={13} />
                 </button>
                 <button onClick={() => navigate('/referee/violations')} className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
-                  {t('Xử lý vi phạm')}
+                  {t('Handle Violations')}
                 </button>
               </>
             }
@@ -122,10 +122,10 @@ export function RefereeDashboardPage() {
               <div className="flex items-center justify-between mb-5 relative z-10">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><Flag size={15} className="text-gold" /></div>
-                  <h2 className="text-lg font-serif text-white">{t('Lịch thi đấu cuộc đua')}</h2>
+                  <h2 className="text-lg font-serif text-white">{t('Race Schedule')}</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
-                <button onClick={() => navigate('/referee/confirm-results')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0 ml-3 font-bold">{t('Xem tất cả')} <ChevronRight size={14} /></button>
+                <button onClick={() => navigate('/referee/confirm-results')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0 ml-3 font-bold">{t('View all')} <ChevronRight size={14} /></button>
               </div>
 
               {loading ? (
@@ -134,18 +134,18 @@ export function RefereeDashboardPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">🏁</div>
-                  <div className="text-muted text-sm">{t('Chưa được phân công cuộc đua nào')}</div>
+                  <div className="text-muted text-sm">{t('No races assigned yet')}</div>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                        <th className="px-4 py-3">{t('Mã đua')}</th>
-                        <th className="px-4 py-3">{t('Tên cuộc đua')}</th>
-                        <th className="px-4 py-3">{t('Thời gian')}</th>
-                        <th className="px-4 py-3">{t('Trạng thái')}</th>
-                        <th className="px-4 py-3 text-right">{t('Thao tác')}</th>
+                        <th className="px-4 py-3">{t('Race ID')}</th>
+                        <th className="px-4 py-3">{t('Race Name')}</th>
+                        <th className="px-4 py-3">{t('Time')}</th>
+                        <th className="px-4 py-3">{t('Status')}</th>
+                        <th className="px-4 py-3 text-right">{t('Actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -162,7 +162,7 @@ export function RefereeDashboardPage() {
                               race.status === 'InProgress' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse' :
                               'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                             }`}>
-                              {(race.status === 'Finished' || race.status === 'Completed') ? t('Đã kết thúc') : race.status === 'InProgress' ? t('Đang chạy') : t('Lịch trình')}
+                              {(race.status === 'Finished' || race.status === 'Completed') ? t('Completed') : race.status === 'InProgress' ? t('In Progress') : t('Scheduled')}
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-right">
@@ -170,7 +170,7 @@ export function RefereeDashboardPage() {
                               onClick={() => navigate(`/referee/horse-check`)} 
                               className="text-xs text-gold hover:underline font-semibold"
                             >
-                              {t('Kiểm tra ngựa')}
+                              {t('Horse Inspection')}
                             </button>
                           </td>
                         </tr>
@@ -186,7 +186,7 @@ export function RefereeDashboardPage() {
               <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-red-500/10 to-transparent blur-[40px] pointer-events-none" />
               <div className="flex items-center gap-3 mb-5 relative z-10">
                 <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0"><ClipboardList size={15} className="text-gold" /></div>
-                <h2 className="text-base font-serif text-white">{t('Hoạt động gần đây')}</h2>
+                <h2 className="text-base font-serif text-white">{t('Recent activity')}</h2>
                 <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
               </div>
               
@@ -196,7 +196,7 @@ export function RefereeDashboardPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📊</div>
-                  <div className="text-muted text-sm">{t('Chưa có hoạt động')}</div>
+                  <div className="text-muted text-sm">{t('No recent activity')}</div>
                 </div>
               ) : (
                 <div className="space-y-4 text-xs">
@@ -204,7 +204,7 @@ export function RefereeDashboardPage() {
                     <div key={i} className="flex gap-3 items-start border-l border-glass-border pl-4 relative ml-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-gold absolute -left-[5.5px] top-1 border border-[#0b101e]" />
                       <div className="space-y-1">
-                        <div className="text-white font-medium">{t('Phân công giám sát cuộc đua:')}</div>
+                        <div className="text-white font-medium">{t('Race supervision assigned:')}</div>
                         <div className="text-gold font-semibold">{race.raceName}</div>
                         <div className="text-muted/60">{race.raceDate ? new Date(race.raceDate).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US') : ''}</div>
                       </div>
