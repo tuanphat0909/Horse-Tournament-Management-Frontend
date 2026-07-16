@@ -11,6 +11,12 @@ interface LanguageContextProps {
 const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
     // Vietnamese to English
+    "Số ngày gia hạn phải lớn hơn 0.": "Additional days must be greater than 0.",
+    "Giải đấu đã qua lượt gia hạn đầu tiên hoặc trạng thái không hợp lệ.": "The tournament has already been extended once or has an invalid status.",
+    "Thời gian đăng ký hoặc thời gian bắt đầu giải đấu chưa được cấu hình.": "Registration or start date has not been configured.",
+    "Ngày gia hạn vượt quá giới hạn cho phép. Thời gian đóng đăng ký mới phải cách ngày bắt đầu giải đấu ít nhất 1 ngày.": "The extended registration date exceeds the limit. The new registration end date must be at least 1 day before the tournament starts.",
+    "Hủy giải đấu thành công.": "Tournament cancelled successfully.",
+    "Gia hạn thời gian đăng ký giải đấu thành công.": "Registration period extended successfully.",
     "Vừa xong": "Just now",
     "phút trước": "minutes ago",
     "giờ trước": "hours ago",

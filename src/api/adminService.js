@@ -12,6 +12,7 @@ export const generateTournamentRaces = (tournamentId) => api.post(`/admin/tourna
 export const generateFinalRace = (tournamentId) => api.post(`/admin/tournaments/${tournamentId}/generate-final`);
 export const closeTournamentRegistration = (tournamentId) => api.post(`/admin/tournaments/${tournamentId}/close-registration`);
 export const extendTournamentRegistration = (tournamentId, additionalDays) => api.put(`/admin/tournaments/${tournamentId}/extend`, { additionalDays });
+export const cancelTournament = (tournamentId, reason) => api.put(`/admin/tournaments/${tournamentId}/cancel`, { reason });
 
 export const createRace = (data) => api.post('/admin/races', data);
 

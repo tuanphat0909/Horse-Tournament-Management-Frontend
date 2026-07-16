@@ -5,7 +5,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { createTournament, generateTournamentRaces, generateFinalRace, closeTournamentRegistration, extendTournamentRegistration } from '../../api/adminService';
+import { createTournament, generateTournamentRaces, generateFinalRace, closeTournamentRegistration, extendTournamentRegistration, cancelTournament } from '../../api/adminService';
 import { getRaceSchedule, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { formatDateTime } from '../../utils/format';
@@ -72,12 +72,15 @@ export function AdminTournamentsPage() {
   const [additionalDays, setAdditionalDays] = useState<number>(1);
   const [extendLoading, setExtendLoading] = useState(false);
 
+  const [cancelWarningTournament, setCancelWarningTournament] = useState<any>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
   async function handleExtendRegistration() {
     if (!extendingTournament) return;
     
-    const currentRegistrationEndDate = new Date(extendingTournament.registrationEndDate);
+    const now = new Date();
     const startDate = new Date(extendingTournament.startDate);
-    const newRegistrationEndDate = new Date(currentRegistrationEndDate.getTime() + additionalDays * 24 * 60 * 60 * 1000);
+    const newRegistrationEndDate = new Date(now.getTime() + additionalDays * 24 * 60 * 60 * 1000);
     const limitDate = new Date(startDate.getTime() - 24 * 60 * 60 * 1000);
     
     if (newRegistrationEndDate > limitDate) {
@@ -95,6 +98,58 @@ export function AdminTournamentsPage() {
       showToast(t('Error'), t(parseApiError(err as Error)));
     } finally {
       setExtendLoading(false);
+    }
+  }
+
+  function handleCloseRegistrationClick(tour: any) {
+    const cancelCount = tour.cancelCount ?? tour.CancelCount ?? 0;
+    if (cancelCount >= 1) {
+      setCancelWarningTournament(tour);
+      return;
+    }
+    if (!tour.startDate) {
+      handleCloseRegistration(tour.tournamentId);
+      return;
+    }
+    const now = new Date();
+    const startDate = new Date(tour.startDate);
+    const diffMs = startDate.getTime() - now.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffDays >= 1) {
+      setExtendingTournament(tour);
+      setAdditionalDays(1);
+    } else {
+      setCancelWarningTournament(tour);
+    }
+  }
+
+  async function handleCancelTournament() {
+    if (!cancelWarningTournament) return;
+
+    const cancelCount = cancelWarningTournament.cancelCount ?? cancelWarningTournament.CancelCount ?? 0;
+    const isSecondClose = cancelCount >= 1;
+    const confirmMessage = isSecondClose
+      ? "Are you sure you want to cancel this tournament because there are not enough registered horses after 2 registration cycles?"
+      : "Are you sure you want to cancel this tournament?";
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setCancelLoading(true);
+    try {
+      const reason = isSecondClose
+        ? "Not enough registered horses after 2 registration cycles."
+        : "Tournament starts in less than 24 hours.";
+      await cancelTournament(cancelWarningTournament.tournamentId, reason);
+      showToast(t('Success'), t('Tournament cancelled successfully!'));
+      setCancelWarningTournament(null);
+      await loadTournaments();
+    } catch (err: unknown) {
+      showToast(t('Error'), t(parseApiError(err as Error)));
+    } finally {
+      setCancelLoading(false);
     }
   }
 
@@ -331,8 +386,9 @@ export function AdminTournamentsPage() {
     const canGenerateFinal = preFinished && finalRaces.length === 0;
 
     let statusLabel = '';
+    const cancelCount = tour.cancelCount ?? tour.CancelCount ?? 0;
     const isSuspended = tour.status?.toLowerCase() === 'registration suspended' ||
-                        (tour.status?.toLowerCase() === 'registration open' && regEnded && tour.cancelCount === 0);
+                        (tour.status?.toLowerCase() === 'registration open' && regEnded && cancelCount === 0);
 
     if (isSuspended) {
       statusLabel = 'Registration Suspended';
@@ -433,7 +489,8 @@ export function AdminTournamentsPage() {
                 const now = new Date();
                 const regEnd = tour.registrationEndDate ? new Date(tour.registrationEndDate) : null;
                 const regEnded = regEnd ? now >= regEnd : false;
-                const s = (tour.status?.toLowerCase() === 'registration open' && regEnded && tour.cancelCount === 0)
+                const cancelCount = tour.cancelCount ?? tour.CancelCount ?? 0;
+                const s = (tour.status?.toLowerCase() === 'registration open' && regEnded && cancelCount === 0)
                   ? 'registration suspended'
                   : (tour.status?.toLowerCase() ?? 'upcoming');
                 const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
@@ -534,7 +591,7 @@ export function AdminTournamentsPage() {
                     </div>
                     {/* mt-auto đẩy hàng nút xuống đáy card — các card trong cùng hàng luôn thẳng nhau */}
                     <div className="mt-auto pt-4 flex flex-wrap gap-2">
-                      {s === 'registration suspended' && tour.cancelCount === 0 && (
+                      {s === 'registration suspended' && (tour.cancelCount ?? tour.CancelCount ?? 0) === 0 && (
                         <button
                           onClick={() => {
                             setExtendingTournament(tour);
@@ -549,7 +606,7 @@ export function AdminTournamentsPage() {
                       )}
                       {raceState.regOpen && (
                         <button
-                          onClick={() => handleCloseRegistration(tour.tournamentId)}
+                          onClick={() => handleCloseRegistrationClick(tour)}
                           disabled={isGenerating}
                           className="px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
                         >
@@ -705,9 +762,9 @@ export function AdminTournamentsPage() {
 
       {/* Extend Registration Modal */}
       {extendingTournament && (() => {
-        const currentRegistrationEndDate = new Date(extendingTournament.registrationEndDate);
+        const now = new Date();
         const startDate = new Date(extendingTournament.startDate);
-        const newRegistrationEndDate = new Date(currentRegistrationEndDate.getTime() + additionalDays * 24 * 60 * 60 * 1000);
+        const newRegistrationEndDate = new Date(now.getTime() + additionalDays * 24 * 60 * 60 * 1000);
         const limitDate = new Date(startDate.getTime() - 24 * 60 * 60 * 1000);
         const isValid = newRegistrationEndDate <= limitDate;
 
@@ -791,6 +848,67 @@ export function AdminTournamentsPage() {
                   className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {extendLoading ? t('Extending...') : t('Confirm')}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        );
+      })()}
+
+      {/* Cancel Tournament Warning Modal */}
+      {cancelWarningTournament && (() => {
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-red-500/20 relative overflow-hidden text-left"
+            >
+              <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-red-500/40 to-transparent pointer-events-none" />
+              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-red-500/10 to-transparent blur-[40px] pointer-events-none" />
+              
+              <div className="relative flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                  <Trophy size={15} className="text-red-400" />
+                </div>
+                <h2 className="text-xl font-serif text-white">{t("Cancel Tournament")}</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-red-500/30 via-glass-border to-transparent" />
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-white/[0.02] border border-glass-border/30 rounded-xl p-4 text-xs space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted">Tournament:</span>
+                    <span className="text-white font-bold">{cancelWarningTournament.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted">Tournament start date:</span>
+                    <span className="text-white font-medium">{formatDateTime(cancelWarningTournament.startDate)}</span>
+                  </div>
+                </div>
+
+                <div className="text-xs px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 font-bold">
+                  {(cancelWarningTournament.cancelCount ?? cancelWarningTournament.CancelCount ?? 0) >= 1 ? (
+                    <span>The tournament registration has closed for the second time, but it failed to reach the minimum number of registered horses. Please click Cancel Tournament to complete the cancellation process.</span>
+                  ) : (
+                    <span>Registration cannot be extended because the tournament starts in less than 24 hours. The tournament must be cancelled.</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setCancelWarningTournament(null)}
+                  className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors"
+                >
+                  {t("Cancel")}
+                </button>
+                <button
+                  onClick={handleCancelTournament}
+                  disabled={cancelLoading}
+                  className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                >
+                  {cancelLoading ? t('Cancelling...') : t('Cancel Tournament')}
                 </button>
               </div>
             </motion.div>
