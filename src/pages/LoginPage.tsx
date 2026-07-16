@@ -133,7 +133,9 @@ export function LoginPage() {
       setUser(result);
       navigate(getDashboardPath(result.role), { replace: true });
     } catch (err: unknown) {
-      setError(parseApiError(err as Error));
+      const errorMsg = parseApiError(err as Error);
+      setError(errorMsg);
+      showToast('Đăng nhập thất bại', errorMsg || 'Đã xảy ra lỗi khi đăng nhập.', 'error');
     } finally {
       setLoading(false);
     }

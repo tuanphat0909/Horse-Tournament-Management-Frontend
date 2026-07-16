@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { register, parseApiError } from '../api/authService';
-import { getDashboardPath } from '../utils/roleRoutes';
 import { BrandLogo } from '../components/ui/BrandLogo';
 
 const staggerContainer: Variants = {
@@ -36,6 +35,7 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   async function handleRegister() {
     setError('');
@@ -45,14 +45,15 @@ export function RegisterPage() {
     }
     setLoading(true);
     try {
-      const user = await register(fullName, email, password, confirmPassword);
-      navigate(getDashboardPath(user.role), { replace: true });
+      await register(fullName, email, password, confirmPassword);
+      setIsRegistered(true);
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
       setLoading(false);
     }
   }
+
 
   return (
     <div
@@ -175,165 +176,190 @@ export function RegisterPage() {
               <div className="absolute bottom-3 left-3 pointer-events-none scale-y-[-1]"><CornerOrnament /></div>
               <div className="absolute bottom-3 right-3 pointer-events-none scale-x-[-1] scale-y-[-1]"><CornerOrnament /></div>
 
-              {/* Header */}
-              <motion.div variants={fadeUp} className="text-center mb-7 relative z-10">
-                <BrandLogo size={84} className="mb-3" />
-                <h2
-                  className="text-2xl tracking-widest mb-2"
-                  style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37' }}
-                >
-                  EQUESTRIA
-                </h2>
-                <p className="text-sm" style={{ color: '#94a3b8' }}>Create your premium account</p>
-              </motion.div>
-
-              <div className="space-y-4 relative z-10">
-                {/* Full Name */}
-                <motion.div variants={fadeUp}>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Full Name
-                  </label>
-                  <input
-                    className="w-full rounded-md px-4 py-3 text-sm outline-none transition-all duration-300"
-                    style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
-                    onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
-                  />
-                </motion.div>
-
-                {/* Email */}
-                <motion.div variants={fadeUp}>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Email Address
-                  </label>
-                  <input
-                    className="w-full rounded-md px-4 py-3 text-sm outline-none transition-all duration-300"
-                    style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
-                    type="email"
-                    placeholder="champion@equestria.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
-                    onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
-                  />
-                </motion.div>
-
-                {/* Password */}
-                <motion.div variants={fadeUp}>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
-                      style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••  (min. 6 characters)"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
-                      onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
-                    />
-                    <button
-                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                      style={{ color: '#94a3b8' }}
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
+              {!isRegistered ? (
+                <>
+                  {/* Header */}
+                  <motion.div variants={fadeUp} className="text-center mb-7 relative z-10">
+                    <BrandLogo size={84} className="mb-3" />
+                    <h2
+                      className="text-2xl tracking-widest mb-2"
+                      style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37' }}
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </motion.div>
-
-                {/* Confirm Password */}
-                <motion.div variants={fadeUp}>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
-                      style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
-                      type={showConfirm ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
-                      onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
-                      onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
-                    />
-                    <button
-                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                      style={{ color: '#94a3b8' }}
-                      type="button"
-                      onClick={() => setShowConfirm(!showConfirm)}
-                    >
-                      {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </motion.div>
-
-                {/* Error message */}
-                {error && (
-                  <motion.div
-                    variants={fadeUp}
-                    className="rounded-md px-4 py-3 text-sm"
-                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
-                  >
-                    {error}
+                      EQUESTRIA
+                    </h2>
+                    <p className="text-sm" style={{ color: '#94a3b8' }}>Create your premium account</p>
                   </motion.div>
-                )}
 
-                {/* Submit */}
-                <motion.div variants={fadeUp}>
+                  <div className="space-y-4 relative z-10">
+                    {/* Full Name */}
+                    <motion.div variants={fadeUp}>
+                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
+                        Full Name
+                      </label>
+                      <input
+                        className="w-full rounded-md px-4 py-3 text-sm outline-none transition-all duration-300"
+                        style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
+                        type="text"
+                        placeholder="John Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
+                        onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
+                      />
+                    </motion.div>
+
+                    {/* Email */}
+                    <motion.div variants={fadeUp}>
+                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
+                        Email Address
+                      </label>
+                      <input
+                        className="w-full rounded-md px-4 py-3 text-sm outline-none transition-all duration-300"
+                        style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
+                        type="email"
+                        placeholder="champion@equestria.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
+                        onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
+                      />
+                    </motion.div>
+
+                    {/* Password */}
+                    <motion.div variants={fadeUp}>
+                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
+                          style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••  (min. 6 characters)"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
+                          onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
+                        />
+                        <button
+                          className="absolute inset-y-0 right-0 flex items-center pr-3"
+                          style={{ color: '#94a3b8' }}
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </motion.div>
+
+                    {/* Confirm Password */}
+                    <motion.div variants={fadeUp}>
+                      <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
+                        Confirm Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
+                          style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
+                          type={showConfirm ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+                          onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
+                          onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
+                        />
+                        <button
+                          className="absolute inset-y-0 right-0 flex items-center pr-3"
+                          style={{ color: '#94a3b8' }}
+                          type="button"
+                          onClick={() => setShowConfirm(!showConfirm)}
+                        >
+                          {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </motion.div>
+
+                    {/* Error message */}
+                    {error && (
+                      <motion.div
+                        variants={fadeUp}
+                        className="rounded-md px-4 py-3 text-sm"
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+
+                    {/* Submit */}
+                    <motion.div variants={fadeUp}>
+                      <button
+                        className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
+                        style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: '#0b101e' }}
+                        type="button"
+                        onClick={handleRegister}
+                        disabled={loading}
+                      >
+                        {loading ? 'Creating account…' : 'Register'}
+                        {!loading && (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                          </svg>
+                        )}
+                      </button>
+                    </motion.div>
+
+                    {/* Divider */}
+                    <motion.div variants={fadeUp} className="relative py-2">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t" style={{ borderColor: 'rgba(212,175,55,0.2)' }} />
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span
+                          className="px-3 text-xs uppercase tracking-wider font-semibold"
+                          style={{ background: 'rgba(15,23,42,0.5)', color: '#94a3b8' }}
+                        >
+                          or
+                        </span>
+                      </div>
+                    </motion.div>
+
+                    {/* Login link */}
+                    <motion.div variants={fadeUp} className="text-center text-xs" style={{ color: '#94a3b8' }}>
+                      Already have an account?{' '}
+                      <a
+                        href="#"
+                        className="font-medium transition-colors"
+                        style={{ color: '#d4af37' }}
+                        onClick={(e) => { e.preventDefault(); navigate('/login'); }}
+                      >
+                        Sign in here
+                      </a>
+                    </motion.div>
+                  </div>
+                </>
+              ) : (
+                <motion.div variants={fadeUp} className="text-center py-6 relative z-10 flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)' }}>
+                    <Mail size={32} className="text-[#d4af37] animate-bounce" />
+                  </div>
+                  <h3 className="text-xl font-bold tracking-wider mb-4" style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37' }}>
+                    Đăng Ký Thành Công!
+                  </h3>
+                  <p className="text-sm leading-relaxed mb-8 px-2" style={{ color: '#e2e8f0' }}>
+                    Một email xác nhận đã được gửi tới hộp thư của bạn. Vui lòng kiểm tra email và bấm vào đường dẫn để kích hoạt tài khoản trước khi đăng nhập.
+                  </p>
                   <button
-                    className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
                     style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: '#0b101e' }}
                     type="button"
-                    onClick={handleRegister}
-                    disabled={loading}
+                    onClick={() => navigate('/login')}
                   >
-                    {loading ? 'Creating account…' : 'Register'}
-                    {!loading && (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                      </svg>
-                    )}
+                    Đi đến Đăng nhập
                   </button>
                 </motion.div>
+              )}
 
-                {/* Divider */}
-                <motion.div variants={fadeUp} className="relative py-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t" style={{ borderColor: 'rgba(212,175,55,0.2)' }} />
-                  </div>
-                  <div className="relative flex justify-center">
-                    <span
-                      className="px-3 text-xs uppercase tracking-wider font-semibold"
-                      style={{ background: 'rgba(15,23,42,0.5)', color: '#94a3b8' }}
-                    >
-                      or
-                    </span>
-                  </div>
-                </motion.div>
-
-                {/* Login link */}
-                <motion.div variants={fadeUp} className="text-center text-xs" style={{ color: '#94a3b8' }}>
-                  Already have an account?{' '}
-                  <a
-                    href="#"
-                    className="font-medium transition-colors"
-                    style={{ color: '#d4af37' }}
-                    onClick={(e) => { e.preventDefault(); navigate('/login'); }}
-                  >
-                    Sign in here
-                  </a>
-                </motion.div>
-              </div>
             </motion.div>
             </div>
           </section>

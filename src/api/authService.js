@@ -26,10 +26,15 @@ export async function googleLogin(idToken) {
 
 export async function register(fullName, email, password, confirmPassword) {
   const data = await api.post('/auth/register', { fullName, email, password, confirmPassword });
-  localStorage.setItem('token', data.result.accessToken);
-  localStorage.setItem('user', JSON.stringify(data.result.user));
+  // Do NOT store token or user in localStorage since email activation is pending
   return data.result.user;
 }
+
+export async function verifyEmail(token) {
+  const data = await api.get(`/auth/verify-email?token=${encodeURIComponent(token)}`);
+  return data;
+}
+
 
 export function logout() {
   localStorage.removeItem('token');
