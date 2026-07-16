@@ -556,10 +556,6 @@ export function AdminTournamentsPage() {
                         <span className="text-white font-medium">{formatDateTime(tour.endDate)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Rounds:")}</span>
-                        <span className="text-gold font-bold">Pre + Final</span>
-                      </div>
-                      <div className="flex justify-between">
                         <span>{t("Race status:")}</span>
                         <span className="text-gold font-bold">{t(raceState.statusLabel)}</span>
                       </div>
