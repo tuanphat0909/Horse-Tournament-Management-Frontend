@@ -39,9 +39,9 @@ export function VerifyEmailPage() {
     if (verificationAttempted.current) return;
     verificationAttempted.current = true;
 
-    if (!token) {
+    if (!token || token === 'undefined' || token === 'null' || token.trim() === '') {
       setStatus('error');
-      setErrorMessage('Không tìm thấy mã xác thực (token) trên đường dẫn.');
+      setErrorMessage('Không tìm thấy mã xác thực (token) hợp lệ trên đường dẫn.');
       return;
     }
 
