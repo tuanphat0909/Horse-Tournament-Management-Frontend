@@ -406,7 +406,7 @@ export function LoginPage() {
                         theme="filled_blue"
                         shape="rectangular"
                         size="large"
-                        width="100%"
+                        width={368}
                       />
                     </div>
                   </motion.div>

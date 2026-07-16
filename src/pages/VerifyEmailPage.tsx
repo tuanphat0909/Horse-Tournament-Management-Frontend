@@ -39,9 +39,9 @@ export function VerifyEmailPage() {
     if (verificationAttempted.current) return;
     verificationAttempted.current = true;
 
-    if (!token) {
+    if (!token || token === 'undefined' || token === 'null' || token.trim() === '') {
       setStatus('error');
-      setErrorMessage('No verification token found in the URL.');
+      setErrorMessage('No valid verification token found in the URL.');
       return;
     }
 
@@ -87,8 +87,8 @@ export function VerifyEmailPage() {
         <path d="M-10,90 C40,50 80,30 110,10" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.2" />
       </svg>
 
-      {/* Logo */}
-      <header className="absolute top-0 left-0 w-full px-12 py-8 z-20">
+      {/* Logo — dùng div thay vì <header> để không dính override nền trắng của Topbar ở light theme */}
+      <div className="absolute top-0 left-0 w-full px-12 py-8 z-20 bg-transparent">
         <div
           className="tracking-widest font-semibold cursor-pointer"
           style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37', fontSize: '26px' }}
@@ -96,7 +96,7 @@ export function VerifyEmailPage() {
         >
           EQUESTRIA
         </div>
-      </header>
+      </div>
 
       {/* Main */}
       <main className="flex-grow flex items-center justify-center relative z-10 px-6 py-12 w-full max-w-[1600px] mx-auto">

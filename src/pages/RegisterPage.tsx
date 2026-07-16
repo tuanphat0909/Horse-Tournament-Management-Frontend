@@ -309,19 +309,13 @@ export function RegisterPage() {
                       </button>
                     </motion.div>
 
-                    {/* Divider */}
-                    <motion.div variants={fadeUp} className="relative py-2">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t" style={{ borderColor: 'rgba(212,175,55,0.2)' }} />
-                      </div>
-                      <div className="relative flex justify-center">
-                        <span
-                          className="px-3 text-xs uppercase tracking-wider font-semibold"
-                          style={{ background: 'rgba(15,23,42,0.5)', color: '#94a3b8' }}
-                        >
-                          or
-                        </span>
-                      </div>
+                    {/* Divider — 2 đoạn kẻ 2 bên chữ "or", không dùng background che line */}
+                    <motion.div variants={fadeUp} className="flex items-center gap-3 py-2">
+                      <div className="flex-1 h-px" style={{ background: 'rgba(212,175,55,0.2)' }} />
+                      <span className="text-xs uppercase tracking-wider font-semibold" style={{ color: '#94a3b8' }}>
+                        or
+                      </span>
+                      <div className="flex-1 h-px" style={{ background: 'rgba(212,175,55,0.2)' }} />
                     </motion.div>
 
                     {/* Login link */}
