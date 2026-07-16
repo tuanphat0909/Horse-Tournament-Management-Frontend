@@ -3,10 +3,13 @@ import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { login, parseApiError } from '../api/authService';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { login, googleLogin, parseApiError } from '../api/authService';
 import { getDashboardPath } from '../utils/roleRoutes';
 import { BrandLogo } from '../components/ui/BrandLogo';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
+
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -109,6 +112,8 @@ function CornerOrnament() {
 export function LoginPage() {
   const navigate = useNavigate();
   const { user, authReady, setUser } = useAuth();
+  const { showToast } = useNotifications();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -134,246 +139,295 @@ export function LoginPage() {
     }
   }
 
+  async function handleGoogleSuccess(credentialResponse: any) {
+    setError('');
+    setLoading(true);
+    try {
+      const token = credentialResponse.credential;
+      if (!token) {
+        throw new Error('Google credential token was not returned.');
+      }
+      const result = await googleLogin(token);
+      setUser(result);
+      showToast('Đăng nhập thành công', 'Chào mừng bạn quay trở lại!', 'success');
+      navigate(getDashboardPath(result.role), { replace: true });
+    } catch (err: unknown) {
+      const errorMsg = parseApiError(err as Error);
+      setError(errorMsg);
+      showToast('Lỗi đăng nhập', errorMsg || 'Xác thực Google thất bại hoặc email hệ thống bị từ chối', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleGoogleError() {
+    setError('Xác thực Google thất bại.');
+    showToast('Lỗi đăng nhập', 'Xác thực Google thất bại hoặc email hệ thống bị từ chối', 'error');
+  }
+
+
   return (
-    <div
-      className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{
-        backgroundColor: '#0b101e',
-        backgroundImage:
-          'radial-gradient(ellipse at 0% 100%, rgba(212,175,55,0.15) 0%, transparent 50%), radial-gradient(ellipse at 100% 0%, rgba(212,175,55,0.1) 0%, transparent 40%)',
-        fontFamily: '"DM Sans", sans-serif',
-        color: '#e2e8f0',
-      }}
-    >
-      {/* Subtle background wave lines */}
-      <svg
-        className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
-        preserveAspectRatio="none"
-        viewBox="0 0 100 100"
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <div
+        className="min-h-screen flex flex-col relative overflow-hidden"
+        style={{
+          backgroundColor: '#0b101e',
+          backgroundImage:
+            'radial-gradient(ellipse at 0% 100%, rgba(212,175,55,0.15) 0%, transparent 50%), radial-gradient(ellipse at 100% 0%, rgba(212,175,55,0.1) 0%, transparent 40%)',
+          fontFamily: '"DM Sans", sans-serif',
+          color: '#e2e8f0',
+        }}
       >
-        <path d="M0,50 Q25,20 50,50 T100,50" fill="none" stroke="#d4af37" strokeWidth="0.1"/>
-        <path d="M0,60 Q35,10 60,60 T100,60" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.8"/>
-        <path d="M0,40 Q15,80 40,40 T100,40" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.6"/>
-        <path d="M0,70 Q45,30 70,70 T100,70" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.4"/>
-        <path d="M0,80 Q50,90 80,40 T100,80" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.5"/>
-        <path d="M-10,110 C30,70 60,10 110,-10" fill="none" stroke="#d4af37" strokeWidth="0.2" opacity="0.3"/>
-        <path d="M-10,90 C40,50 80,30 110,10" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.2"/>
-      </svg>
-
-      {/* Logo */}
-      <header className="absolute top-0 left-0 w-full px-12 py-8 z-20">
-        <div
-          className="tracking-widest font-semibold cursor-pointer"
-          style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37', fontSize: '26px' }}
-          onClick={() => navigate('/')}
+        {/* Subtle background wave lines */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
+          preserveAspectRatio="none"
+          viewBox="0 0 100 100"
         >
-          EQUESTRIA
-        </div>
-      </header>
+          <path d="M0,50 Q25,20 50,50 T100,50" fill="none" stroke="#d4af37" strokeWidth="0.1"/>
+          <path d="M0,60 Q35,10 60,60 T100,60" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.8"/>
+          <path d="M0,40 Q15,80 40,40 T100,40" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.6"/>
+          <path d="M0,70 Q45,30 70,70 T100,70" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.4"/>
+          <path d="M0,80 Q50,90 80,40 T100,80" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.5"/>
+          <path d="M-10,110 C30,70 60,10 110,-10" fill="none" stroke="#d4af37" strokeWidth="0.2" opacity="0.3"/>
+          <path d="M-10,90 C40,50 80,30 110,10" fill="none" stroke="#d4af37" strokeWidth="0.1" opacity="0.2"/>
+        </svg>
 
-      {/* Main */}
-      <main className="flex-grow flex items-center justify-center relative z-10 px-6 py-12 lg:px-16 w-full max-w-[1600px] mx-auto">
-        {/* Vertical divider */}
-        <div
-          className="absolute hidden lg:flex flex-col items-center pointer-events-none z-0"
-          style={{ left: '50%', transform: 'translateX(-50%)', top: '10%', bottom: '10%' }}
-        >
-          <div style={{ width: '1px', flex: 1, background: 'linear-gradient(to bottom, transparent, rgba(212,175,55,0.35) 30%, rgba(212,175,55,0.35) 70%, transparent)' }} />
-          <svg viewBox="0 0 24 24" style={{ width: '22px', height: '22px', flexShrink: 0, margin: '10px 0' }}>
-            <path d="M12,0 L24,12 L12,24 L0,12 Z" fill="#d4af37" fillOpacity="0.6"/>
-            <path d="M12,4 L20,12 L12,20 L4,12 Z" fill="none" stroke="#d4af37" strokeOpacity="0.35" strokeWidth="0.8"/>
-          </svg>
-          <div style={{ width: '1px', height: '60px', background: 'rgba(212,175,55,0.25)', flexShrink: 0 }} />
-          <svg viewBox="0 0 16 16" style={{ width: '14px', height: '14px', flexShrink: 0, margin: '8px 0' }}>
-            <path d="M8,0 L16,8 L8,16 L0,8 Z" fill="none" stroke="#d4af37" strokeOpacity="0.45" strokeWidth="1"/>
-            <circle cx="8" cy="8" r="2" fill="#d4af37" fillOpacity="0.5"/>
-          </svg>
-          <div style={{ width: '1px', height: '60px', background: 'rgba(212,175,55,0.25)', flexShrink: 0 }} />
-          <svg viewBox="0 0 24 24" style={{ width: '22px', height: '22px', flexShrink: 0, margin: '10px 0' }}>
-            <path d="M12,0 L24,12 L12,24 L0,12 Z" fill="#d4af37" fillOpacity="0.6"/>
-            <path d="M12,4 L20,12 L12,20 L4,12 Z" fill="none" stroke="#d4af37" strokeOpacity="0.35" strokeWidth="0.8"/>
-          </svg>
-          <div style={{ width: '1px', flex: 1, background: 'linear-gradient(to bottom, rgba(212,175,55,0.35), transparent)' }} />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center w-full">
-
-          {/* Left: Branding */}
-          <motion.section
-            className="hidden lg:flex flex-col items-center justify-center text-center px-8"
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7 }}
+        {/* Logo */}
+        <header className="absolute top-0 left-0 w-full px-12 py-8 z-20">
+          <div
+            className="tracking-widest font-semibold cursor-pointer"
+            style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37', fontSize: '26px' }}
+            onClick={() => navigate('/')}
           >
-            {/* Khung 576px; ảnh gốc trống bên phải + trống đáy nên: dịch phải 18%
-                để ngựa vào tâm chữ, margin âm kéo khối chữ lên SÁT ngựa hơn */}
-            <div className="w-[36rem] max-w-full -mb-14">
-              <HorseArt />
-            </div>
-            <div className="mb-10">
-              <h1
-                className="italic font-medium mb-6 leading-tight"
-                style={{ fontFamily: '"Playfair Display", serif', color: '#e9c46a', fontSize: '52px', lineHeight: '1.15' }}
-              >
-                "Where Champions<br/>Are Made."
-              </h1>
-              <p className="tracking-[0.22em] uppercase font-semibold" style={{ color: '#94a3b8', fontSize: '13px' }}>
-                Horse Racing Tournament Management System
-              </p>
-            </div>
-            <div className="flex gap-3">
-              {['5 Races', 'Real-time', 'Secure'].map((s) => (
-                <span
-                  key={s}
-                  className="px-5 py-2 rounded-full font-medium tracking-wide auth-badge"
-                  style={{ border: '1px solid rgba(212,175,55,0.2)', color: '#d4af37', background: 'rgba(30,41,59,0.3)', fontSize: '13px' }}
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </motion.section>
- 
-          {/* Right: Login form */}
-          <section className="w-full flex justify-center">
-            <div className="w-full max-w-md" style={{
-              padding: '1px',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, rgba(212,175,55,0.55) 0%, rgba(212,175,55,0.08) 40%, rgba(212,175,55,0.45) 100%)',
-              boxShadow: '0 0 30px rgba(212,175,55,0.12), 0 0 60px rgba(212,175,55,0.06)',
-            }}>
-            <motion.div
-              className="rounded-2xl p-10 relative overflow-hidden auth-card"
-              style={{
-                background: 'rgba(15,23,42,0.5)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderRadius: '15px',
-                boxShadow: 'inset 0 1px 0 rgba(212,175,55,0.1), 0 25px 50px -12px rgba(0,0,0,0.6)',
-              }}
-              variants={staggerContainer}
-              initial="hidden"
-              animate="show"
+            EQUESTRIA
+          </div>
+        </header>
+
+        {/* Main */}
+        <main className="flex-grow flex items-center justify-center relative z-10 px-6 py-12 lg:px-16 w-full max-w-[1600px] mx-auto">
+          {/* Vertical divider */}
+          <div
+            className="absolute hidden lg:flex flex-col items-center pointer-events-none z-0"
+            style={{ left: '50%', transform: 'translateX(-50%)', top: '10%', bottom: '10%' }}
+          >
+            <div style={{ width: '1px', flex: 1, background: 'linear-gradient(to bottom, transparent, rgba(212,175,55,0.35) 30%, rgba(212,175,55,0.35) 70%, transparent)' }} />
+            <svg viewBox="0 0 24 24" style={{ width: '22px', height: '22px', flexShrink: 0, margin: '10px 0' }}>
+              <path d="M12,0 L24,12 L12,24 L0,12 Z" fill="#d4af37" fillOpacity="0.6"/>
+              <path d="M12,4 L20,12 L12,20 L4,12 Z" fill="none" stroke="#d4af37" strokeOpacity="0.35" strokeWidth="0.8"/>
+            </svg>
+            <div style={{ width: '1px', height: '60px', background: 'rgba(212,175,55,0.25)', flexShrink: 0 }} />
+            <svg viewBox="0 0 16 16" style={{ width: '14px', height: '14px', flexShrink: 0, margin: '8px 0' }}>
+              <path d="M8,0 L16,8 L8,16 L0,8 Z" fill="none" stroke="#d4af37" strokeOpacity="0.45" strokeWidth="1"/>
+              <circle cx="8" cy="8" r="2" fill="#d4af37" fillOpacity="0.5"/>
+            </svg>
+            <div style={{ width: '1px', height: '60px', background: 'rgba(212,175,55,0.25)', flexShrink: 0 }} />
+            <svg viewBox="0 0 24 24" style={{ width: '22px', height: '22px', flexShrink: 0, margin: '10px 0' }}>
+              <path d="M12,0 L24,12 L12,24 L0,12 Z" fill="#d4af37" fillOpacity="0.6"/>
+              <path d="M12,4 L20,12 L12,20 L4,12 Z" fill="none" stroke="#d4af37" strokeOpacity="0.35" strokeWidth="0.8"/>
+            </svg>
+            <div style={{ width: '1px', flex: 1, background: 'linear-gradient(to bottom, rgba(212,175,55,0.35), transparent)' }} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center w-full">
+
+            {/* Left: Branding */}
+            <motion.section
+              className="hidden lg:flex flex-col items-center justify-center text-center px-8"
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
             >
-              {/* Corners */}
-              <div className="absolute top-3 left-3 pointer-events-none"><CornerOrnament /></div>
-              <div className="absolute top-3 right-3 pointer-events-none scale-x-[-1]"><CornerOrnament /></div>
-              <div className="absolute bottom-3 left-3 pointer-events-none scale-y-[-1]"><CornerOrnament /></div>
-              <div className="absolute bottom-3 right-3 pointer-events-none scale-x-[-1] scale-y-[-1]"><CornerOrnament /></div>
-
-              {/* Header */}
-              <motion.div variants={fadeUp} className="text-center mb-8 relative z-10">
-                <BrandLogo size={84} className="mb-3" />
-                <h2
-                  className="text-2xl tracking-widest mb-2"
-                  style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37' }}
+              {/* Khung 576px; ảnh gốc trống bên phải + trống đáy nên: dịch phải 18%
+                  để ngựa vào tâm chữ, margin âm kéo khối chữ lên SÁT ngựa hơn */}
+              <div className="w-[36rem] max-w-full -mb-14">
+                <HorseArt />
+              </div>
+              <div className="mb-10">
+                <h1
+                  className="italic font-medium mb-6 leading-tight"
+                  style={{ fontFamily: '"Playfair Display", serif', color: '#e9c46a', fontSize: '52px', lineHeight: '1.15' }}
                 >
-                  EQUESTRIA
-                </h2>
-                <p className="text-sm" style={{ color: '#94a3b8' }}>Sign in to your account</p>
-              </motion.div>
+                  "Where Champions<br/>Are Made."
+                </h1>
+                <p className="tracking-[0.22em] uppercase font-semibold" style={{ color: '#94a3b8', fontSize: '13px' }}>
+                  Horse Racing Tournament Management System
+                </p>
+              </div>
+              <div className="flex gap-3">
+                {['5 Races', 'Real-time', 'Secure'].map((s) => (
+                  <span
+                    key={s}
+                    className="px-5 py-2 rounded-full font-medium tracking-wide auth-badge"
+                    style={{ border: '1px solid rgba(212,175,55,0.2)', color: '#d4af37', background: 'rgba(30,41,59,0.3)', fontSize: '13px' }}
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </motion.section>
+   
+            {/* Right: Login form */}
+            <section className="w-full flex justify-center">
+              <div className="w-full max-w-md" style={{
+                padding: '1px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, rgba(212,175,55,0.55) 0%, rgba(212,175,55,0.08) 40%, rgba(212,175,55,0.45) 100%)',
+                boxShadow: '0 0 30px rgba(212,175,55,0.12), 0 0 60px rgba(212,175,55,0.06)',
+              }}>
+              <motion.div
+                className="rounded-2xl p-10 relative overflow-hidden auth-card"
+                style={{
+                  background: 'rgba(15,23,42,0.5)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  borderRadius: '15px',
+                  boxShadow: 'inset 0 1px 0 rgba(212,175,55,0.1), 0 25px 50px -12px rgba(0,0,0,0.6)',
+                }}
+                variants={staggerContainer}
+                initial="hidden"
+                animate="show"
+              >
+                {/* Corners */}
+                <div className="absolute top-3 left-3 pointer-events-none"><CornerOrnament /></div>
+                <div className="absolute top-3 right-3 pointer-events-none scale-x-[-1]"><CornerOrnament /></div>
+                <div className="absolute bottom-3 left-3 pointer-events-none scale-y-[-1]"><CornerOrnament /></div>
+                <div className="absolute bottom-3 right-3 pointer-events-none scale-x-[-1] scale-y-[-1]"><CornerOrnament /></div>
 
-              <div className="space-y-5 relative z-10">
-                {/* Email */}
-                <motion.div variants={fadeUp}>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Email
-                  </label>
-                  <input
-                    className="w-full rounded-md px-4 py-3 text-sm outline-none transition-all duration-300"
-                    style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
-                    type="email"
-                    placeholder="email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
-                    onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
-                  />
+                {/* Header */}
+                <motion.div variants={fadeUp} className="text-center mb-8 relative z-10">
+                  <BrandLogo size={84} className="mb-3" />
+                  <h2
+                    className="text-2xl tracking-widest mb-2"
+                    style={{ fontFamily: '"Playfair Display", serif', color: '#d4af37' }}
+                  >
+                    EQUESTRIA
+                  </h2>
+                  <p className="text-sm" style={{ color: '#94a3b8' }}>Sign in to your account</p>
                 </motion.div>
 
-                {/* Password */}
-                <motion.div variants={fadeUp}>
-                  <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
-                    Password
-                  </label>
-                  <div className="relative">
+                <div className="space-y-5 relative z-10">
+                  {/* Email */}
+                  <motion.div variants={fadeUp}>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
+                      Email
+                    </label>
                     <input
-                      className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
+                      className="w-full rounded-md px-4 py-3 text-sm outline-none transition-all duration-300"
                       style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
+                      type="email"
+                      placeholder="email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
                       onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
                     />
-                    <button
-                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                      style={{ color: '#94a3b8' }}
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </motion.div>
-
-                {/* Remember / Forgot */}
-                <motion.div variants={fadeUp} className="flex items-center justify-between text-sm">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="rounded h-4 w-4" style={{ accentColor: '#d4af37' }} />
-                    <span style={{ color: '#94a3b8' }}>Remember me</span>
-                  </label>
-                  <a href="#" style={{ color: '#d4af37' }}>Forgot password?</a>
-                </motion.div>
-
-                {/* Error message */}
-                {error && (
-                  <motion.div
-                    variants={fadeUp}
-                    className="rounded-md px-4 py-3 text-sm"
-                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
-                  >
-                    {error}
                   </motion.div>
-                )}
 
-                {/* Submit */}
-                <motion.div variants={fadeUp}>
-                  <button
-                    className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: '#0b101e' }}
-                    type="button"
-                    onClick={handleSignIn}
-                    disabled={loading}
-                  >
-                    {loading ? 'Signing in…' : 'Sign In'}
-                    {!loading && (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                      </svg>
-                    )}
-                  </button>
-                </motion.div>
+                  {/* Password */}
+                  <motion.div variants={fadeUp}>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#94a3b8' }}>
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        className="w-full rounded-md px-4 py-3 pr-10 text-sm outline-none transition-all duration-300"
+                        style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', color: '#e2e8f0' }}
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSignIn()}
+                        onFocus={(e) => (e.target.style.borderColor = '#d4af37')}
+                        onBlur={(e) => (e.target.style.borderColor = 'rgba(148,163,184,0.2)')}
+                      />
+                      <button
+                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                        style={{ color: '#94a3b8' }}
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </motion.div>
 
-                {/* Register link */}
-                <motion.div variants={fadeUp} className="text-center text-xs" style={{ color: '#94a3b8' }}>
-                  Don't have an account?{' '}
-                  <a
-                    href="#"
-                    className="font-medium transition-colors"
-                    style={{ color: '#d4af37' }}
-                    onClick={(e) => { e.preventDefault(); navigate('/register'); }}
-                  >
-                    Register here
-                  </a>
-                </motion.div>
+                  {/* Remember / Forgot */}
+                  <motion.div variants={fadeUp} className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" className="rounded h-4 w-4" style={{ accentColor: '#d4af37' }} />
+                      <span style={{ color: '#94a3b8' }}>Remember me</span>
+                    </label>
+                    <a href="#" style={{ color: '#d4af37' }}>Forgot password?</a>
+                  </motion.div>
+
+                  {/* Error message */}
+                  {error && (
+                    <motion.div
+                      variants={fadeUp}
+                      className="rounded-md px-4 py-3 text-sm"
+                      style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+
+                  {/* Submit */}
+                  <motion.div variants={fadeUp}>
+                    <button
+                      className="w-full font-bold text-sm tracking-wider uppercase py-3.5 rounded-md flex items-center justify-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
+                      style={{ background: 'linear-gradient(135deg,#e9c46a 0%,#d4af37 50%,#aa8c2c 100%)', color: '#0b101e' }}
+                      type="button"
+                      onClick={handleSignIn}
+                      disabled={loading}
+                    >
+                      {loading ? 'Signing in…' : 'Sign In'}
+                      {!loading && (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                        </svg>
+                      )}
+                    </button>
+                  </motion.div>
+
+                  {/* Google Login Divider and Button */}
+                  <motion.div variants={fadeUp} className="flex flex-col items-center gap-4">
+                    <div className="flex items-center w-full gap-3 my-1">
+                      <div className="h-px bg-slate-700/50 flex-1" />
+                      <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-widest">Or continue with</span>
+                      <div className="h-px bg-slate-700/50 flex-1" />
+                    </div>
+                    <div className={`w-full flex justify-center ${loading ? 'pointer-events-none opacity-50' : ''}`} style={{ minHeight: '44px' }}>
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        theme="filled_blue"
+                        shape="rectangular"
+                        size="large"
+                        width="100%"
+                      />
+                    </div>
+                  </motion.div>
+
+                  {/* Register link */}
+                  <motion.div variants={fadeUp} className="text-center text-xs" style={{ color: '#94a3b8' }}>
+                    Don't have an account?{' '}
+                    <a
+                      href="#"
+                      className="font-medium transition-colors"
+                      style={{ color: '#d4af37' }}
+                      onClick={(e) => { e.preventDefault(); navigate('/register'); }}
+                    >
+                      Register here
+                    </a>
+                  </motion.div>
+                </div>
+              </motion.div>
               </div>
-            </motion.div>
-            </div>
-          </section>
-        </div>
-      </main>
-    </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </GoogleOAuthProvider>
   );
 }
+
