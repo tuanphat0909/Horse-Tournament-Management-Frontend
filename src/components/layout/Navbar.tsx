@@ -14,7 +14,7 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const navigate = useNavigate();
-  const { t, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -58,18 +58,6 @@ export function Navbar() {
 
         {/* Right Buttons — desktop only */}
         <div className="hidden md:flex items-center gap-4">
-          {/* Language toggle VI | EN */}
-          <div className="flex items-center text-xs font-bold border border-glass-border rounded overflow-hidden">
-            <button
-              onClick={() => setLanguage('vi')}
-              className={`px-2.5 py-1 transition-colors ${language === 'vi' ? 'bg-gold/15 text-gold' : 'text-muted hover:text-white'}`}
-            >VI</button>
-            <span className="w-px h-3 bg-glass-border" />
-            <button
-              onClick={() => setLanguage('en')}
-              className={`px-2.5 py-1 transition-colors ${language === 'en' ? 'bg-gold/15 text-gold' : 'text-muted hover:text-white'}`}
-            >EN</button>
-          </div>
           <button
             onClick={() => navigate('/login')}
             className="text-sm font-medium text-body hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-gold/50 rounded-md px-2 py-1"
@@ -116,21 +104,6 @@ export function Navbar() {
                   {t(item.label)}
                 </a>
               ))}
-              {/* Language toggle mobile */}
-              <div className="flex items-center gap-2 pt-1 pb-1">
-                <span className="text-xs text-muted/60">Language:</span>
-                <div className="flex items-center text-xs font-bold border border-glass-border rounded overflow-hidden">
-                  <button
-                    onClick={() => setLanguage('vi')}
-                    className={`px-2.5 py-1 transition-colors ${language === 'vi' ? 'bg-gold/15 text-gold' : 'text-muted hover:text-white'}`}
-                  >VI</button>
-                  <span className="w-px h-3 bg-glass-border" />
-                  <button
-                    onClick={() => setLanguage('en')}
-                    className={`px-2.5 py-1 transition-colors ${language === 'en' ? 'bg-gold/15 text-gold' : 'text-muted hover:text-white'}`}
-                  >EN</button>
-                </div>
-              </div>
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => { navigate('/login'); setMobileOpen(false); }}
