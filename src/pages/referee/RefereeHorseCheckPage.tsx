@@ -148,13 +148,13 @@ export function RefereeHorseCheckPage() {
               trực tiếp được cho tới khi BE bổ sung API ghi horse-check. Horse unhealthy sẽ tự
               hiển thị "Ineligible" ở cột Status. */}
           <div className="text-[11px] text-champagne/80 bg-gold/5 border border-gold/15 rounded-lg px-3 py-2 leading-relaxed">
-            ⓘ Tình trạng sức khỏe do <b>Horse Owner</b> cập nhật trên hồ sơ horse. Horse có sức khỏe không đạt sẽ tự động hiển thị <b>"Ineligible"</b> dù đã được ghép lanes — nếu phát hiện sai lệch thực tế, hãy yêu cầu chủ horse cập nhật hoặc ghi nhận vi phạm ở trang Handle Violations.
+            ⓘ Health status is updated by the <b>Horse Owner</b> on the horse profile. Horses with failing health are automatically shown as <b>"Ineligible"</b> even if assigned to lanes — if you spot a real-world mismatch, ask the owner to update it or record a violation on the Handle Violations page.
           </div>
 
           {/* Select Race Dropdown + Search */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <span className="text-sm text-muted font-bold shrink-0">Chọn races:</span>
+              <span className="text-sm text-muted font-bold shrink-0">Select race:</span>
               {loadingRaces ? (
                 <span className="text-xs text-muted">Loading races...</span>
               ) : races.length === 0 ? (
@@ -246,7 +246,7 @@ export function RefereeHorseCheckPage() {
                             'bg-red-500/10 text-red-400 border border-red-500/20'
                           }`}>
                             {state === 'pending' ? 'Awaiting Inspection' :
-                             state === 'approved' ? 'Đã duyệt' :
+                             state === 'approved' ? 'Approved' :
                              state === 'blocked' ? '⚠ Ineligible (Health)' : 'Disqualified'}
                           </span>
                         </td>

@@ -130,10 +130,10 @@ export function OwnerTournamentsPage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left"
+                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left h-full flex flex-col"
                   >
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                    <div className="flex justify-between items-center gap-2 mb-3">
+                    <div className="flex justify-between items-center gap-2 mb-3 min-h-[26px]">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5 whitespace-nowrap shrink-0`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                       </span>
@@ -164,21 +164,24 @@ export function OwnerTournamentsPage() {
                       </div>
                       <div className="flex flex-col gap-1 pt-2.5 mt-2 border-t border-glass-border/30">
                         <span className="font-bold text-white text-[11px] uppercase tracking-wider">{t("Prizes:")}</span>
-                        {tour.prizes && tour.prizes.length > 0 ? (
-                          <div className="grid grid-cols-3 gap-1.5 text-center mt-1">
-                            {tour.prizes
-                              .slice()
-                              .sort((a: any, b: any) => a.rankPosition - b.rankPosition)
-                              .map((p: any) => (
-                                <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
-                                  <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
-                                  <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('vi-VN')} đ</div>
-                                </div>
-                              ))}
-                          </div>
-                        ) : (
-                          <span className="text-red-400 font-semibold italic text-[11px] mt-0.5">{t("Prizes not configured yet")}</span>
-                        )}
+                        {/* min-h giữ chỗ để card không có prize vẫn cao bằng card có prize */}
+                        <div className="min-h-[46px] flex flex-col justify-center">
+                          {tour.prizes && tour.prizes.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-1.5 text-center mt-1">
+                              {tour.prizes
+                                .slice()
+                                .sort((a: any, b: any) => a.rankPosition - b.rankPosition)
+                                .map((p: any) => (
+                                  <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
+                                    <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
+                                    <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('vi-VN')} đ</div>
+                                  </div>
+                                ))}
+                            </div>
+                          ) : (
+                            <span className="text-red-400 font-semibold italic text-[11px]">{t("Prizes not configured yet")}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>

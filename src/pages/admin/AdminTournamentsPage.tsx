@@ -79,50 +79,6 @@ export function AdminTournamentsPage() {
     loadTournaments();
   }, []);
 
-  useEffect(() => {
-    setError('');
-    const now = new Date();
-
-    // 1. Validate registration window
-    if (form.registrationStartDate && form.registrationEndDate) {
-      const regStartVal = new Date(form.registrationStartDate);
-      const regEndVal = new Date(form.registrationEndDate);
-      if (regEndVal <= regStartVal) {
-        setError(t('Registration end date must be after registration start date.'));
-        return;
-      }
-    }
-
-    // 2. Validate registration start date vs past
-    if (form.registrationStartDate) {
-      const regStartVal = new Date(form.registrationStartDate);
-      if (regStartVal.getTime() < now.getTime() - 5 * 60 * 1000) {
-        setError(t('Registration start date cannot be in the past.'));
-        return;
-      }
-    }
-
-    // 3. Validate tournament start date vs registration end date
-    if (form.startDate && form.registrationEndDate) {
-      const startVal = new Date(form.startDate);
-      const regEndVal = new Date(form.registrationEndDate);
-      if (startVal < regEndVal) {
-        setError(t('Tournament start date must be on or after registration end date.'));
-        return;
-      }
-    }
-
-    // 4. Validate tournament window
-    if (form.startDate && form.endDate) {
-      const startVal = new Date(form.startDate);
-      const endVal = new Date(form.endDate);
-      if (endVal <= startVal) {
-        setError(t('Tournament end date must be after tournament start date.'));
-        return;
-      }
-    }
-  }, [form.registrationStartDate, form.registrationEndDate, form.startDate, form.endDate, t]);
-
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
@@ -140,11 +96,21 @@ export function AdminTournamentsPage() {
     const endVal = new Date(form.endDate);
     const now = new Date();
 
-    if (regStartVal.getTime() < now.getTime() - 5 * 60 * 1000 ||
-        regEndVal <= regStartVal ||
-        startVal < regEndVal ||
-        endVal <= startVal) {
-      return; // prevent submit if invalid dates
+    if (regStartVal.getTime() < now.getTime() - 5 * 60 * 1000) {
+      setError(t('Registration start date cannot be in the past.'));
+      return;
+    }
+    if (regEndVal <= regStartVal) {
+      setError(t('Registration end date must be after registration start date.'));
+      return;
+    }
+    if (startVal < regEndVal) {
+      setError(t('Tournament start date must be on or after registration end date.'));
+      return;
+    }
+    if (endVal <= startVal) {
+      setError(t('Tournament end date must be after tournament start date.'));
+      return;
     }
 
     const prizes = [
@@ -186,13 +152,13 @@ export function AdminTournamentsPage() {
 
   async function handleCloseRegistration(tournamentId: number) {
     setGeneratingForTournament(tournamentId);
-    setError('');
     try {
       await closeTournamentRegistration(tournamentId);
       showToast(t('Success'), t('Registration deadline closed successfully!'));
       await loadTournaments();
     } catch (err: unknown) {
-      setError(parseApiError(err as Error));
+      const errorMsg = parseApiError(err as Error);
+      showToast(t('Failed'), errorMsg, 'error');
     } finally {
       setGeneratingForTournament(null);
     }
@@ -200,13 +166,13 @@ export function AdminTournamentsPage() {
 
   async function handleGenerateRaces(tournamentId: number) {
     setGeneratingForTournament(tournamentId);
-    setError('');
     try {
       await generateTournamentRaces(tournamentId);
       showToast(t('Success'), t('Races auto-assigned for tournament.'));
       await loadTournaments();
     } catch (err: unknown) {
-      setError(parseApiError(err as Error));
+      const errorMsg = parseApiError(err as Error);
+      showToast(t('Failed'), errorMsg, 'error');
     } finally {
       setGeneratingForTournament(null);
     }
@@ -214,13 +180,13 @@ export function AdminTournamentsPage() {
 
   async function handleGenerateFinal(tournamentId: number) {
     setGeneratingForTournament(tournamentId);
-    setError('');
     try {
       await generateFinalRace(tournamentId);
       showToast(t('Success'), t('Final bracket (Top 12) auto-assigned successfully.'));
       await loadTournaments();
     } catch (err: unknown) {
-      setError(parseApiError(err as Error));
+      const errorMsg = parseApiError(err as Error);
+      showToast(t('Failed'), errorMsg, 'error');
     } finally {
       setGeneratingForTournament(null);
     }
@@ -290,13 +256,13 @@ export function AdminTournamentsPage() {
     if (regNotStarted) {
       statusLabel = 'Registration not open';
     } else if (regOpen) {
-      statusLabel = 'Đang mở đăng ký';
+      statusLabel = 'Registration open';
     } else if (rounds.length === 0) {
       statusLabel = 'Pending Auto Arrange';
     } else if (hasPre && !preFinished) {
       statusLabel = 'Competing in Pre-round';
     } else if (canGenerateFinal) {
-      statusLabel = 'Pending xếp Final';
+      statusLabel = 'Pending Final assignment';
     } else if (hasFinal) {
       statusLabel = 'Competing in Finals';
     }
@@ -368,11 +334,6 @@ export function AdminTournamentsPage() {
             </div>
           </div>
 
-          {!showModal && error && (
-            <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>
-          )}
-
-
           {/* Tournament Cards */}
           {loadingTournaments ? (
             <LoadingSkeleton rows={4} h="h-24" />
@@ -396,7 +357,7 @@ export function AdminTournamentsPage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left"
+                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left h-full flex flex-col"
                   >
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="mb-3 space-y-1.5">
@@ -406,21 +367,21 @@ export function AdminTournamentsPage() {
                           <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                         </span>
                       </div>
-                      {/* Hàng 2: badge loại rounds + đếm ngược thời gian */}
-                      <div className="flex items-center gap-2 flex-wrap">
+                      {/* Hàng 2: badge loại rounds + đếm ngược thời gian — min-h giữ chỗ để card không bị lệch khi thiếu badge */}
+                      <div className="flex items-center gap-2 flex-wrap min-h-[26px]">
                         {(() => {
                           const now = Date.now();
                           const endMs = tour.registrationEndDate ? new Date(tour.registrationEndDate).getTime() : null;
                           const daysLeft = endMs !== null ? Math.ceil((endMs - now) / 86400000) : null;
                           if (daysLeft === null) return null;
                           if (daysLeft < 0) return (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">🔒 Đã đóng ĐK</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">🔒 Reg. closed</span>
                           );
                           if (daysLeft <= 12) return (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-yellow-500/40 bg-yellow-500/10 text-yellow-400 shrink-0">⚡ Final · còn {daysLeft}n</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-yellow-500/40 bg-yellow-500/10 text-yellow-400 shrink-0">⚡ Final · {daysLeft}d left</span>
                           );
                           return (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 text-emerald-400 shrink-0">✓ Đang mở ĐK</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 text-emerald-400 shrink-0">✓ Reg. open</span>
                           );
                         })()}
                         {raceState.regNotStarted && tour.registrationStartDate ? (
@@ -450,37 +411,41 @@ export function AdminTournamentsPage() {
                         <span className="text-white font-medium">{formatDateTime(tour.endDate)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Round thi đấu:")}</span>
+                        <span>{t("Rounds:")}</span>
                         <span className="text-gold font-bold">Pre + Final</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Status đua:")}</span>
+                        <span>{t("Race status:")}</span>
                         <span className="text-gold font-bold">{t(raceState.statusLabel)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("Race đã tạo:")}</span>
+                        <span>{t("Races created:")}</span>
                         <span className="text-white font-medium">{raceState.totalRaces}</span>
                       </div>
                       <div className="flex flex-col gap-1 pt-2.5 mt-2 border-t border-glass-border/30">
                         <span className="font-bold text-white text-[11px] uppercase tracking-wider">{t("Prizes:")}</span>
-                        {tour.prizes && tour.prizes.length > 0 ? (
-                          <div className="grid grid-cols-3 gap-1.5 text-center mt-1">
-                            {tour.prizes
-                              .slice()
-                              .sort((a: any, b: any) => a.rankPosition - b.rankPosition)
-                              .map((p: any) => (
-                                <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
-                                  <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
-                                  <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('vi-VN')} đ</div>
-                                </div>
-                              ))}
-                          </div>
-                        ) : (
-                          <span className="text-red-400 font-semibold italic text-[11px] mt-0.5">{t("Prizes not configured yet")}</span>
-                        )}
+                        {/* min-h giữ chỗ bằng chiều cao lưới prize để card không có prize vẫn cao bằng card có prize */}
+                        <div className="min-h-[46px] flex flex-col justify-center">
+                          {tour.prizes && tour.prizes.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-1.5 text-center mt-1">
+                              {tour.prizes
+                                .slice()
+                                .sort((a: any, b: any) => a.rankPosition - b.rankPosition)
+                                .map((p: any) => (
+                                  <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
+                                    <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
+                                    <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('vi-VN')} đ</div>
+                                  </div>
+                                ))}
+                            </div>
+                          ) : (
+                            <span className="text-red-400 font-semibold italic text-[11px]">{t("Prizes not configured yet")}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    {/* mt-auto đẩy hàng nút xuống đáy card — các card trong cùng hàng luôn thẳng nhau */}
+                    <div className="mt-auto pt-4 flex flex-wrap gap-2">
                       {raceState.regOpen && (
                         <button
                           onClick={() => handleCloseRegistration(tour.tournamentId)}
@@ -556,13 +521,13 @@ export function AdminTournamentsPage() {
               </div>
 
               <div>
-                <label className={LABEL}>{t("Description tournaments")}</label>
+                <label className={LABEL}>{t("Tournament Description")}</label>
                 <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder={t("Enter detailed tournament description...")} className={`${INPUT} h-20 resize-none`} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={LABEL}>{t("Mở đăng ký *")}</label>
+                  <label className={LABEL}>{t("Open Registration *")}</label>
                   <input
                     type="datetime-local"
                     value={form.registrationStartDate}
@@ -585,7 +550,7 @@ export function AdminTournamentsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={LABEL}>{t("Bắt đầu tournaments *")}</label>
+                  <label className={LABEL}>{t("Tournament Start *")}</label>
                   <input
                     type="datetime-local"
                     value={form.startDate}
@@ -595,7 +560,7 @@ export function AdminTournamentsPage() {
                   />
                 </div>
                 <div>
-                  <label className={LABEL}>{t("Kết thúc tournaments *")}</label>
+                  <label className={LABEL}>{t("Tournament End *")}</label>
                   <input
                     type="datetime-local"
                     value={form.endDate}
@@ -607,10 +572,10 @@ export function AdminTournamentsPage() {
               </div>
 
               <div className="border-t border-glass-border/30 pt-3">
-                <span className="font-bold text-white text-[11px] uppercase tracking-wider mb-2 block">{t("Cơ cấu giải thưởng (VNĐ)")}</span>
+                <span className="font-bold text-white text-[11px] uppercase tracking-wider mb-2 block">{t("Prize Structure (VND)")}</span>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-[10px] text-muted mb-1">Vô địch *</label>
+                    <label className="block text-[10px] text-muted mb-1">Champion *</label>
                     <input type="number" value={form.firstPrize} onChange={e => set('firstPrize', e.target.value)} className={INPUT} />
                   </div>
                   <div>

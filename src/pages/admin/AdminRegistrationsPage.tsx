@@ -15,7 +15,7 @@ type TabType = 'pending' | 'approved' | 'rejected';
 
 const TAB_CONFIG = {
   pending:  { label: 'Awaiting Approval', color: 'text-yellow-400',  bg: 'border-yellow-400/40 bg-yellow-400/5',   statusValue: 'Pending'  },
-  approved: { label: 'Đã duyệt',  color: 'text-emerald-400', bg: 'border-emerald-400/40 bg-emerald-400/5', statusValue: 'Approved' },
+  approved: { label: 'Approved',  color: 'text-emerald-400', bg: 'border-emerald-400/40 bg-emerald-400/5', statusValue: 'Approved' },
   rejected: { label: 'Decline',   color: 'text-red-400',     bg: 'border-red-400/40 bg-red-400/5',         statusValue: 'Rejected' },
 };
 
@@ -56,7 +56,7 @@ export function AdminRegistrationsPage() {
       setRegistrations(raw);
     } catch (err) {
       console.error(err);
-      setError('Không thể lấy danh sách đăng ký');
+      setError('Failed to load registrations');
     } finally {
       setLoading(false);
     }
@@ -69,8 +69,8 @@ export function AdminRegistrationsPage() {
       setProcessingId(registrationId);
       await updateRegistrationStatus(registrationId, status);
       showToast(
-        status === 'Approved' ? 'Approve thành công' : 'Reject thành công',
-        `Yêu cầu đăng ký #${registrationId} has been processed.`,
+        status === 'Approved' ? 'Approved successfully' : 'Rejected successfully',
+        `Registration request #${registrationId} has been processed.`,
         'success'
       );
       await loadRegistrations();
@@ -80,9 +80,9 @@ export function AdminRegistrationsPage() {
       const raw = parseApiError(err) ?? '';
       let msg = raw;
       if (/no jockey contract/i.test(raw)) {
-        msg = 'Không thể duyệt: horse này CHƯA có hợp đồng jockey nào cho tournaments. Horse Owner cần mời jockey và được jockey chấp nhận trước.';
+        msg = 'Cannot approve: this horse has NO jockey contract for the tournament. The horse owner must invite a jockey and have the invitation accepted first.';
       } else if (/jockey contract status/i.test(raw)) {
-        msg = 'Không thể duyệt: hợp đồng jockey của horse này chưa được jockey chấp nhận (trạng thái chưa phải Accepted).';
+        msg = "Cannot approve: this horse's jockey contract has not been accepted by the jockey yet (status is not Accepted).";
       }
       showToast('Failed', msg, 'error');
     } finally {
@@ -126,8 +126,8 @@ export function AdminRegistrationsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Approve đăng ký"
-            subtitle="Xét duyệt registered to join thi đấu của các chủ horse"
+            title="Approve Registrations"
+            subtitle="Review tournament registration requests from horse owners"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
           />
@@ -158,14 +158,14 @@ export function AdminRegistrationsPage() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted hover:text-white bg-white/[0.04] border border-glass-border hover:border-gold/30 transition-colors"
               >
                 <RefreshCw size={12} />
-                Làm mới
+                Refresh
               </button>
               <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-1.5 w-56">
                 <Search size={13} className="text-muted shrink-0" />
                 <input
                   value={search}
                   onChange={e => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="Tìm horse, chủ horse..."
+                  placeholder="Search horse, owner..."
                   className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
                 />
               </div>
@@ -204,7 +204,7 @@ export function AdminRegistrationsPage() {
               — khi bấm Approve, hệ thống sẽ tự kiểm tra và báo rõ nếu thiếu jockey. */}
           {tab === 'pending' && (
             <div className="text-[11px] text-champagne/80 bg-gold/5 border border-gold/15 rounded-lg px-3 py-2 leading-relaxed">
-              ⓘ Chỉ duyệt được đơn khi horse <b>đã có jockey nhận hợp đồng (Accepted)</b> cho tournaments đó — hệ thống tự kiểm tra khi bấm Approve và báo lỗi rõ ràng nếu horse chưa có jockey.
+              ⓘ A registration can only be approved when the horse <b>has a jockey with an Accepted contract</b> for that tournament — the system checks this automatically on Approve and shows a clear error if the horse has no jockey.
             </div>
           )}
 
@@ -212,7 +212,7 @@ export function AdminRegistrationsPage() {
           {error && (
             <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm">
               {error}
-              <button onClick={loadRegistrations} className="ml-3 underline hover:no-underline">Thử lại</button>
+              <button onClick={loadRegistrations} className="ml-3 underline hover:no-underline">Retry</button>
             </div>
           )}
 
@@ -225,8 +225,8 @@ export function AdminRegistrationsPage() {
               <div className="text-4xl opacity-40 mb-3">📝</div>
               <div className="text-muted text-sm">
                 {registrations.length === 0
-                  ? 'Chưa có đăng ký nào trong hệ thống'
-                  : `No registrations found ở trạng thái "${TAB_CONFIG[tab].label}"`}
+                  ? 'No registrations in the system yet'
+                  : `No registrations with status "${TAB_CONFIG[tab].label}"`}
               </div>
             </motion.div>
           ) : (
@@ -239,7 +239,7 @@ export function AdminRegistrationsPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
-                      <th className="px-6 py-4">ID ĐK</th>
+                      <th className="px-6 py-4">Reg. ID</th>
                       <th className="px-6 py-4">Horse</th>
                       <th className="px-6 py-4">Horse Owner</th>
                       <th className="px-6 py-4">Tournaments</th>
@@ -264,7 +264,7 @@ export function AdminRegistrationsPage() {
                             reg.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                             'bg-red-500/10 text-red-400 border border-red-500/20'
                           }`}>
-                            {reg.status === 'Pending' ? 'Awaiting Approval' : reg.status === 'Approved' ? 'Đã duyệt' : 'Decline'}
+                            {reg.status === 'Pending' ? 'Awaiting Approval' : reg.status === 'Approved' ? 'Approved' : 'Declined'}
                           </span>
                         </td>
                         {tab === 'pending' && (

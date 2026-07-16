@@ -78,13 +78,13 @@ export function JockeyInvitationsPage() {
 
           <PageHero
             title="Race Invitations"
-            subtitle="Quản lý lời mời từ các chủ horse"
+            subtitle="Manage invitations from horse owners"
             imageUrl="/images/hero-jockey.jpg"
             imagePosition="center 25%"
           />
 
           <div className="flex items-center gap-1 border-b border-glass-border pb-0">
-            {([['pending', 'Awaiting Response', 'text-yellow-400 border-yellow-400'], ['accepted', 'Đã nhận', 'text-emerald-400 border-emerald-400'], ['rejected', 'Đã từ chối', 'text-red-400 border-red-400']] as [Tab, string, string][]).map(([t, label, activeClass]) => (
+            {([['pending', 'Awaiting Response', 'text-yellow-400 border-yellow-400'], ['accepted', 'Accepted', 'text-emerald-400 border-emerald-400'], ['rejected', 'Declined', 'text-red-400 border-red-400']] as [Tab, string, string][]).map(([t, label, activeClass]) => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${tab === t ? activeClass : 'text-muted border-transparent hover:text-white'}`}>
                 {label} <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold ${tab === t ? 'bg-current/10 text-current' : 'bg-white/5 text-muted'}`}>{TAB_COUNTS[t]}</span>
@@ -127,7 +127,7 @@ export function JockeyInvitationsPage() {
                           {inv.invitationExpiredAt && (
                             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-red-400">
                               <Clock size={11} className="text-red-400" />
-                              <span className="font-semibold">Hạn phản hồi: {formatUtcDateTime(inv.invitationExpiredAt)}</span>
+                              <span className="font-semibold">Respond by: {formatUtcDateTime(inv.invitationExpiredAt)}</span>
                             </span>
                           )}
                         </div>
@@ -138,7 +138,7 @@ export function JockeyInvitationsPage() {
                             )}
                             {isExpired && (
                               <span className="inline-flex items-center gap-1.5 text-xs text-red-400 font-semibold mb-1">
-                                <Clock size={12} /> Expired (Lời mời đã hết hạn)
+                                <Clock size={12} /> Expired (invitation has expired)
                               </span>
                             )}
                             <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ export function JockeyInvitationsPage() {
                                 disabled={respondingId === inv.id || isExpired}
                                 onClick={() => handleRespond(inv.id, 'Accepted')}
                                 className="px-5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
-                                <CheckCircle size={15} /> Accept lời mời
+                                <CheckCircle size={15} /> Accept invitation
                               </button>
                               <button
                                 disabled={respondingId === inv.id || isExpired}
@@ -158,10 +158,10 @@ export function JockeyInvitationsPage() {
                           </div>
                         )}
                         {bucket === 'accepted' && (
-                          <span className="inline-flex items-center gap-1.5 text-sm text-emerald-400 font-medium"><CheckCircle size={15} /> Đã nhận lời mời</span>
+                          <span className="inline-flex items-center gap-1.5 text-sm text-emerald-400 font-medium"><CheckCircle size={15} /> Invitation accepted</span>
                         )}
                         {bucket === 'rejected' && (
-                          <span className="inline-flex items-center gap-1.5 text-sm text-red-400 font-medium"><XCircle size={15} /> Đã từ chối</span>
+                          <span className="inline-flex items-center gap-1.5 text-sm text-red-400 font-medium"><XCircle size={15} /> Declined</span>
                         )}
                       </div>
                     </div>

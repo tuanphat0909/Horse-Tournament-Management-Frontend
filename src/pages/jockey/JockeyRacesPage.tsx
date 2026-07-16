@@ -51,7 +51,7 @@ export function JockeyRacesPage() {
 
           <PageHero
             title="My Races"
-            subtitle="History và kết quả races"
+            subtitle="Your race history and results"
             imageUrl="/images/hero-jockey.jpg"
             imagePosition="center 25%"
           />

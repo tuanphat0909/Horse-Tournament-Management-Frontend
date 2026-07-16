@@ -21,8 +21,8 @@ function normalizeStatus(s: string): Tab {
 }
 
 const STATUS_CONFIG = {
-  pending:  { label: 'Pending Admin duyệt', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
-  approved: { label: 'Đã duyệt',        color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  pending:  { label: 'Pending Admin approval', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+  approved: { label: 'Approved',        color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
   rejected: { label: 'Rejected',      color: 'text-red-400 bg-red-500/10 border-red-500/20' },
 };
 
@@ -71,12 +71,12 @@ export function OwnerRegistrationsPage() {
   async function handleSubmit() {
     setSubmitError('');
     if (!form.horseId || !form.tournamentId) {
-      setSubmitError('Please select horse và tournaments.');
+      setSubmitError('Please select a horse and a tournament.');
       return;
     }
     const selectedHorse = horses.find(h => String(h.id) === String(form.horseId));
     if (selectedHorse && !isHealthy(selectedHorse)) {
-      setSubmitError(`Horse "${selectedHorse.name}" đang có tình trạng "${selectedHorse.healthStatus}" — chỉ horse Healthy (Healthy) mới được đăng ký thi đấu. Hãy cập nhật tình trạng ở trang My Horses khi horse đã hồi phục.`);
+      setSubmitError(`Horse "${selectedHorse.name}" is currently "${selectedHorse.healthStatus}" — only Healthy horses can register to race. Update the status on the My Horses page once the horse has recovered.`);
       return;
     }
     setSubmitLoading(true);
@@ -145,7 +145,7 @@ export function OwnerRegistrationsPage() {
           {error && <div className="glass-panel rounded-xl p-5 text-red-400 text-sm border border-red-500/20">{error}</div>}
 
           <div className="flex items-center gap-1 border-b border-glass-border pb-0">
-            {([['pending', 'Awaiting Approval'], ['approved', 'Đã duyệt'], ['rejected', 'Rejected']] as [Tab, string][]).map(([t, label]) => (
+            {([['pending', 'Awaiting Approval'], ['approved', 'Approved'], ['rejected', 'Rejected']] as [Tab, string][]).map(([t, label]) => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${tab === t ? 'text-gold border-gold' : 'text-muted border-transparent hover:text-white'}`}>
                 {label}
@@ -159,7 +159,7 @@ export function OwnerRegistrationsPage() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Tìm horse, tournaments..."
+                placeholder="Search horse, tournament..."
                 className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
               />
             </div>
@@ -194,7 +194,7 @@ export function OwnerRegistrationsPage() {
                     )}
                     {statusKey === 'approved' && (
                       <span className="relative z-10 text-xs text-emerald-400 font-medium flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                        <CheckCircle size={13} /> Đã duyệt
+                        <CheckCircle size={13} /> Approved
                       </span>
                     )}
                   </motion.div>
@@ -254,12 +254,12 @@ export function OwnerRegistrationsPage() {
                 {unhealthyHorses.length > 0 && (
                   <div className="text-[11px] text-yellow-400/90 mt-1.5 leading-relaxed">
                     ⚠ {unhealthyHorses.length} horses locked due to health issues: {unhealthyHorses.map(h => h.name).join(', ')}.
-                    Chỉ horse <b>Healthy (Healthy)</b> được đăng ký — cập nhật tình trạng tại trang My Horses khi đã hồi phục.
+                    Only <b>Healthy</b> horses can register — update the status on the My Horses page once recovered.
                   </div>
                 )}
               </div>
               <div>
-                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Chọn tournaments *</label>
+                <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Select Tournament *</label>
                 <select 
                   value={form.tournamentId} 
                   onChange={e => setForm(p => ({...p, tournamentId: e.target.value}))}
@@ -277,12 +277,12 @@ export function OwnerRegistrationsPage() {
                 </select>
                 {form.horseId && filteredTournamentsForRegister.length === 0 && (
                   <div className="text-[11px] text-yellow-400 mt-1.5">
-                    Con horse này đã registered to join tất cả các tournaments hiện tại.
+                    This horse has already registered for all current tournaments.
                   </div>
                 )}
                 {tournaments.length === 0 && (
                   <div className="text-[11px] text-yellow-400 mt-1.5">
-                    None tournaments nào. Admin cần tạo tournaments trước khi đăng ký horse.
+                    No tournaments available. An admin must create a tournament before horses can register.
                   </div>
                 )}
               </div>
@@ -291,7 +291,7 @@ export function OwnerRegistrationsPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
               <button onClick={handleSubmit} disabled={submitLoading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60">
-                {submitLoading ? 'Đang gửi…' : 'Nộp đăng ký'}
+                {submitLoading ? 'Submitting...' : 'Submit Registration'}
               </button>
             </div>
           </motion.div>

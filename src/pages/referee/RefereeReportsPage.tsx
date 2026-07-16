@@ -168,7 +168,7 @@ export function RefereeReportsPage() {
           {/* Select Race Dropdown */}
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <span className="text-sm text-muted font-bold shrink-0">Chọn races:</span>
+              <span className="text-sm text-muted font-bold shrink-0">Select race:</span>
               {loadingRaces ? (
                 <span className="text-xs text-muted">Loading races...</span>
               ) : races.length === 0 ? (

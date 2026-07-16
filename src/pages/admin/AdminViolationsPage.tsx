@@ -42,7 +42,7 @@ export function AdminViolationsPage() {
       setError('');
     } catch (err) {
       console.error(err);
-      setError('Không thể tải danh sách vi phạm');
+      setError('Failed to load violations list');
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ export function AdminViolationsPage() {
       await fetchViolations();
     } catch (err: any) {
       console.error('Error reviewing violation:', err);
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật trạng thái vi phạm');
+      alert(err.response?.data?.message || 'An error occurred while updating the violation status');
     } finally {
       setProcessingId(null);
     }
@@ -91,7 +91,7 @@ export function AdminViolationsPage() {
 
           <PageHero
             title="Handle Violations & Appeals"
-            subtitle="Xem xét các ghi nhận vi phạm từ trọng tài và đưa ra quyết định xác nhận hoặc bác bỏ"
+            subtitle="Review violations recorded by referees and decide to confirm or dismiss them"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
           />
@@ -103,11 +103,11 @@ export function AdminViolationsPage() {
             <div className="relative z-10 flex items-center gap-2 text-xs flex-wrap">
               <span className="text-muted font-bold shrink-0">Process:</span>
               {[
-                { label: 'Referee ghi nhận', active: false },
+                { label: 'Referee records', active: false },
                 { label: '→', sep: true },
-                { label: 'Save dưới dạng Awaiting Approval (Pending)', active: false, note: true },
+                { label: 'Saved as Awaiting Approval (Pending)', active: false, note: true },
                 { label: '→', sep: true },
-                { label: 'Admin xem xét chứng cứ / video', active: false },
+                { label: 'Admin reviews evidence / video', active: false },
                 { label: '→', sep: true },
                 { label: 'Confirm (Confirmed) / Dismiss (Rejected)', active: true },
               ].map((s, i) =>
@@ -120,9 +120,9 @@ export function AdminViolationsPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Appeals chờ xử lý', value: loading ? '...' : pendingViolations.length, color: 'text-orange-400', bg: 'from-orange-500/15 to-orange-900/20', icon: ArrowUpCircle },
-              { label: 'Violation đã xác nhận', value: loading ? '...' : confirmedViolations.length, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', icon: AlertTriangle },
-              { label: 'Violation bị bác bỏ', value: loading ? '...' : rejectedViolations.length, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', icon: CheckCircle },
+              { label: 'Pending appeals', value: loading ? '...' : pendingViolations.length, color: 'text-orange-400', bg: 'from-orange-500/15 to-orange-900/20', icon: ArrowUpCircle },
+              { label: 'Confirmed violations', value: loading ? '...' : confirmedViolations.length, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', icon: AlertTriangle },
+              { label: 'Dismissed violations', value: loading ? '...' : rejectedViolations.length, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', icon: CheckCircle },
             ].map((s, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
                 className="glass-panel rounded-xl p-5 relative overflow-hidden border border-glass-border hover:border-gold/30 transition-all">
@@ -147,9 +147,9 @@ export function AdminViolationsPage() {
           {/* Tabs */}
           <div className="flex items-center gap-1 border-b border-glass-border">
             {([
-              ['pending', `Pending xử lý (${loading ? 0 : pendingViolations.length})`, 'text-orange-400 border-orange-400'],
+              ['pending', `Pending (${loading ? 0 : pendingViolations.length})`, 'text-orange-400 border-orange-400'],
               ['confirmed', `Confirmed (${loading ? 0 : confirmedViolations.length})`, 'text-red-400 border-red-400'],
-              ['rejected', `Đã bác bỏ (${loading ? 0 : rejectedViolations.length})`, 'text-emerald-400 border-emerald-400'],
+              ['rejected', `Dismissed (${loading ? 0 : rejectedViolations.length})`, 'text-emerald-400 border-emerald-400'],
             ] as [Tab, string, string][]).map(([t, label, ac]) => (
               <button key={t} onClick={() => { setTab(t); setPage(1); }}
                 className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${tab === t ? ac : 'text-muted border-transparent hover:text-white'}`}>
@@ -177,7 +177,7 @@ export function AdminViolationsPage() {
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">✔️</div>
-                    <div className="text-muted text-sm">Không có khiếu nại/vi phạm nào chờ xử lý</div>
+                    <div className="text-muted text-sm">No pending appeals or violations</div>
                   </div>
                 ) : (
                   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-panel rounded-xl overflow-hidden">
@@ -187,10 +187,10 @@ export function AdminViolationsPage() {
                           <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
                             <th className="px-6 py-4">ID VP</th>
                             <th className="px-6 py-4">Race</th>
-                            <th className="px-6 py-4">Loại vi phạm</th>
+                            <th className="px-6 py-4">Violation Type</th>
                             <th className="px-6 py-4">Description / Detail</th>
-                            <th className="px-6 py-4">Penalty dự kiến</th>
-                            <th className="px-6 py-4 text-right">Actions duyệt</th>
+                            <th className="px-6 py-4">Proposed Penalty</th>
+                            <th className="px-6 py-4 text-right">Review Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -220,7 +220,7 @@ export function AdminViolationsPage() {
                                     onClick={() => handleReview(v.violationId, 'Rejected')}
                                     disabled={processingId === v.violationId}
                                     className="px-3 py-1.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all flex items-center gap-1 text-xs font-semibold disabled:opacity-40"
-                                    title="Dismiss vi phạm"
+                                    title="Dismiss violation"
                                   >
                                     <X size={12} />
                                     <span>Dismiss</span>
@@ -242,7 +242,7 @@ export function AdminViolationsPage() {
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">⚠️</div>
-                    <div className="text-muted text-sm">None thông báo vi phạm được xác nhận</div>
+                    <div className="text-muted text-sm">No confirmed violations</div>
                   </div>
                 ) : (
                   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-panel rounded-xl overflow-hidden">
@@ -252,9 +252,9 @@ export function AdminViolationsPage() {
                           <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
                             <th className="px-6 py-4">ID VP</th>
                             <th className="px-6 py-4">Race</th>
-                            <th className="px-6 py-4">Loại vi phạm</th>
+                            <th className="px-6 py-4">Violation Type</th>
                             <th className="px-6 py-4">Description</th>
-                            <th className="px-6 py-4">Penalty áp dụng</th>
+                            <th className="px-6 py-4">Applied Penalty</th>
                             <th className="px-6 py-4">Status</th>
                           </tr>
                         </thead>
@@ -291,7 +291,7 @@ export function AdminViolationsPage() {
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">⚠️</div>
-                    <div className="text-muted text-sm">None vi phạm nào bị bác bỏ</div>
+                    <div className="text-muted text-sm">No dismissed violations</div>
                   </div>
                 ) : (
                   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="glass-panel rounded-xl overflow-hidden">
@@ -301,9 +301,9 @@ export function AdminViolationsPage() {
                           <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
                             <th className="px-6 py-4">ID VP</th>
                             <th className="px-6 py-4">Race</th>
-                            <th className="px-6 py-4">Loại vi phạm</th>
+                            <th className="px-6 py-4">Violation Type</th>
                             <th className="px-6 py-4">Description</th>
-                            <th className="px-6 py-4">Penalty đề xuất</th>
+                            <th className="px-6 py-4">Proposed Penalty</th>
                             <th className="px-6 py-4">Status</th>
                           </tr>
                         </thead>
@@ -318,7 +318,7 @@ export function AdminViolationsPage() {
                               <td className="px-6 py-4">
                                 <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center gap-1 w-fit">
                                   <CheckCircle size={10} />
-                                  Đã bác bỏ
+                                  Dismissed
                                 </span>
                               </td>
                             </tr>

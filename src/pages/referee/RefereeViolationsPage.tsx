@@ -303,7 +303,7 @@ export function RefereeViolationsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs text-muted font-medium mb-1.5">Penalty</label>
-                    <input value={editPenalty} onChange={e => setEditPenalty(e.target.value)} placeholder="VD: Time Penalty, Disqualified..." className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors" />
+                    <input value={editPenalty} onChange={e => setEditPenalty(e.target.value)} placeholder="E.g.: Time Penalty, Disqualified..." className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors" />
                   </div>
                   <div>
                     <label className="block text-xs text-muted font-medium mb-1.5">New Description / Notes</label>

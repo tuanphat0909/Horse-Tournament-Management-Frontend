@@ -131,10 +131,10 @@ export function SpectatorTournamentsPage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left"
+                    className="glass-panel rounded-2xl p-5 border border-glass-border hover:border-gold/25 transition-all group relative overflow-hidden text-left h-full flex flex-col"
                   >
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
-                    <div className="flex justify-between items-center gap-2 mb-3">
+                    <div className="flex justify-between items-center gap-2 mb-3 min-h-[26px]">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5 whitespace-nowrap shrink-0`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                       </span>
@@ -163,7 +163,7 @@ export function SpectatorTournamentsPage() {
                         <span className="text-white font-medium">{formatDateTime(tour.endDate)}</span>
                       </div>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-glass-border/40 flex justify-end">
+                    <div className="mt-auto pt-3 border-t border-glass-border/40 flex justify-end">
                       <button 
                         onClick={() => navigate(`/spectator/tournaments/${tour.tournamentId}`)}
                         className="text-xs font-bold bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg transition-colors border border-glass-border hover:border-gold/30"

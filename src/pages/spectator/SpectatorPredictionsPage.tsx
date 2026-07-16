@@ -306,7 +306,7 @@ export function SpectatorPredictionsPage() {
                         const hId = h.horseId ?? h.id;
                         const oddsVal = h.currentOdds ? Number(h.currentOdds).toFixed(2) : '2.00';
                         return (
-                          <option key={hId} value={hId}>{h.laneNo ? `Lane ${h.laneNo} - ` : ''}{h.horseName ?? h.name ?? `Horse #${hId}`} (Tỷ lệ cược x{oddsVal})</option>
+                          <option key={hId} value={hId}>{h.laneNo ? `Lane ${h.laneNo} - ` : ''}{h.horseName ?? h.name ?? `Horse #${hId}`} (Odds x{oddsVal})</option>
                         );
                       })}
                     </select>
@@ -315,7 +315,7 @@ export function SpectatorPredictionsPage() {
                   {addMode === 'bet' && (
                     <div>
                       <label className="block text-xs text-muted font-medium mb-1.5">Bet Amount (Coins) *</label>
-                      <input type="number" min="1" value={form.amount} onChange={e => setForm(p => ({...p, amount: e.target.value}))} placeholder="VD: 100" className={INPUT} />
+                      <input type="number" min="1" value={form.amount} onChange={e => setForm(p => ({...p, amount: e.target.value}))} placeholder="E.g.: 100" className={INPUT} />
                       
                       {form.horseId && Number(form.amount) > 0 && (() => {
                         const sel = horses.find(h => String(h.horseId ?? h.id) === form.horseId);

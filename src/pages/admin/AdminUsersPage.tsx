@@ -43,7 +43,7 @@ export function AdminUsersPage() {
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   async function handleToggleStatus(id: number, currentStatus: string) {
-    if (!confirm(`Bạn có chắc muốn ${currentStatus === 'Active' ? 'Khóa' : 'Mở khóa'} tài khoản này?`)) return;
+    if (!confirm(`Are you sure you want to ${currentStatus === 'Active' ? 'lock' : 'unlock'} this account?`)) return;
     setTogglingId(id);
     try {
       await updateUserStatus(id);
@@ -91,7 +91,7 @@ export function AdminUsersPage() {
   async function handleCreate() {
     setError(''); setSuccess('');
     if (!form.fullName || !form.email || !form.password || !form.role) {
-      setError('Vui lòng điền đầy đủ các trường bắt buộc.');
+      setError('Please fill in all required fields.');
       return;
     }
     setLoading(true);
@@ -108,7 +108,7 @@ export function AdminUsersPage() {
       }
       const data: any = await createAccount(body);
       const newId = data?.result?.id ?? data?.result?.accountId ?? data?.result?.user?.id;
-      showToast('Success', newId != null ? `Đã tạo tài khoản successful! ID = ${newId}` : 'Tạo tài khoản successful!');
+      showToast('Success', newId != null ? `Account created successfully! ID = ${newId}` : 'Account created successfully!');
       closeModal();
       fetchAccounts();
     } catch (err: unknown) {
@@ -170,13 +170,13 @@ export function AdminUsersPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Quản lý người dùng"
-            subtitle="All tài khoản trong hệ thống"
+            title="User Management"
+            subtitle="All accounts in the system"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             actions={
               <button onClick={() => setShowModal(true)} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
-                <Plus size={16} /> Thêm người dùng
+                <Plus size={16} /> Add User
               </button>
             }
           />
@@ -214,11 +214,11 @@ export function AdminUsersPage() {
                 <input
                   value={search}
                   onChange={e => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="Tìm theo tên hoặc email..."
+                  placeholder="Search by name or email..."
                   className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
                 />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-muted"><span className="text-champagne font-semibold">{filteredAccounts.length}</span> kết quả</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-muted"><span className="text-champagne font-semibold">{filteredAccounts.length}</span> results</span>
               <div className="ml-auto flex items-center gap-2">
                 <ArrowUpDown size={14} className="text-muted" />
                 <select
@@ -240,18 +240,18 @@ export function AdminUsersPage() {
               <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                 <div className="text-4xl opacity-40 mb-3">👥</div>
-                <div className="text-muted text-sm">Không tìm thấy tài khoản nào khớp yêu cầu</div>
+                <div className="text-muted text-sm">No accounts match your search</div>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-glass-border text-xs text-muted uppercase font-bold tracking-wider">
-                      <th className="py-4 px-6">Họ và tên</th>
+                      <th className="py-4 px-6">Full Name</th>
                       <th className="py-4 px-6">Email</th>
                       <th className="py-4 px-6">Role</th>
                       <th className="py-4 px-6">Status</th>
-                      <th className="py-4 px-6">Ngày tạo</th>
+                      <th className="py-4 px-6">Created</th>
                       <th className="py-4 px-6 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -292,7 +292,7 @@ export function AdminUsersPage() {
                               'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20'
                             }`}
                           >
-                            {togglingId === user.userId ? '...' : user.status === 'Active' ? 'Khóa' : 'Mở khóa'}
+                            {togglingId === user.userId ? '...' : user.status === 'Active' ? 'Lock' : 'Unlock'}
                           </button>
                         </td>
                       </tr>
@@ -320,15 +320,15 @@ export function AdminUsersPage() {
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                 <Plus size={15} className="text-gold" />
               </div>
-              <h2 className="text-xl font-serif text-white">Tạo tài khoản mới</h2>
+              <h2 className="text-xl font-serif text-white">Create New Account</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
 
             <div className="space-y-4">
               {/* Full Name */}
               <div>
-                <label className={LABEL}>Họ và tên *</label>
-                <input value={form.fullName} onChange={e => set('fullName', e.target.value)} placeholder="Nguyễn Văn A" className={INPUT} />
+                <label className={LABEL}>Full Name *</label>
+                <input value={form.fullName} onChange={e => set('fullName', e.target.value)} placeholder="E.g.: John Smith" className={INPUT} />
               </div>
 
               {/* Email */}
@@ -345,7 +345,7 @@ export function AdminUsersPage() {
                     value={form.password}
                     onChange={e => set('password', e.target.value)}
                     type={showPwd ? 'text' : 'password'}
-                    placeholder="Dark thiểu 6 ký tự"
+                    placeholder="At least 6 characters"
                     className={INPUT + ' pr-10'}
                   />
                   <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute inset-y-0 right-3 flex items-center text-muted hover:text-white">
@@ -378,12 +378,12 @@ export function AdminUsersPage() {
               {NEEDS_LICENSE.includes(form.role) && (
                 <>
                   <div>
-                    <label className={LABEL}>Số giấy phép (License Number)</label>
-                    <input value={form.licenseNumber} onChange={e => set('licenseNumber', e.target.value)} placeholder="VD: LIC-2024-001" className={INPUT} />
+                    <label className={LABEL}>License Number</label>
+                    <input value={form.licenseNumber} onChange={e => set('licenseNumber', e.target.value)} placeholder="E.g.: LIC-2024-001" className={INPUT} />
                   </div>
                   <div>
-                    <label className={LABEL}>Số years of experience</label>
-                    <input value={form.experienceYears} onChange={e => set('experienceYears', e.target.value)} type="number" min="0" placeholder="VD: 5" className={INPUT} />
+                    <label className={LABEL}>Years of Experience</label>
+                    <input value={form.experienceYears} onChange={e => set('experienceYears', e.target.value)} type="number" min="0" placeholder="E.g.: 5" className={INPUT} />
                   </div>
                 </>
               )}
@@ -402,7 +402,7 @@ export function AdminUsersPage() {
                 Cancel
               </button>
               <button onClick={handleCreate} disabled={loading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
-                {loading ? 'Creating...' : 'Tạo tài khoản'}
+                {loading ? 'Creating...' : 'Create Account'}
               </button>
             </div>
           </motion.div>

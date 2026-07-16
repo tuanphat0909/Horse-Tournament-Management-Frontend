@@ -20,10 +20,19 @@ async function request(method, endpoint, data) {
   });
 
   if (res.status === 401) {
+    // 401 tại endpoint /auth/* = sai email/mật khẩu → trả lỗi cho form hiển thị,
+    // KHÔNG redirect (nếu redirect thì trang login reload và mất thông báo lỗi)
+    if (endpoint.startsWith('/auth/')) {
+      const message = await res.text();
+      throw new Error(message || 'Incorrect email or password.');
+    }
+    // 401 tại các endpoint khác = token hết hạn/không hợp lệ → đăng xuất
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
-    throw new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+    if (!window.location.pathname.startsWith('/login')) {
+      window.location.href = '/login';
+    }
+    throw new Error('Session expired. Please log in again.');
   }
 
   if (!res.ok) {

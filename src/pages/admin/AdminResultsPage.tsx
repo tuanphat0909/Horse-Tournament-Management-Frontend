@@ -94,7 +94,7 @@ export function AdminResultsPage() {
   }
 
   async function handlePublish(raceId: number) {
-    if (!confirm(`Bạn có chắc muốn công bố kết quả cho races đua #${raceId}?`)) return;
+    if (!confirm(`Are you sure you want to publish results for race #${raceId}?`)) return;
     try {
       await publishRaceResult(raceId);
       alert('Published successful!');
@@ -150,7 +150,7 @@ export function AdminResultsPage() {
         secondPlacePrize: Number(prizes.secondPlacePrize),
         thirdPlacePrize: Number(prizes.thirdPlacePrize),
       });
-      alert(`Thiết lập giải thưởng thành công cho tournaments #${prizes.tournamentId}!`);
+      alert(`Prizes configured successfully for tournament #${prizes.tournamentId}!`);
       closePrizesModal();
       fetchTournaments();
     } catch (err: unknown) {
@@ -168,11 +168,11 @@ export function AdminResultsPage() {
 
   async function handleTriggerPayout() {
     setPayoutError(''); setPayoutSuccess('');
-    if (!payoutRaceId) { setPayoutError('Vui lòng nhập Race ID.'); return; }
+    if (!payoutRaceId) { setPayoutError('Please enter Race ID.'); return; }
     setPayoutLoading(true);
     try {
       await triggerPayout(Number(payoutRaceId));
-      setPayoutSuccess(`Chi trả cho Race #${payoutRaceId} đã được kích hoạt!`);
+      setPayoutSuccess(`Payout for Race #${payoutRaceId} has been triggered!`);
       setPayoutRaceId('');
     } catch (err: unknown) {
       setPayoutError(parseApiError(err as Error));
@@ -190,7 +190,7 @@ export function AdminResultsPage() {
         <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-6 relative z-10">
 
           <PageHero
-            title="Results & Công bố"
+            title="Results & Publishing"
             subtitle="Confirm and publish official results"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
@@ -202,7 +202,7 @@ export function AdminResultsPage() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm races, tournaments..."
+              placeholder="Search races, tournaments..."
               className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
             />
           </div>
@@ -218,15 +218,15 @@ export function AdminResultsPage() {
                   <DollarSign size={18} className="text-gold" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white">Thiết lập giải thưởng</div>
-                  <div className="text-xs text-muted">Cấu hình tiền thưởng 1–3 cho tournament</div>
+                  <div className="text-sm font-semibold text-white">Configure Prizes</div>
+                  <div className="text-xs text-muted">Set prize money for ranks 1–3 of a tournament</div>
                 </div>
               </div>
               <button
                 onClick={() => setShowPrizesModal(true)}
                 className="btn-gold w-full py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 relative z-10"
               >
-                <DollarSign size={14} /> Cấu hình giải thưởng
+                <DollarSign size={14} /> Configure Prizes
               </button>
             </div>
 
@@ -239,8 +239,8 @@ export function AdminResultsPage() {
                   <Zap size={18} className="text-emerald-400" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white">Kích hoạt chi trả</div>
-                  <div className="text-xs text-muted">Chọn races đấu đã công bố kết quả để chi trả tiền cược</div>
+                  <div className="text-sm font-semibold text-white">Trigger Payout</div>
+                  <div className="text-xs text-muted">Select a race with published results to pay out bets</div>
                 </div>
               </div>
               <div className="relative z-10 flex gap-2">
@@ -279,7 +279,7 @@ export function AdminResultsPage() {
                 <Megaphone size={15} className="text-yellow-400" />
               </div>
               <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-              <h2 className="text-base font-medium font-serif text-white">Pending công bố</h2>
+              <h2 className="text-base font-medium font-serif text-white">Pending Publication</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-yellow-400/30 via-glass-border to-transparent" />
             </div>
             
@@ -306,17 +306,17 @@ export function AdminResultsPage() {
                         <div className="p-5 flex items-center justify-between gap-4">
                           <div>
                             <div className="font-bold text-white mb-1">{race.name ?? race.raceName} (ID: {race.raceId})</div>
-                            <div className="text-xs text-muted">Giải: {race.tournamentName || 'N/A'} • {new Date(race.raceDate || race.startTime).toLocaleString('vi-VN')}</div>
+                            <div className="text-xs text-muted">Tournament: {race.tournamentName || 'N/A'} • {new Date(race.raceDate || race.startTime).toLocaleString('vi-VN')}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <button
                               onClick={() => toggleExpandRace(race.raceId)}
                               className="px-2.5 py-1.5 rounded-lg border border-glass-border text-xs text-muted hover:text-white hover:bg-white/5 transition-all"
                             >
-                              {isExpanded ? 'Ẩn' : 'Detail'}
+                              {isExpanded ? 'Hide' : 'Detail'}
                             </button>
                             <button onClick={() => handlePublish(race.raceId)} className="btn-gold px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-gold/20">
-                              Công bố
+                              Publish
                             </button>
                           </div>
                         </div>
@@ -324,7 +324,7 @@ export function AdminResultsPage() {
                         {isExpanded && (
                           <div className="border-t border-glass-border/30 bg-navy/60 p-4 text-xs space-y-3">
                             <div className="font-bold text-[10px] text-muted uppercase tracking-wider">
-                              Results ghi nhận từ hệ thống (Dùng để xác thực):
+                              Results recorded by the system (for verification):
                             </div>
                             {loadingEntries ? (
                               <LoadingSkeleton />
@@ -391,7 +391,7 @@ export function AdminResultsPage() {
                 <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                   <div className="text-4xl opacity-40 mb-3">📋</div>
-                  <div className="text-muted text-sm">None races nào được công bố</div>
+                  <div className="text-muted text-sm">No races published yet</div>
                 </div>
               );
               return (
@@ -403,14 +403,14 @@ export function AdminResultsPage() {
                         <div className="p-5 flex items-center justify-between gap-4">
                           <div>
                             <div className="font-bold text-white mb-1">{race.name ?? race.raceName} (ID: {race.raceId})</div>
-                            <div className="text-xs text-muted">Giải: {race.tournamentName || 'N/A'}</div>
+                            <div className="text-xs text-muted">Tournament: {race.tournamentName || 'N/A'}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <button
                               onClick={() => toggleExpandRace(race.raceId)}
                               className="px-2.5 py-1.5 rounded-lg border border-glass-border text-xs text-muted hover:text-white hover:bg-white/5 transition-all"
                             >
-                              {isExpanded ? 'Ẩn' : 'Detail'}
+                              {isExpanded ? 'Hide' : 'Detail'}
                             </button>
                             <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold flex items-center gap-1.5">
                               <CheckCircle size={12} /> Published
@@ -421,7 +421,7 @@ export function AdminResultsPage() {
                         {isExpanded && (
                           <div className="border-t border-glass-border/30 bg-navy/60 p-4 text-xs space-y-3">
                             <div className="font-bold text-[10px] text-muted uppercase tracking-wider">
-                              Results chính thức:
+                              Official results:
                             </div>
                             {loadingEntries ? (
                               <LoadingSkeleton />
@@ -487,13 +487,13 @@ export function AdminResultsPage() {
               <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
                 <DollarSign size={15} className="text-gold" />
               </div>
-              <h2 className="text-xl font-serif text-white">Thiết lập giải thưởng</h2>
+              <h2 className="text-xl font-serif text-white">Configure Prizes</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>Chọn tournaments *</label>
+                <label className={LABEL}>Select Tournament *</label>
                 <select
                   value={prizes.tournamentId}
                   onChange={e => handleTournamentChange(e.target.value)}
@@ -514,25 +514,25 @@ export function AdminResultsPage() {
                 const hasPrizes = tour && tour.prizes && tour.prizes.length > 0;
                 return hasPrizes ? (
                   <div className="text-xs px-3 py-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium leading-relaxed">
-                    ✓ Tournaments đã được cấu hình giải thưởng. Số tiền cấu hình trước đó đã được tự động hiển thị bên dưới. Bạn có thể sửa đổi nếu muốn.
+                    ✓ This tournament already has prizes configured. The previously configured amounts are shown below. You can modify them if needed.
                   </div>
                 ) : (
                   <div className="text-xs px-3 py-2 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 font-medium leading-relaxed">
-                    ⚠ Tournaments này chưa được cấu hình giải thưởng. Vui lòng thiết lập mới bên dưới.
+                    ⚠ This tournament has no prizes configured yet. Please set them up below.
                   </div>
                 );
               })()}
               <div>
-                <label className={LABEL}>Giải nhất (VNĐ) *</label>
-                <input value={prizes.firstPlacePrize} onChange={e => setP('firstPlacePrize', e.target.value)} type="number" min="0" placeholder="VD: 85000000" className={INPUT} />
+                <label className={LABEL}>First Prize (VND) *</label>
+                <input value={prizes.firstPlacePrize} onChange={e => setP('firstPlacePrize', e.target.value)} type="number" min="0" placeholder="E.g.: 85000000" className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Giải nhì (VNĐ) *</label>
-                <input value={prizes.secondPlacePrize} onChange={e => setP('secondPlacePrize', e.target.value)} type="number" min="0" placeholder="VD: 42000000" className={INPUT} />
+                <label className={LABEL}>Second Prize (VND) *</label>
+                <input value={prizes.secondPlacePrize} onChange={e => setP('secondPlacePrize', e.target.value)} type="number" min="0" placeholder="E.g.: 42000000" className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Giải ba (VNĐ) *</label>
-                <input value={prizes.thirdPlacePrize} onChange={e => setP('thirdPlacePrize', e.target.value)} type="number" min="0" placeholder="VD: 21000000" className={INPUT} />
+                <label className={LABEL}>Third Prize (VND) *</label>
+                <input value={prizes.thirdPlacePrize} onChange={e => setP('thirdPlacePrize', e.target.value)} type="number" min="0" placeholder="E.g.: 21000000" className={INPUT} />
               </div>
 
               {prizesError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{prizesError}</div>}
@@ -542,7 +542,7 @@ export function AdminResultsPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={closePrizesModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
               <button onClick={handleCreatePrizes} disabled={prizesLoading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
-                {prizesLoading ? 'Saving...' : 'Save giải thưởng'}
+                {prizesLoading ? 'Saving...' : 'Save Prizes'}
               </button>
             </div>
           </motion.div>

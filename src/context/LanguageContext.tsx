@@ -5,7 +5,6 @@ type Language = 'en' | 'vi';
 
 interface LanguageContextProps {
   language: Language;
-  setLanguage: (lang: Language) => void;
   t: (key: string) => string;
 }
 
@@ -437,11 +436,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Single language for the whole app: English (no VI/EN toggle)
   const language: Language = 'en';
-
-  const setLanguage = (_lang: Language) => {
-    // Language is locked to English, changing is disabled
-  };
 
   const t = (key: string): string => {
     if (!key) return '';
@@ -457,7 +453,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, t }}>
       {children}
     </LanguageContext.Provider>
   );

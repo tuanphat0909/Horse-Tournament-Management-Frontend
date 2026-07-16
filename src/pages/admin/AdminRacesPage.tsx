@@ -44,7 +44,7 @@ const fixMojibake = (str: string): string => {
 function raceTypeBadge(name: string = ''): { label: string; cls: string } | null {
   const n = name.toLowerCase();
   if (n.includes('chung kết') || n.includes('chung ket') || n.includes('final')) {
-    return { label: '🏆 Chung kết', cls: 'text-gold bg-gold/15 border-gold/30' };
+    return { label: '🏆 Final', cls: 'text-gold bg-gold/15 border-gold/30' };
   }
   if (n.includes('sơ loại') || n.includes('so loai') || n.includes('heat') || n.includes('vòng loại')) {
     return { label: '⚡ Qualifier', cls: 'text-orange-400 bg-orange-500/10 border-orange-500/25' };
@@ -69,6 +69,15 @@ function fmtDate(v: any): string {
   if (isNaN(d.getTime())) return String(v);
   const p = (n: number) => String(n).padStart(2, '0');
   return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// "2026-07-04T18:30:00" -> "2026-07-04T18:30" (giá trị cho input datetime-local)
+function formatToDatetimeLocal(v: any): string {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return '';
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 export function AdminRacesPage() {
@@ -110,6 +119,32 @@ export function AdminRacesPage() {
   const [raceForm, setRaceForm] = useState(INIT_RACE);
   const [raceLoading, setRaceLoading] = useState(false);
   const [raceError, setRaceError] = useState('');
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string>('');
+
+  const selectedTournamentApprovedHorsesCount = useMemo(() => {
+    if (!selectedTournamentId) return 0;
+    return registrationsList.filter(
+      r => String(r.tournamentId) === selectedTournamentId && r.status === 'Approved'
+    ).length;
+  }, [selectedTournamentId, registrationsList]);
+
+  const availableRounds = useMemo(() => {
+    if (!selectedTournamentId) return [];
+    const selectedTour = tournamentsList.find(t => String(t.tournamentId) === selectedTournamentId);
+    const allRounds = selectedTour?.rounds ?? [];
+    const horseCount = selectedTournamentApprovedHorsesCount;
+
+    // ≤12 ngựa: đấu thẳng Chung kết, chỉ cho chọn vòng Final
+    if (horseCount <= 12 && horseCount > 0) {
+      return allRounds.filter((r: any) => r.roundNumber === 2 || r.name?.toLowerCase().includes('final'));
+    }
+    return allRounds;
+  }, [selectedTournamentId, tournamentsList, selectedTournamentApprovedHorsesCount]);
+
+  const selectedRound = useMemo(() => {
+    if (!raceForm.roundId) return null;
+    return availableRounds.find((r: any) => String(r.roundId) === raceForm.roundId);
+  }, [raceForm.roundId, availableRounds]);
 
   // Ghép lanes (modal 'lanes'): race đang chọn + lựa chọn horse cho từng lanes empty
   const [laneRaceId, setLaneRaceId] = useState('');
@@ -196,10 +231,10 @@ export function AdminRacesPage() {
     setGeneratingForTournament(tournamentId);
     try {
       await generateTournamentRaces(tournamentId);
-      showToast('Success', 'Đã sinh races successful!');
+      showToast('Success', 'Races generated successfully!');
       await loadAllData();
     } catch (err: any) {
-      showToast('Error', 'Error khi sinh races: ' + parseApiError(err), 'error');
+      showToast('Error', 'Error generating races: ' + parseApiError(err), 'error');
     } finally {
       setGeneratingForTournament(null);
     }
@@ -209,16 +244,24 @@ export function AdminRacesPage() {
     setGeneratingForTournament(tournamentId);
     try {
       await generateFinalRace(tournamentId);
-      showToast('Success', 'Đã xếp bảng Chung kết (Top 12) successful!');
+      showToast('Success', 'Final bracket (Top 12) assigned successfully!');
       await loadAllData();
     } catch (err: any) {
-      showToast('Error', 'Error khi xếp bảng Chung kết: ' + parseApiError(err), 'error');
+      showToast('Error', 'Error assigning Final bracket: ' + parseApiError(err), 'error');
     } finally {
       setGeneratingForTournament(null);
     }
   }
 
   function openRaceModal(roundId?: number) {
+    let tourId = '';
+    if (roundId) {
+      const tour = tournamentsList.find(t => (t.rounds ?? []).some((r: any) => r.roundId === roundId));
+      if (tour) {
+        tourId = String(tour.tournamentId);
+      }
+    }
+    setSelectedTournamentId(tourId);
     setRaceForm({
       roundId: roundId ? String(roundId) : '',
       name: '',
@@ -232,6 +275,7 @@ export function AdminRacesPage() {
   function closeModal() {
     setModal('none');
     setRaceError(''); setRaceForm(INIT_RACE);
+    setSelectedTournamentId('');
     setLaneRaceId(''); setLaneEntries([]); setLaneSel({}); setLaneMsg(null);
     setSwapFromEntry(null); setSwapToLane(0);
     setRefError(''); setRefForm(INIT_REF);
@@ -437,7 +481,7 @@ export function AdminRacesPage() {
     setWithdrawingEntryId(raceEntryId);
     try {
       await withdrawRaceEntry(raceEntryId, 'Health does not meet criteria to participate');
-      showToast('Đã loại bỏ', `Horse "${horseName}" has been withdrawn from the race.`);
+      showToast('Removed', `Horse "${horseName}" has been withdrawn from the race.`);
       if (modal === 'lanes') await selectLaneRace(laneRaceId);
       if (modal === 'detail' && detailRace) await openDetail(detailRace);
     } catch (err: unknown) {
@@ -455,7 +499,7 @@ export function AdminRacesPage() {
 
     try {
       await deleteRace(raceId);
-      showToast('Success', `Đã xóa races ${label}.`);
+      showToast('Success', `Race ${label} deleted.`);
       await loadAllData();
     } catch (err: unknown) {
       showToast('Error', parseApiError(err as Error), 'error');
@@ -757,11 +801,11 @@ export function AdminRacesPage() {
                         <button
                           disabled
                           title={t.regNotStarted
-                            ? `Registration opens at ${fmtDate(t.registrationStartDate)}, đóng lúc ${fmtDate(t.registrationEndDate)}.`
+                            ? `Registration opens at ${fmtDate(t.registrationStartDate)}, closes at ${fmtDate(t.registrationEndDate)}.`
                             : `Registration closed at ${fmtDate(t.registrationEndDate)}. Pending registration expiry to assign lanes.`}
                           className="px-4 py-2 bg-white/[0.04] text-muted border border-glass-border text-xs font-bold rounded-lg cursor-not-allowed flex items-center gap-1.5"
                         >
-                          <AlertCircle size={12} /> {t.regNotStarted ? 'Registration not open' : 'Pending đóng đăng ký'}
+                          <AlertCircle size={12} /> {t.regNotStarted ? 'Registration not open' : 'Awaiting registration close'}
                         </button>
                       )}
 
@@ -957,41 +1001,84 @@ export function AdminRacesPage() {
 
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>Tournament Round *</label>
+                <label className={LABEL}>Tournament *</label>
                 <select
-                  value={raceForm.roundId}
-                  onChange={e => setR('roundId', e.target.value)}
+                  value={selectedTournamentId}
+                  onChange={e => {
+                    setSelectedTournamentId(e.target.value);
+                    setR('roundId', '');
+                  }}
                   className={`${INPUT} bg-navy`}
                   style={{ colorScheme: 'dark' }}
                 >
-                  <option value="">-- Select Round --</option>
+                  <option value="">-- Select Tournament --</option>
                   {tournamentsList.map(t => (
-                    <optgroup key={t.tournamentId} label={t.name}>
-                      {(t.rounds ?? []).map((r: any) => (
-                        <option key={r.roundId} value={r.roundId}>
-                          {r.name} (Round {r.roundNumber})
-                        </option>
-                      ))}
-                    </optgroup>
+                    <option key={t.tournamentId} value={t.tournamentId}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedTournamentId && (
+                <div className="text-xs px-3 py-2.5 rounded-lg bg-gold/10 border border-gold/20 text-gold/90 flex items-center gap-2 my-2">
+                  <span>📢</span>
+                  <span>
+                    This tournament has <strong>{selectedTournamentApprovedHorsesCount}</strong> approved horses.
+                    {selectedTournamentApprovedHorsesCount <= 12 ? " (Straight to Final)" : " (Prelims & Final required)"}
+                  </span>
+                </div>
+              )}
+              <div>
+                <label className={LABEL}>Round *</label>
+                <select
+                  value={raceForm.roundId}
+                  onChange={e => setR('roundId', e.target.value)}
+                  disabled={!selectedTournamentId}
+                  className={`${INPUT} bg-navy disabled:opacity-60 disabled:cursor-not-allowed`}
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="">
+                    {selectedTournamentId ? "-- Select Round --" : "-- Select Tournament first --"}
+                  </option>
+                  {availableRounds.map((r: any) => (
+                    <option key={r.roundId} value={r.roundId}>
+                      {r.name} (Round {r.roundNumber})
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
                 <label className={LABEL}>Race Name *</label>
-                <input value={raceForm.name} onChange={e => setR('name', e.target.value)} placeholder="VD: Race 1 (Prefinal)" className={INPUT} />
+                <input value={raceForm.name} onChange={e => setR('name', e.target.value)} placeholder="E.g.: Race 1 (Prefinal)" className={INPUT} />
               </div>
               <div>
                 <label className={LABEL}>Race Date & Time *</label>
-                <input type="datetime-local" value={raceForm.raceDate} onChange={e => setR('raceDate', e.target.value)} className={INPUT} style={{ colorScheme: 'dark' }} />
+                <input
+                  type="datetime-local"
+                  value={raceForm.raceDate}
+                  onChange={e => setR('raceDate', e.target.value)}
+                  min={selectedRound ? formatToDatetimeLocal(selectedRound.startDate) : undefined}
+                  max={selectedRound ? formatToDatetimeLocal(selectedRound.endDate) : undefined}
+                  className={INPUT}
+                  style={{ colorScheme: 'dark' }}
+                />
+                {selectedRound && (selectedRound.startDate || selectedRound.endDate) && (
+                  <div className="text-xs text-gold/80 mt-1.5 flex items-center gap-1.5">
+                    <span>⏰</span>
+                    <span>
+                      Valid time range: <strong>{fmtDate(selectedRound.startDate)}</strong> to <strong>{fmtDate(selectedRound.endDate)}</strong>
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={LABEL}>Distance (m) *</label>
-                  <input value={raceForm.distanceMeter} onChange={e => setR('distanceMeter', e.target.value)} type="number" min="100" placeholder="VD: 1200" className={INPUT} />
+                  <input value={raceForm.distanceMeter} onChange={e => setR('distanceMeter', e.target.value)} type="number" min="100" placeholder="E.g.: 1200" className={INPUT} />
                 </div>
                 <div>
                   <label className={LABEL}>Number of Lanes *</label>
-                  <input value={raceForm.maxLanes} onChange={e => setR('maxLanes', e.target.value)} type="number" min="1" placeholder="VD: 12" className={INPUT} />
+                  <input value={raceForm.maxLanes} onChange={e => setR('maxLanes', e.target.value)} type="number" min="1" placeholder="E.g.: 12" className={INPUT} />
                 </div>
               </div>
               {raceError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{raceError}</div>}
@@ -1124,7 +1211,7 @@ export function AdminRacesPage() {
                                 onClick={() => { setSwapFromEntry(existing); setSwapToLane(0); }}
                                 className="text-[10px] px-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 shrink-0 font-bold"
                                 title="Swap Lane [MOCK]"
-                              >⇄ Đổi</button>
+                              >⇄ Swap</button>
                             )}
                           </div>
                           {isSwapping && (
@@ -1186,7 +1273,7 @@ export function AdminRacesPage() {
                   {/* Entry lỗi: laneNo vượt quá số lanes (dữ liệu backend sai) */}
                   {laneEntries.some((e: any) => (e.laneNo ?? 0) > maxLanes) && (
                     <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-[11px] text-red-400">
-                      ⚠ There are {laneEntries.filter((e: any) => (e.laneNo ?? 0) > maxLanes).length} horses assigned <b>exceeding {maxLanes} lanes</b> (dữ liệu lỗi từ backend):{' '}
+                      ⚠ There are {laneEntries.filter((e: any) => (e.laneNo ?? 0) > maxLanes).length} horses assigned <b>exceeding {maxLanes} lanes</b> (invalid data from backend):{' '}
                       {laneEntries.filter((e: any) => (e.laneNo ?? 0) > maxLanes).map((e: any) => `Lane ${e.laneNo} • ${e.horseName ?? 'Horse #' + e.horseId}`).join(', ')}
                     </div>
                   )}
@@ -1240,7 +1327,7 @@ export function AdminRacesPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               {[
                 { l: 'Race Date', v: fmtDate(detailRace.raceDate) },
-                { l: 'Cự ly', v: detailRace.distanceMeter != null ? `${detailRace.distanceMeter}m` : '—' },
+                { l: 'Distance', v: detailRace.distanceMeter != null ? `${detailRace.distanceMeter}m` : '—' },
                 { l: 'Number of lanes', v: String(detailRace.maxLanes ?? '—') },
                 { l: 'Status', v: detailRace.status ?? '—' },
               ].map(x => (
@@ -1385,7 +1472,7 @@ export function AdminRacesPage() {
               {refError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{refError}</div>}
 
               <button onClick={handleAssignReferee} disabled={refLoading} className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
-                {refLoading ? 'Đang phân công…' : 'Assign referees'}
+                {refLoading ? 'Assigning...' : 'Assign referees'}
               </button>
 
               {/* Referee hiện tại của races — tự tải khi chọn races */}

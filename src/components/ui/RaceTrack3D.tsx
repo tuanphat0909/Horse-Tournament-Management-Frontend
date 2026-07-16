@@ -107,7 +107,7 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
         <div className="h-1.5 bg-gradient-to-r from-transparent via-white/40 to-transparent rounded-full mt-0.5" />
       </div>
       <div className="text-center text-[10px] text-white/40 mt-2">
-        {live ? 'Race is live' : 'Horses are at the starting gates'} • vạch đích phía xa
+        {live ? 'Race is live' : 'Horses are at the starting gates'} • finish line ahead
       </div>
     </div>
   );

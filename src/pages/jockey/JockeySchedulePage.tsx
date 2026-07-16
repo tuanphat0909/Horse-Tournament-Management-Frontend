@@ -10,8 +10,8 @@ import { parseApiError } from '../../api/authService';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const STATUS_CONFIG = {
-  upcoming: { label: 'Đã nhận', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-  pending:  { label: 'Pending xác nhận', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
+  upcoming: { label: 'Confirmed', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  pending:  { label: 'Pending confirmation', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
 };
 
 export function JockeySchedulePage() {
@@ -45,7 +45,7 @@ export function JockeySchedulePage() {
 
           <PageHero
             title="Race Schedule"
-            subtitle="Lịch đua sắp tới của bạn"
+            subtitle="Your upcoming race schedule"
             imageUrl="/images/hero-jockey.jpg"
             imagePosition="center 25%"
           />
@@ -76,7 +76,7 @@ export function JockeySchedulePage() {
                         <span className="text-sm font-bold text-gold">{date}</span>
                       </div>
                       <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted shrink-0">{dayRaces.length} lượt đua</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted shrink-0">{dayRaces.length} races</span>
                     </div>
 
                     <div className="space-y-3">

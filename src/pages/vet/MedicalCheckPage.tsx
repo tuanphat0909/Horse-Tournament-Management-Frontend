@@ -436,17 +436,17 @@ export function MedicalCheckPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase mb-1">Weight (kg) *</label>
-                      <input type="number" step="0.01" required value={weight} onChange={e => setWeight(e.target.value)} placeholder="VD: 450.5" className={INPUT_CLS} />
+                      <input type="number" step="0.01" required value={weight} onChange={e => setWeight(e.target.value)} placeholder="E.g.: 450.5" className={INPUT_CLS} />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase mb-1">Temperature (°C)</label>
-                      <input type="number" step="0.1" value={temperature} onChange={e => setTemperature(e.target.value)} placeholder="VD: 38.2" className={INPUT_CLS} />
+                      <input type="number" step="0.1" value={temperature} onChange={e => setTemperature(e.target.value)} placeholder="E.g.: 38.2" className={INPUT_CLS} />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-muted uppercase mb-1">Heart Rate (bpm)</label>
-                    <input type="number" value={heartRate} onChange={e => setHeartRate(e.target.value)} placeholder="VD: 40" className={INPUT_CLS} />
+                    <input type="number" value={heartRate} onChange={e => setHeartRate(e.target.value)} placeholder="E.g.: 40" className={INPUT_CLS} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

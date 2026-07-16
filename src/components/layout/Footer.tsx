@@ -5,7 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 export function Footer() {
   const { t } = useLanguage();
   return (
-    <footer className="bg-[#040810] border-t border-gold/20 pt-20 pb-10 relative overflow-hidden">
+    <footer className="bg-navy-light/95 backdrop-blur-xl border-t border-glass-border pt-20 pb-10 relative overflow-hidden">
       <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-gold to-transparent opacity-50 shadow-[0_0_20px_rgba(201,168,76,1)]" />
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 relative z-10">

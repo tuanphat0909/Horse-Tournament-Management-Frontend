@@ -61,7 +61,7 @@ export function AdminRefereesPage() {
     if (!window.confirm('Are you sure you want to cancel this referee assignment for the race?')) return;
     try {
       await removeReferee(raceId, refereeId);
-      showToast('Success', 'Cancelled phân công trọng tài.');
+      showToast('Success', 'Referee assignment cancelled.');
       await fetchData();
     } catch (err: any) {
       showToast('Error', parseApiError(err), 'error');
@@ -107,13 +107,13 @@ export function AdminRefereesPage() {
         <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-6 relative z-10">
 
           <PageHero
-            title="Quản lý trọng tài"
-            subtitle="Theo dõi danh sách trọng tài và phân công theo từng vòng, từng giải — việc gán trọng tài thực hiện tại trang Manage races, sau khi ghép lanes"
+            title="Referee Management"
+            subtitle="Track the referee list and assignments per round and tournament — referees are assigned on the Manage Races page, after lanes are set"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
             actions={
               <button onClick={() => navigate('/admin/races')} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
-                Tới trang Manage races <ArrowRight size={15} />
+Go to Manage Races <ArrowRight size={15} />
               </button>
             }
           />
@@ -130,7 +130,7 @@ export function AdminRefereesPage() {
                 className="glass-panel rounded-xl overflow-hidden h-fit"
               >
                 <div className="p-5 border-b border-glass-border flex items-center gap-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
-                  <h2 className="text-lg font-serif text-white font-semibold">Danh Sách Trọng Tài</h2>
+                  <h2 className="text-lg font-serif text-white font-semibold">Referee List</h2>
                   <span className="ml-auto px-2.5 py-0.5 rounded-full bg-gold/10 text-gold text-xs font-bold border border-gold/20">
                     {filteredReferees.length}
                   </span>
@@ -141,14 +141,14 @@ export function AdminRefereesPage() {
                     <input
                       value={search}
                       onChange={e => setSearch(e.target.value)}
-                      placeholder="Tìm trọng tài theo tên, email, giấy phép..."
+                      placeholder="Search referees by name, email, license..."
                       className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
                     />
                   </div>
                 </div>
                 <div className="p-5">
                   {filteredReferees.length === 0 ? (
-                    <div className="text-center py-12 text-muted">{search ? 'Không tìm thấy trọng tài phù hợp.' : 'Không có trọng tài nào trong hệ thống.'}</div>
+                    <div className="text-center py-12 text-muted">{search ? 'No matching referees found.' : 'No referees in the system.'}</div>
                   ) : (
                     <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
                       {filteredReferees.map((r) => {
@@ -175,7 +175,7 @@ export function AdminRefereesPage() {
                                 </span>
                               ) : (
                                 <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-muted border border-glass-border">
-                                  Chưa phân công
+                                  Unassigned
                                 </span>
                               )}
                             </div>
@@ -187,7 +187,7 @@ export function AdminRefereesPage() {
                                   <div key={i} className="flex items-center gap-2 text-[11px]">
                                     <Flag size={11} className="text-cyan-400 shrink-0" />
                                     <span className="text-white truncate">{a.raceName}</span>
-                                    <span className="text-muted truncate">• {a.roundName || 'Round ?'} • {a.tournamentName || 'Giải ?'}</span>
+                                    <span className="text-muted truncate">• {a.roundName || 'Round ?'} • {a.tournamentName || 'Tournament ?'}</span>
                                     <span className="ml-auto text-muted/70 shrink-0">{a.raceDate ? new Date(a.raceDate).toLocaleDateString('vi-VN') : ''}</span>
                                   </div>
                                 ))}
@@ -222,12 +222,12 @@ export function AdminRefereesPage() {
                     {unassignedRaces.length === 0 ? (
                       <div className="p-8 text-center text-muted">
                         <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400 opacity-60" />
-                        All các races đấu đã được phân công trọng tài.
+                        All races have referees assigned.
                       </div>
                     ) : (
                       <>
                         <div className="mb-4 text-[11px] text-champagne/80 bg-gold/5 border border-gold/15 rounded-lg px-3 py-2 leading-relaxed">
-                          Các races dưới đây chưa có trọng tài. Vào <b>Manage races</b> → bấm nút <b>phân công trọng tài</b> trên card races (sau khi assigned horse vào lanes).
+                          The races below have no referee yet. Go to <b>Manage Races</b> → click <b>Assign referees</b> on the race card (after horses are assigned to lanes).
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {unassignedRaces.map((race) => (
@@ -256,7 +256,7 @@ export function AdminRefereesPage() {
                                   onClick={() => navigate('/admin/races')}
                                   className="w-full py-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all text-xs font-semibold flex items-center justify-center gap-1.5"
                                 >
-                                  Phân công tại Manage races <ArrowRight size={12} />
+                                  Assign in Manage Races <ArrowRight size={12} />
                                 </button>
                               </div>
                             </div>
@@ -276,7 +276,7 @@ export function AdminRefereesPage() {
                 >
                   <div className="p-5 border-b border-glass-border flex items-center gap-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
                     <CheckCircle size={18} className="text-emerald-400" />
-                    <h2 className="text-lg font-serif text-white font-semibold">Đã Phân Công Trọng Tài (Assigned)</h2>
+                    <h2 className="text-lg font-serif text-white font-semibold">Assigned Referees</h2>
                     <span className="ml-auto px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
                       {assignedRaces.length}
                     </span>
@@ -286,7 +286,7 @@ export function AdminRefereesPage() {
                     {assignedRaces.length === 0 ? (
                       <div className="p-8 text-center text-muted">
                         <ShieldAlert size={32} className="mx-auto mb-2 text-yellow-400 opacity-60" />
-                        None races nào được gán trọng tài.
+                        No races have referees assigned yet.
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -328,7 +328,7 @@ export function AdminRefereesPage() {
                                     <button
                                       className="p-1 rounded text-muted hover:text-red-400 hover:bg-red-500/10 transition-all"
                                       onClick={() => handleRemove(race.raceId, ref.refereeId)}
-                                      title="Cancel phân công"
+                                      title="Cancel assignment"
                                     >
                                       <Trash2 size={13} />
                                     </button>

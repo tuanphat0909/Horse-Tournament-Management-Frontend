@@ -28,6 +28,7 @@ function GlobalWave() {
 
 export default function App() {
   useEffect(() => {
+    // Single light theme and single language (English) — no dark/light or VI/EN toggle
     document.documentElement.setAttribute('data-theme', 'light');
     document.documentElement.classList.add('light');
     localStorage.removeItem('theme');

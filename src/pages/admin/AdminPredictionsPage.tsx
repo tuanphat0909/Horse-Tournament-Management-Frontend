@@ -51,7 +51,7 @@ export function AdminPredictionsPage() {
       })
       .catch(err => {
         console.error(err);
-        setError('Không thể tải dữ liệu dự đoán');
+        setError('Failed to load prediction data');
         setLoading(false);
       });
   }, []);
@@ -92,10 +92,10 @@ export function AdminPredictionsPage() {
     .reduce((sum, p) => sum + (p.point * 2), 0); // Assuming 2x payout
 
   const statsDisplay = [
-    { label: 'Tổng dự đoán', value: loading ? '...' : (stats?.totalPredictions ?? 0), icon: Target, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20' },
-    { label: 'Predictions đúng', value: loading ? '...' : (stats?.correctPredictions ?? 0), icon: CheckCircle, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
-    { label: 'Điểm trả thưởng', value: loading ? '...' : totalRewardedPoints, icon: DollarSign, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
-    { label: 'Tỉ lệ chính xác', value: loading ? '...' : `${stats?.accuracyRate?.toFixed(1) ?? '0'}%`, icon: TrendingUp, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20' },
+    { label: 'Total predictions', value: loading ? '...' : (stats?.totalPredictions ?? 0), icon: Target, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20' },
+    { label: 'Correct predictions', value: loading ? '...' : (stats?.correctPredictions ?? 0), icon: CheckCircle, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
+    { label: 'Reward points paid', value: loading ? '...' : totalRewardedPoints, icon: DollarSign, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
+    { label: 'Accuracy rate', value: loading ? '...' : `${stats?.accuracyRate?.toFixed(1) ?? '0'}%`, icon: TrendingUp, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20' },
   ];
 
   return (
@@ -107,8 +107,8 @@ export function AdminPredictionsPage() {
         <main className="max-w-[1600px] mx-auto px-8 py-6 space-y-6 relative z-10">
 
           <PageHero
-            title="Quản lý dự đoán"
-            subtitle="Theo dõi và xét duyệt dự đoán khán giả"
+            title="Prediction Management"
+            subtitle="Track and review spectator predictions"
             imageUrl="/images/hero-admin.jpg"
             imagePosition="center center"
           />
@@ -163,7 +163,7 @@ export function AdminPredictionsPage() {
               <input 
                 value={search} 
                 onChange={e => { setSearch(e.target.value); setPage(1); }} 
-                placeholder="Tìm khán giả, horse..." 
+                placeholder="Search spectator, horse..."
                 className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" 
               />
             </div>
@@ -191,10 +191,10 @@ export function AdminPredictionsPage() {
                       <th className="px-6 py-4">ID</th>
                       <th className="px-6 py-4">Spectator</th>
                       <th className="px-6 py-4">Race</th>
-                      <th className="px-6 py-4">Horse dự đoán</th>
-                      <th className="px-6 py-4">Điểm đặt</th>
+                      <th className="px-6 py-4">Predicted Horse</th>
+                      <th className="px-6 py-4">Points Staked</th>
                       <th className="px-6 py-4">Results</th>
-                      <th className="px-6 py-4">Ngày dự đoán</th>
+                      <th className="px-6 py-4">Prediction Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-glass-border/40 text-sm text-white">
@@ -204,14 +204,14 @@ export function AdminPredictionsPage() {
                         <td className="px-6 py-4 font-medium">{pred.spectatorName}</td>
                         <td className="px-6 py-4 text-muted">{pred.raceName}</td>
                         <td className="px-6 py-4 text-gold font-semibold">{pred.predictedWinner}</td>
-                        <td className="px-6 py-4 font-mono text-xs">{pred.point} điểm</td>
+                        <td className="px-6 py-4 font-mono text-xs">{pred.point} points</td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 rounded text-xs font-semibold ${
                             pred.isCorrect === null ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
                             pred.isCorrect === true ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                             'bg-red-500/10 text-red-400 border border-red-500/20'
                           }`}>
-                            {pred.isCorrect === null ? 'Pending' : pred.isCorrect === true ? 'Correct' : 'Incorrect biệt'}
+                            {pred.isCorrect === null ? 'Pending' : pred.isCorrect === true ? 'Correct' : 'Incorrect'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-xs text-muted">

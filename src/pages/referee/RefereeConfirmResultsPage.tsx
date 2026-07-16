@@ -235,7 +235,7 @@ export function RefereeConfirmResultsPage() {
                 
                 <div>
                   <label className={LABEL}>Time completed (Winning Time) *</label>
-                  <input disabled={!!isCompleted} value={form.winningTime} onChange={e => setF('winningTime', e.target.value)} placeholder="VD: 01:23.45" className={INPUT} />
+                  <input disabled={!!isCompleted} value={form.winningTime} onChange={e => setF('winningTime', e.target.value)} placeholder="E.g.: 01:23.45" className={INPUT} />
                 </div>
                 
                 <div>
@@ -288,7 +288,7 @@ export function RefereeConfirmResultsPage() {
                                 max={raceEntries.length}
                                 value={entry.finishPosition ?? ''} 
                                 onChange={e => handleEntryChange(entry.raceEntryId, 'finishPosition', e.target.value)}
-                                placeholder="VD: 1" 
+                                placeholder="E.g.: 1" 
                                 className="w-16 bg-navy/40 border border-glass-border/60 rounded px-2 py-1 text-sm text-white text-center focus:border-red-400/40 outline-none"
                               />
                             </td>
@@ -300,7 +300,7 @@ export function RefereeConfirmResultsPage() {
                                 min="0"
                                 value={entry.finishTime ?? ''} 
                                 onChange={e => handleEntryChange(entry.raceEntryId, 'finishTime', e.target.value)}
-                                placeholder="VD: 60.55" 
+                                placeholder="E.g.: 60.55" 
                                 className="w-28 bg-navy/40 border border-glass-border/60 rounded px-2 py-1 text-sm text-white text-right focus:border-red-400/40 outline-none"
                               />
                             </td>

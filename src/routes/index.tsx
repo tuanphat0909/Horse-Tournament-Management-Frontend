@@ -14,7 +14,6 @@ import { AdminRefereesPage } from '../pages/admin/AdminRefereesPage';
 import { AdminResultsPage } from '../pages/admin/AdminResultsPage';
 import { AdminPredictionsPage } from '../pages/admin/AdminPredictionsPage';
 import { AdminViolationsPage } from '../pages/admin/AdminViolationsPage';
-import { AdminDemoFlowPage } from '../pages/admin/AdminDemoFlowPage';
 
 // Owner
 import { OwnerDashboardPage } from '../pages/owner/OwnerDashboardPage';
@@ -77,7 +76,6 @@ export function AppRoutes() {
         <Route path="/admin/results" element={<PrivateRoute><AdminResultsPage /></PrivateRoute>} />
         <Route path="/admin/predictions" element={<PrivateRoute><AdminPredictionsPage /></PrivateRoute>} />
         <Route path="/admin/violations" element={<PrivateRoute><AdminViolationsPage /></PrivateRoute>} />
-        <Route path="/admin/demo-flow" element={<PrivateRoute><AdminDemoFlowPage /></PrivateRoute>} />
 
         {/* Owner */}
         <Route path="/owner/dashboard" element={<PrivateRoute><OwnerDashboardPage /></PrivateRoute>} />

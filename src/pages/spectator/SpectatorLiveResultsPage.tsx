@@ -64,7 +64,7 @@ export function SpectatorLiveResultsPage() {
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
 
           <PageHero
-            title="Results & Lịch đua"
+            title="Results & Race Schedule"
             subtitle="Track races and upcoming schedule"
             imageUrl="/images/hero-spectator.jpg"
             imagePosition="center 50%"

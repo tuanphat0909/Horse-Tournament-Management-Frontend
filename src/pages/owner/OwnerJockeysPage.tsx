@@ -145,7 +145,7 @@ export function OwnerJockeysPage() {
         invitationExpiredAt: expirationDate,
       });
       closeInvite();
-      showToast('Success', 'Gửi lời mời Jockey successful!', 'success');
+      showToast('Success', 'Jockey invitation sent successfully!', 'success');
       load();
     } catch (err: unknown) {
       setSubmitError(parseApiError(err as Error));
@@ -249,7 +249,7 @@ export function OwnerJockeysPage() {
             imagePosition="center 58%"
             actions={
               <button onClick={() => setShowInvite(true)} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
-                <Plus size={16} /> Mời Jockey
+                <Plus size={16} /> Invite Jockey
               </button>
             }
           />
@@ -274,7 +274,7 @@ export function OwnerJockeysPage() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Tìm jockey, horse..."
+                placeholder="Search jockey, horse..."
                 className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full"
               />
             </div>
@@ -309,8 +309,8 @@ export function OwnerJockeysPage() {
                         <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne">🐴 {p.horseName ?? `Horse #${p.horseId}`}</span>
                           {p.startDate && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted inline-flex items-center gap-1"><Calendar size={9} className="text-gold/60" /> From: {formatDate(p.startDate)}</span>}
-                          {p.endDate && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted inline-flex items-center gap-1"><Calendar size={9} className="text-gold/60" /> Đến: {formatDate(p.endDate)}</span>}
-                          {p.invitationExpiredAt && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-red-400 inline-flex items-center gap-1"><Clock size={9} className="text-red-400" /> Hạn: {formatUtcDateTime(p.invitationExpiredAt)}</span>}
+                          {p.endDate && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted inline-flex items-center gap-1"><Calendar size={9} className="text-gold/60" /> Until: {formatDate(p.endDate)}</span>}
+                          {p.invitationExpiredAt && <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-red-400 inline-flex items-center gap-1"><Clock size={9} className="text-red-400" /> Expires: {formatUtcDateTime(p.invitationExpiredAt)}</span>}
                           {p.invitationExpiredAt && String(p.status ?? '').toLowerCase() === 'pending' && <CountdownTimer target={p.invitationExpiredAt} />}
                         </div>
                       </div>
@@ -323,7 +323,7 @@ export function OwnerJockeysPage() {
                             onClick={() => handleCancelInvite(p.id)}
                             className="px-3 py-1 rounded-full text-[11px] font-bold text-red-400 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 transition-colors"
                           >
-                            Cancel lời mời
+                            Cancel invitation
                           </button>
                         )}
                       </div>
@@ -336,7 +336,7 @@ export function OwnerJockeysPage() {
                     <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
                     <div className="relative z-10">
                       <div className="text-4xl opacity-40 mb-3">🏇</div>
-                      None hợp đồng nào
+                      No contracts yet
                       <div className="mx-auto mt-4 w-24 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
                     </div>
                   </div>
@@ -351,7 +351,7 @@ export function OwnerJockeysPage() {
       {showInvite && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-md border border-gold/20">
-            <h2 className="text-xl font-serif text-white mb-6">Mời Jockey</h2>
+            <h2 className="text-xl font-serif text-white mb-6">Invite Jockey</h2>
             <div className="space-y-4">
               <div>
                 <label className={LABEL}>Select Horse *</label>
@@ -359,20 +359,20 @@ export function OwnerJockeysPage() {
                   <option value="">-- Select Your Horse --</option>
                   {horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                 </select>
-                {horses.length === 0 && <p className="text-[10px] text-muted/60 mt-1">None horse — hãy tạo ở trang "Manage Horses" trước.</p>}
+                {horses.length === 0 && <p className="text-[10px] text-muted/60 mt-1">No horses — create one on the "Manage Horses" page first.</p>}
               </div>
               <div>
-                <label className={LABEL}>Chọn Jockey *</label>
+                <label className={LABEL}>Select Jockey *</label>
                 <select value={form.jockeyId} onChange={e => setForm(p => ({...p, jockeyId: e.target.value}))} className={INPUT}>
                   <option value="">-- Select Jockey --</option>
                   {jockeys.map(j => (
                     <option key={j.jockeyProfileId ?? j.userId} value={j.userId}>
                       {j.fullName ?? `Jockey #${j.userId}`}
-                      {j.totalWins != null ? ` (${j.totalWins} thắng)` : ''}
+                      {j.totalWins != null ? ` (${j.totalWins} wins)` : ''}
                     </option>
                   ))}
                 </select>
-                {jockeys.length === 0 && <p className="text-[10px] text-muted/60 mt-1">Danh sách jockey đang tải hoặc empty.</p>}
+                {jockeys.length === 0 && <p className="text-[10px] text-muted/60 mt-1">Jockey list is loading or empty.</p>}
                 {jockeyBusyError && (
                   <p className="text-[11px] text-red-400 mt-1.5 font-medium">
                     {jockeyBusyError}
@@ -380,7 +380,7 @@ export function OwnerJockeysPage() {
                 )}
               </div>
               <div>
-                <label className={LABEL}>Chọn tournaments *</label>
+                <label className={LABEL}>Select Tournament *</label>
                 <select 
                   value={form.tournamentId} 
                   onChange={e => {
@@ -406,11 +406,11 @@ export function OwnerJockeysPage() {
                   ))}
                 </select>
                 {form.horseId && filteredTournamentsForSelect.length === 0 && (
-                  <p className="text-[10px] text-yellow-400 mt-1">Con horse này chưa registered to join tournaments nào.</p>
+                  <p className="text-[10px] text-yellow-400 mt-1">This horse has not registered for any tournament yet.</p>
                 )}
                 {selectedInviteTournament?.startDate && selectedInviteTournament?.endDate && (
                   <p className="text-[10px] text-muted/70 mt-1">
-                    Time giải: {formatDate(selectedInviteTournament.startDate)} - {formatDate(selectedInviteTournament.endDate)}
+                    Tournament time: {formatDate(selectedInviteTournament.startDate)} - {formatDate(selectedInviteTournament.endDate)}
                   </p>
                 )}
                 {horseBusyError && (
@@ -430,11 +430,11 @@ export function OwnerJockeysPage() {
                 </div>
               </div>
               <div>
-                <label className={LABEL}>Thời hạn phản hồi *</label>
+                <label className={LABEL}>Response Deadline *</label>
                 <select value={form.expirationHours} onChange={e => setForm(p => ({...p, expirationHours: e.target.value}))} className={INPUT}>
-                  <option value="24">24 giờ</option>
-                  <option value="48">48 giờ</option>
-                  <option value="72">72 giờ</option>
+                  <option value="24">24 hours</option>
+                  <option value="48">48 hours</option>
+                  <option value="72">72 hours</option>
                 </select>
               </div>
               {submitError &&<div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{submitError}</div>}
@@ -443,7 +443,7 @@ export function OwnerJockeysPage() {
             <div className="flex gap-3 mt-6">
               <button onClick={closeInvite} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
               <button onClick={handleInvite} disabled={submitLoading || !!jockeyBusyError || !!horseBusyError} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60">
-                {submitLoading ? 'Đang gửi…' : 'Gửi lời mời'}
+                {submitLoading ? 'Sending...' : 'Send Invitation'}
               </button>
             </div>
           </motion.div>

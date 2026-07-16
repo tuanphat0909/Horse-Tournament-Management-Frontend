@@ -19,11 +19,11 @@ const INIT_EDIT   = { name: '', breed: '', age: '', gender: 'Male', healthStatus
 
 // Giá trị lưu bằng tiếng Anh cho khớp dữ liệu BE (Horse.HealthStatus mặc định "Healthy")
 const HEALTH_OPTIONS = [
-  { value: 'Healthy',    label: 'Healthy (Healthy)' },
-  { value: 'Injured',    label: 'Injured (Injured)' },
+  { value: 'Healthy',    label: 'Healthy' },
+  { value: 'Injured',    label: 'Injured' },
   { value: 'Sick',       label: 'Sick' },
-  { value: 'Recovering', label: 'Recovering (Recovering)' },
-  { value: 'Retired',    label: 'Retired (Retired)' },
+  { value: 'Recovering', label: 'Recovering' },
+  { value: 'Retired',    label: 'Retired' },
 ];
 
 export function OwnerHorsesPage() {
@@ -77,7 +77,7 @@ export function OwnerHorsesPage() {
       await createHorse({ name: createForm.name, breed: createForm.breed, age: createForm.age, gender: createForm.gender });
       setShowCreate(false);
       setCreateForm(INIT_CREATE);
-      showToast('Success', 'Đã thêm horse mới successful!');
+      showToast('Success', 'New horse added successfully!');
       loadHorses();
     } catch (err: unknown) {
       setCreateError(parseApiError(err as Error));
@@ -99,7 +99,7 @@ export function OwnerHorsesPage() {
     try {
       await updateHorse(editHorse.id, { name: editForm.name, breed: editForm.breed, age: editForm.age, gender: editForm.gender, healthStatus: editForm.healthStatus });
       setEditHorse(null);
-      showToast('Success', 'Đã cập nhật thông tin horse successful!');
+      showToast('Success', 'Horse info updated successfully!');
       loadHorses();
     } catch (err: unknown) {
       setEditError(parseApiError(err as Error));
@@ -135,12 +135,12 @@ export function OwnerHorsesPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!window.confirm('Confirm xóa horse này?')) return;
+    if (!window.confirm('Are you sure you want to delete this horse?')) return;
     setDeletingId(id);
     try {
       await deleteHorse(id);
       setHorses(prev => prev.filter(h => h.id !== id));
-      showToast('Success', 'Đã xóa horse successful!', 'success');
+      showToast('Success', 'Horse deleted successfully!', 'success');
     } catch (err: unknown) {
       showToast('Failed', parseApiError(err as Error), 'error');
     } finally {
@@ -169,12 +169,12 @@ export function OwnerHorsesPage() {
 
           <PageHero
             title="Manage Horses"
-            subtitle="Horse List trong chuồng của bạn"
+            subtitle="Horses in your stable"
             imageUrl="/images/hero-owner.jpg"
             imagePosition="center 58%"
             actions={
               <button onClick={() => setShowCreate(true)} className="btn-gold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 font-bold">
-                <Plus size={16} /> Thêm horse
+                <Plus size={16} /> Add Horse
               </button>
             }
           />
@@ -182,7 +182,7 @@ export function OwnerHorsesPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border focus-within:border-gold/40 rounded-lg px-3 py-2 w-72 transition-colors">
               <Search size={15} className="text-gold/60 shrink-0" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm tên horse..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search horse name..." className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none w-full" />
             </div>
             <div className="ml-auto flex items-center gap-2">
               <ArrowUpDown size={14} className="text-muted" />
@@ -193,8 +193,8 @@ export function OwnerHorsesPage() {
                 style={{ colorScheme: 'dark' }}
               >
                 <option value="name">Name A-Z</option>
-                <option value="ageAsc">Trẻ nhất</option>
-                <option value="ageDesc">Lớn years old nhất</option>
+                <option value="ageAsc">Youngest</option>
+                <option value="ageDesc">Oldest</option>
               </select>
             </div>
           </div>
@@ -206,7 +206,7 @@ export function OwnerHorsesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {filtered.map((h, i) => (
                 <motion.div key={h.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                  className="glass-panel rounded-2xl overflow-hidden border border-glass-border hover:border-gold/25 transition-all group relative">
+                  className="glass-panel rounded-2xl overflow-hidden border border-glass-border hover:border-gold/25 transition-all group relative h-full flex flex-col">
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent z-10 pointer-events-none" />
                   <div className="relative h-36 overflow-hidden bg-gradient-to-br from-gold/10 to-navy/80 flex items-center justify-center">
                     <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #C9A84C 1px, transparent 0)', backgroundSize: '18px 18px' }} />
@@ -217,7 +217,7 @@ export function OwnerHorsesPage() {
                     <div className="absolute top-3 left-3 w-7 h-7 rounded-full bg-navy/70 backdrop-blur-sm border border-gold/25 flex items-center justify-center font-serif font-bold text-champagne text-xs">{i + 1}</div>
                     <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
                   </div>
-                  <div className="p-5 relative">
+                  <div className="p-5 relative flex-1 flex flex-col">
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="text-lg font-serif text-white group-hover:text-champagne transition-colors">{h.name}</h3>
@@ -234,7 +234,7 @@ export function OwnerHorsesPage() {
                       </div>
                     </div>
                     {h.healthStatus && (
-                      <div className="flex justify-between items-center text-[11px] text-muted font-medium mt-1 pt-3 border-t border-glass-border/60">
+                      <div className="flex justify-between items-center text-[11px] text-muted font-medium mt-auto pt-3 border-t border-glass-border/60">
                         <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"><ShieldCheck size={10} /></span> Health</span>
                         <span className="text-champagne font-semibold px-2 py-0.5 rounded-full bg-gold/[0.06] border border-gold/20">{h.healthStatus}</span>
                       </div>
@@ -248,7 +248,7 @@ export function OwnerHorsesPage() {
                   <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[40px] pointer-events-none" />
                   <div className="relative z-10">
                     <div className="text-4xl opacity-40 mb-3">🐴</div>
-                    {horses.length === 0 ? 'Chưa có horse nào. Nhấn "Thêm horse" để bắt đầu.' : 'Không tìm thấy horse phù hợp.'}
+                    {horses.length === 0 ? 'No horses yet. Click "Add Horse" to get started.' : 'No matching horses found.'}
                     <div className="mx-auto mt-4 w-24 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
                   </div>
                 </div>
@@ -263,19 +263,19 @@ export function OwnerHorsesPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20">
-            <h2 className="text-xl font-serif text-white mb-6">Thêm horse mới</h2>
+            <h2 className="text-xl font-serif text-white mb-6">Add New Horse</h2>
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>Name horse *</label>
-                <input value={createForm.name} onChange={e => setCreateForm(p => ({...p, name: e.target.value}))} placeholder="VD: Thunder King" className={INPUT} />
+                <label className={LABEL}>Horse Name *</label>
+                <input value={createForm.name} onChange={e => setCreateForm(p => ({...p, name: e.target.value}))} placeholder="E.g.: Thunder King" className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Giống horse *</label>
-                <input value={createForm.breed} onChange={e => setCreateForm(p => ({...p, breed: e.target.value}))} placeholder="VD: Thoroughbred" className={INPUT} />
+                <label className={LABEL}>Breed *</label>
+                <input value={createForm.breed} onChange={e => setCreateForm(p => ({...p, breed: e.target.value}))} placeholder="E.g.: Thoroughbred" className={INPUT} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={LABEL}>Ngày sinh *</label>
+                  <label className={LABEL}>Date of Birth *</label>
                   <input type="date" value={createForm.age} onChange={e => setCreateForm(p => ({...p, age: e.target.value}))} className={INPUT} style={{colorScheme: 'dark'}} />
                 </div>
                 <div>
@@ -307,16 +307,16 @@ export function OwnerHorsesPage() {
             <h2 className="text-xl font-serif text-white mb-6">Edit — {editHorse.name}</h2>
             <div className="space-y-4">
               <div>
-                <label className={LABEL}>Name horse</label>
+                <label className={LABEL}>Horse Name</label>
                 <input value={editForm.name} onChange={e => setEditForm(p => ({...p, name: e.target.value}))} className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Giống horse</label>
+                <label className={LABEL}>Breed</label>
                 <input value={editForm.breed} onChange={e => setEditForm(p => ({...p, breed: e.target.value}))} className={INPUT} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={LABEL}>Ngày sinh *</label>
+                  <label className={LABEL}>Date of Birth *</label>
                   <input type="date" value={editForm.age} onChange={e => setEditForm(p => ({...p, age: e.target.value}))} className={INPUT} style={{colorScheme: 'dark'}} />
                 </div>
                 <div>
@@ -328,12 +328,12 @@ export function OwnerHorsesPage() {
                 </div>
               </div>
               <div>
-                <label className={LABEL}>Tình trạng sức khỏe</label>
+                <label className={LABEL}>Health Status</label>
                 <select value={editForm.healthStatus} onChange={e => setEditForm(p => ({...p, healthStatus: e.target.value}))} className={INPUT} style={{colorScheme: 'dark'}}>
                   {HEALTH_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   {/* Dữ liệu cũ nhập tay không nằm trong danh sách chuẩn — giữ lại để không bị mất khi lưu */}
                   {editForm.healthStatus && !HEALTH_OPTIONS.some(o => o.value === editForm.healthStatus) && (
-                    <option value={editForm.healthStatus}>{editForm.healthStatus} (giá trị cũ)</option>
+                    <option value={editForm.healthStatus}>{editForm.healthStatus} (legacy value)</option>
                   )}
                 </select>
               </div>
@@ -344,7 +344,7 @@ export function OwnerHorsesPage() {
                 className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
               <button onClick={handleEdit} disabled={editLoading}
                 className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60">
-                {editLoading ? 'Saving...' : 'Save thay đổi'}
+                {editLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </motion.div>
@@ -378,7 +378,7 @@ export function OwnerHorsesPage() {
                         : 'border-transparent text-muted hover:text-white'
                     }`}
                   >
-                    Information & Thống kê
+                    Information & Statistics
                   </button>
                   <button
                     onClick={() => setActiveTab('history')}
@@ -396,8 +396,8 @@ export function OwnerHorsesPage() {
                   <div className="space-y-6">
                     <div className="space-y-1">
                       {[
-                        { l: 'Ngày sinh', v: formatDateOnly(viewHorse.age) },
-                        { l: 'Tuổi', v: viewHorse.age != null ? `${calculateAge(viewHorse.age)} years old` : '—' },
+                        { l: 'Date of Birth', v: formatDateOnly(viewHorse.age) },
+                        { l: 'Age', v: viewHorse.age != null ? `${calculateAge(viewHorse.age)} years old` : '—' },
                         { l: 'Gender', v: viewHorse.gender === 'Male' ? 'Male' : viewHorse.gender === 'Female' ? 'Female' : '—' },
                         { l: 'Health', v: viewHorse.healthStatus ?? '—' },
                       ].map(row => (
@@ -410,10 +410,10 @@ export function OwnerHorsesPage() {
 
                     {/* Overall Stats Cards */}
                     <div>
-                      <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Thống kê hiệu suất</h3>
+                      <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Performance Statistics</h3>
                       <div className="grid grid-cols-3 gap-3 mb-3">
                         <div className="bg-white/[0.02] border border-glass-border rounded-xl p-3 text-center">
-                          <div className="text-[10px] uppercase tracking-wider text-muted font-bold mb-1">Tổng số races</div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted font-bold mb-1">Total Races</div>
                           <div className="text-lg font-bold text-white font-mono">{viewHorse.statistic?.totalRaces ?? 0}</div>
                         </div>
                         <div className="bg-white/[0.02] border border-glass-border rounded-xl p-3 text-center">
@@ -421,19 +421,19 @@ export function OwnerHorsesPage() {
                           <div className="text-lg font-bold text-gold font-mono">{viewHorse.statistic?.totalWins ?? 0}</div>
                         </div>
                         <div className="bg-white/[0.02] border border-glass-border rounded-xl p-3 text-center">
-                          <div className="text-[10px] uppercase tracking-wider text-muted font-bold mb-1">Tốc độ TB</div>
+                          <div className="text-[10px] uppercase tracking-wider text-muted font-bold mb-1">Avg Speed</div>
                           <div className="text-sm font-bold text-white font-mono mt-0.5">{viewHorse.statistic?.averageSpeed ? `${Number(viewHorse.statistic.averageSpeed).toFixed(1)} m/s` : '—'}</div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="flex justify-between p-2.5 rounded-lg bg-white/[0.01] border border-glass-border">
-                          <span className="text-slate-300">🥈 Về nhì (2nd Place)</span>
-                          <span className="font-bold text-white font-mono">{viewHorse.statistic?.totalSecondPlaces ?? 0} lần</span>
+                          <span className="text-slate-300">🥈 2nd Place</span>
+                          <span className="font-bold text-white font-mono">{viewHorse.statistic?.totalSecondPlaces ?? 0} times</span>
                         </div>
                         <div className="flex justify-between p-2.5 rounded-lg bg-white/[0.01] border border-glass-border">
-                          <span className="text-amber-600">🥉 Về ba (3rd Place)</span>
-                          <span className="font-bold text-white font-mono">{viewHorse.statistic?.totalThirdPlaces ?? 0} lần</span>
+                          <span className="text-amber-600">🥉 3rd Place</span>
+                          <span className="font-bold text-white font-mono">{viewHorse.statistic?.totalThirdPlaces ?? 0} times</span>
                         </div>
                       </div>
                     </div>
@@ -445,7 +445,7 @@ export function OwnerHorsesPage() {
                     ) : horseRaces.length === 0 ? (
                       <div className="text-center py-12 text-muted text-sm">
                         <div className="text-3xl opacity-40 mb-2">📋</div>
-                        <div>Chưa tham gia races nào.</div>
+                        <div>No races participated yet.</div>
                       </div>
                     ) : (
                       horseRaces.map((r, idx) => (
@@ -468,7 +468,7 @@ export function OwnerHorsesPage() {
                             </div>
                             {r.prizeAmount > 0 && (
                               <div className="text-right border-l border-glass-border pl-3 min-w-[70px]">
-                                <div className="text-[10px] text-muted leading-none mb-1">Thưởng</div>
+                                <div className="text-[10px] text-muted leading-none mb-1">Prize</div>
                                 <div className="text-xs font-mono font-bold text-emerald-400">+{r.prizeAmount.toLocaleString('vi-VN')}đ</div>
                               </div>
                             )}

@@ -95,7 +95,7 @@ export const FeaturedTournamentSection = () => {
                   {rounds != null && (
                     <div className="flex items-center gap-2"><Layers className="w-4 h-4 text-gold" /> {rounds} {t('rounds')}</div>
                   )}
-                  <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-gold" /> ID giải #{tournament.tournamentId ?? tournament.id}</div>
+                  <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-gold" /> Tournament ID #{tournament.tournamentId ?? tournament.id}</div>
                 </div>
 
                 {tournament.description && (
