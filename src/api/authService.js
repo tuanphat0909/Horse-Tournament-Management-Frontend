@@ -16,6 +16,14 @@ export async function login(email, password) {
   return data.result.user;
 }
 
+export async function googleLogin(idToken) {
+  const data = await api.post('/auth/google-login', { idToken });
+  localStorage.setItem('token', data.result.accessToken);
+  localStorage.setItem('user', JSON.stringify(data.result.user));
+  return data.result.user;
+}
+
+
 export async function register(fullName, email, password, confirmPassword) {
   const data = await api.post('/auth/register', { fullName, email, password, confirmPassword });
   localStorage.setItem('token', data.result.accessToken);
