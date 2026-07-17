@@ -11,7 +11,7 @@ import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 import { CountdownTimer } from '../../components/ui/CountdownTimer';
-import { formatUtcDateTime } from '../../utils/format';
+import { formatUtcDateTime, formatDateOnly } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'pending' | 'approved' | 'rejected';
@@ -156,6 +156,10 @@ export function OwnerRegistrationsPage() {
       if (now > regEnd) return false;
     }
     return true;
+  }).sort((a, b) => {
+    const dateA = a.startDate ? new Date(a.startDate).getTime() : Infinity;
+    const dateB = b.startDate ? new Date(b.startDate).getTime() : Infinity;
+    return dateA - dateB;
   });
 
   return (
@@ -461,6 +465,7 @@ export function OwnerRegistrationsPage() {
                   {filteredTournamentsForRegister.map(t => (
                     <option key={t.tournamentId} value={t.tournamentId}>
                       {t.name}
+                      {t.startDate && t.endDate ? ` (${formatDateOnly(t.startDate)} - ${formatDateOnly(t.endDate)})` : ''}
                     </option>
                   ))}
                 </select>
