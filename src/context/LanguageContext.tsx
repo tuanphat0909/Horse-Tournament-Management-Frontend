@@ -322,9 +322,14 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "Vòng chung kết": "Final Round",
     "Trao giải": "Prize Distribution",
     "Giải đấu đang ở trạng thái Đang mở đăng ký (Registration Open).": "Tournament is now in Registration Open status.",
+    "Cần phân công trọng tài": "Pending Admin Attention",
+    "Cần gán trọng tài khẩn cấp (còn lại dưới 24h trước khi giải đấu diễn ra!)": "Urgent referee assignment needed (less than 24h before start!)",
+    "Có cuộc đua chưa phân công trọng tài. Vui lòng phân công trọng tài để giải đấu bắt đầu!": "A race is missing referee. Please assign referee to start the tournament!",
+    "Thiếu trọng tài!": "No referee!",
   },
   vi: {
     // English to Vietnamese
+    "Pending Admin Attention": "Cần phân công trọng tài",
     "Cuộc đua (số nhiều)": "Cuộc đua",
     "Dashboard": "Bảng điều khiển",
     "Accounts": "Tài khoản",

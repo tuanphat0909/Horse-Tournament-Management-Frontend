@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader, Plus, Search, Trophy, Clock, ArrowUpDown, Calendar, AlertCircle } from 'lucide-react';
+import { Loader, Plus, Search, Trophy, Clock, ArrowUpDown, Calendar, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -22,6 +22,7 @@ const CUSTOM_STATUS_CONFIG: Record<string, { label: string; color: string; dot: 
   'Registration Open': { label: 'Registration Open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   'Registration Closed': { label: 'Registration Closed', color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20', dot: 'bg-zinc-400' },
   'Scheduled': { label: 'Scheduled', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-400' },
+  'Pending Admin Attention': { label: 'Cần phân công trọng tài', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20 border-dashed animate-pulse', dot: 'bg-rose-400' },
   'Racing': { label: 'Racing', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
   'Completed': { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
   'Cancelled': { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' }
@@ -34,6 +35,9 @@ function getTournamentCustomStatus(tour: any) {
   }
   if (status === 'completed' || status === 'finished') {
     return 'Completed';
+  }
+  if (status === 'pendingadminattention') {
+    return 'Pending Admin Attention';
   }
 
   const now = new Date();
@@ -307,7 +311,10 @@ export function AdminTournamentsPage() {
     upcoming_registration: tournaments.filter(t => getTournamentCustomStatus(t) === 'Upcoming Registration').length,
     registration_open: tournaments.filter(t => getTournamentCustomStatus(t) === 'Registration Open').length,
     registration_closed: tournaments.filter(t => getTournamentCustomStatus(t) === 'Registration Closed').length,
-    scheduled: tournaments.filter(t => getTournamentCustomStatus(t) === 'Scheduled').length,
+    scheduled: tournaments.filter(t => {
+      const cs = getTournamentCustomStatus(t);
+      return cs === 'Scheduled' || cs === 'Pending Admin Attention';
+    }).length,
     racing: tournaments.filter(t => getTournamentCustomStatus(t) === 'Racing').length,
     completed: tournaments.filter(t => getTournamentCustomStatus(t) === 'Completed').length,
     cancelled: tournaments.filter(t => getTournamentCustomStatus(t) === 'Cancelled').length,
@@ -322,7 +329,7 @@ export function AdminTournamentsPage() {
     if (filter === 'upcoming_registration') return customStatus === 'Upcoming Registration';
     if (filter === 'registration_open') return customStatus === 'Registration Open';
     if (filter === 'registration_closed') return customStatus === 'Registration Closed';
-    if (filter === 'scheduled') return customStatus === 'Scheduled';
+    if (filter === 'scheduled') return customStatus === 'Scheduled' || customStatus === 'Pending Admin Attention';
     if (filter === 'racing') return customStatus === 'Racing';
     if (filter === 'completed') return customStatus === 'Completed';
     if (filter === 'cancelled') return customStatus === 'Cancelled';
@@ -336,6 +343,7 @@ export function AdminTournamentsPage() {
     'registration open': 1,
     'registration closed': 2,
     'scheduled': 3,
+    'pending admin attention': 3.5,
     'racing': 4,
     'completed': 5,
     'cancelled': 6
@@ -501,6 +509,12 @@ export function AdminTournamentsPage() {
                 const config = CUSTOM_STATUS_CONFIG[customStatus] ?? CUSTOM_STATUS_CONFIG.Scheduled;
                 const raceState = getTournamentRaceState(tour);
                 const isGenerating = generatingForTournament === tour.tournamentId;
+                
+                const now = new Date();
+                const isScheduled = customStatus === 'Scheduled';
+                const startsInLessThan24h = tour.startDate && (new Date(tour.startDate).getTime() - now.getTime() < 24 * 60 * 60 * 1000);
+                const show24hWarning = isScheduled && tour.hasMissingReferees && startsInLessThan24h;
+
                 return (
                   <motion.div
                     key={tour.tournamentId ?? i}
@@ -539,7 +553,18 @@ export function AdminTournamentsPage() {
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">🔒 Reg. Closed</span>
                         )}
                         {customStatus === 'Scheduled' && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-400 shrink-0">📅 Scheduled</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-400 shrink-0">📅 Scheduled</span>
+                            {show24hWarning && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/15 text-red-400 shrink-0 flex items-center gap-1 animate-pulse">
+                                <AlertTriangle size={10} className="text-red-400 shrink-0" />
+                                {t("Thiếu trọng tài!")}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {customStatus === 'Pending Admin Attention' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-400 shrink-0 animate-pulse">⚠️ {t("Cần phân công trọng tài")}</span>
                         )}
                         {customStatus === 'Racing' && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/40 bg-orange-500/10 text-orange-400 shrink-0">🏃 Racing</span>
@@ -694,24 +719,72 @@ export function AdminTournamentsPage() {
                       )}
 
                       {customStatus === 'Scheduled' && (
-                        <div className="flex gap-2 w-full">
-                          {raceState.canGenerateFinal ? (
-                            <button
-                              onClick={() => handleGenerateFinal(tour.tournamentId)}
-                              disabled={isGenerating}
-                              className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
-                            >
-                              {isGenerating ? <Loader size={13} className="animate-spin" /> : <Trophy size={13} />}
-                              {isGenerating ? t('Assigning...') : t('Auto Assign Final')}
-                            </button>
-                          ) : (
-                            <button
-                              disabled
-                              className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-muted border border-glass-border bg-white/[0.04] cursor-not-allowed text-center"
-                            >
-                              {t('Scheduled & Ready')}
-                            </button>
+                        <div className="flex flex-col gap-2 w-full">
+                          {show24hWarning && (
+                            <div className="text-red-400 font-bold text-[11px] flex items-start gap-1.5 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5 animate-pulse mb-1">
+                              <AlertTriangle size={13} className="shrink-0 mt-0.5 text-red-400" />
+                              <span>{t("Cần gán trọng tài khẩn cấp (còn lại dưới 24h trước khi giải đấu diễn ra!)")}</span>
+                            </div>
                           )}
+                          <div className="flex gap-2 w-full">
+                            {show24hWarning ? (
+                              <>
+                                <button
+                                  onClick={() => navigate('/admin/races', { state: { openTournamentId: tour.tournamentId } })}
+                                  className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 animate-pulse"
+                                >
+                                  <Calendar size={13} />
+                                  {t('Phân công trọng tài')}
+                                </button>
+                                <button
+                                  onClick={() => setCancelWarningTournament(tour)}
+                                  className="px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5"
+                                >
+                                  {t('Cancel')}
+                                </button>
+                              </>
+                            ) : raceState.canGenerateFinal ? (
+                              <button
+                                onClick={() => handleGenerateFinal(tour.tournamentId)}
+                                disabled={isGenerating}
+                                className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+                              >
+                                {isGenerating ? <Loader size={13} className="animate-spin" /> : <Trophy size={13} />}
+                                {isGenerating ? t('Assigning...') : t('Auto Assign Final')}
+                              </button>
+                            ) : (
+                              <button
+                                disabled
+                                className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-muted border border-glass-border bg-white/[0.04] cursor-not-allowed text-center"
+                              >
+                                {t('Scheduled & Ready')}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {customStatus === 'Pending Admin Attention' && (
+                        <div className="flex flex-col gap-2.5 w-full">
+                          <div className="text-red-400 font-bold text-[11px] flex items-start gap-1.5 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5 animate-pulse">
+                            <AlertCircle size={13} className="shrink-0 mt-0.5 text-red-400" />
+                            <span>{t("Có cuộc đua chưa phân công trọng tài. Vui lòng phân công trọng tài để giải đấu bắt đầu!")}</span>
+                          </div>
+                          <div className="flex gap-2 w-full">
+                            <button
+                              onClick={() => navigate('/admin/races', { state: { openTournamentId: tour.tournamentId } })}
+                              className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 animate-pulse transition-colors flex items-center justify-center gap-1.5"
+                            >
+                              <Calendar size={13} />
+                              {t('Phân công trọng tài')}
+                            </button>
+                            <button
+                              onClick={() => setCancelWarningTournament(tour)}
+                              className="px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5"
+                            >
+                              {t('Hủy giải')}
+                            </button>
+                          </div>
                         </div>
                       )}
 
