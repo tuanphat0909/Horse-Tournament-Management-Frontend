@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, CheckCircle, XCircle, Calendar, Trophy, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, XCircle, Calendar, Trophy, Search, Clock, User, ExternalLink, X } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { createRegistration, getMyRegistrations, getMyHorses, getMyProposals } from '../../api/ownerService';
+import { createRegistration, getMyRegistrations, getMyHorses, getMyProposals, cancelJockeyContract } from '../../api/ownerService';
 import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
+import { CountdownTimer } from '../../components/ui/CountdownTimer';
+import { formatUtcDateTime } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'pending' | 'approved' | 'rejected';
@@ -27,6 +30,7 @@ const STATUS_CONFIG = {
 };
 
 export function OwnerRegistrationsPage() {
+  const navigate = useNavigate();
   const { showToast } = useNotifications();
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
@@ -40,6 +44,7 @@ export function OwnerRegistrationsPage() {
   const [form, setForm] = useState({ horseId: '', tournamentId: '' });
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [pendingModal, setPendingModal] = useState<{ contract: any; registration: any } | null>(null);
 
   async function load() {
     setLoading(true); setError('');
@@ -104,6 +109,18 @@ export function OwnerRegistrationsPage() {
 
   const filtered = registrations.filter(r => {
     if (normalizeStatus(r.status) !== tab) return false;
+
+    // Filter out past (completed/cancelled) tournaments for the approved tab
+    if (tab === 'approved') {
+      const t = tournaments.find(tour => tour.tournamentId === r.tournamentId);
+      if (t) {
+        const status = (t.status ?? '').toLowerCase();
+        if (status === 'completed' || status === 'cancelled') {
+          return false;
+        }
+      }
+    }
+
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (r.horseName ?? '').toLowerCase().includes(q)
@@ -174,35 +191,58 @@ export function OwnerRegistrationsPage() {
             <div className="space-y-3">
               {filtered.map((r, i) => {
                 const statusKey = normalizeStatus(r.status);
+                // Find matching contract for this horse+tournament
+                const contract = proposals.find(
+                  p => String(p.horseId) === String(r.horseId) && String(p.tournamentId) === String(r.tournamentId)
+                );
+                const contractStatus = (contract?.status ?? '').toLowerCase();
+                const resolvedStatus = contractStatus || (r.jockeyName ? 'accepted' : '');
+
                 let customStatus = {
                   label: 'Pending Admin approval',
-                  color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
+                  color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+                  clickable: false as boolean,
+                  action: 'none' as 'none' | 'invite' | 'pending-modal',
                 };
 
-                if (statusKey === 'pending') {
-                  const contract = proposals.find(
-                    p => String(p.horseId) === String(r.horseId) && String(p.tournamentId) === String(r.tournamentId)
-                  );
-                  const contractStatus = (contract?.status ?? '').toLowerCase();
-                  if (contractStatus === 'accepted' || contractStatus === 'active') {
+                 if (statusKey === 'pending') {
+                  if (resolvedStatus === 'accepted' || resolvedStatus === 'active') {
                     customStatus = {
                       label: 'Pending Admin approval',
-                      color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
+                      color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
+                      clickable: false,
+                      action: 'none',
                     };
-                  } else if (contractStatus === 'pending') {
+                  } else if (resolvedStatus === 'pending') {
                     customStatus = {
                       label: 'Awaiting Jockey Response',
-                      color: 'text-orange-400 bg-orange-500/10 border-orange-500/20'
+                      color: 'text-orange-400 bg-orange-500/10 border-orange-500/20 cursor-pointer hover:bg-orange-500/20',
+                      clickable: true,
+                      action: 'pending-modal',
                     };
                   } else {
+                    // Default to no jockey (e.g. status is empty, expired, or declined)
                     customStatus = {
                       label: 'No Jockey Yet',
-                      color: 'text-red-400 bg-red-500/10 border-red-500/20'
+                      color: 'text-red-400 bg-red-500/10 border-red-500/20 cursor-pointer hover:bg-red-500/20',
+                      clickable: true,
+                      action: 'invite',
                     };
                   }
                 } else {
-                  customStatus = STATUS_CONFIG[statusKey];
+                  const cfg = STATUS_CONFIG[statusKey];
+                  customStatus = { ...cfg, clickable: false, action: 'none' };
                 }
+
+                const handleBadgeClick = () => {
+                  if (!customStatus.clickable) return;
+                  if (customStatus.action === 'invite') {
+                    // Navigate to Jockey page with pre-filled horse + tournament
+                    navigate(`/owner/jockeys?horseId=${r.horseId}&tournamentId=${r.tournamentId}`);
+                  } else if (customStatus.action === 'pending-modal' && contract) {
+                    setPendingModal({ contract, registration: r });
+                  }
+                };
 
                 return (
                   <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
@@ -216,18 +256,28 @@ export function OwnerRegistrationsPage() {
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted mt-1">
                         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne"><Trophy size={10} className="text-gold/60" /> {r.tournamentName ?? `Tournament #${r.tournamentId}`}</span>
                         {r.createdAt && <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted"><Calendar size={10} className="text-gold/60" /> {r.createdAt}</span>}
+                        {/* Show jockey name inline — only from registration API or accepted/active contract */}
+                        {((resolvedStatus === 'accepted' || resolvedStatus === 'active') && (r.jockeyName || contract?.jockeyName)) && (
+                          <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300">
+                            <User size={10} className="text-blue-400/60" /> {r.jockeyName || contract?.jockeyName}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <span className={`relative z-10 text-[11px] font-bold px-3 py-1 rounded-full border shrink-0 ${customStatus.color}`}>{customStatus.label}</span>
+                    {/* Status badge — clickable when action is available */}
+                    <span
+                      onClick={handleBadgeClick}
+                      className={`relative z-10 text-[11px] font-bold px-3 py-1 rounded-full border shrink-0 transition-all flex items-center gap-1.5 ${customStatus.color}`}
+                      title={customStatus.clickable ? (customStatus.action === 'invite' ? 'Click to invite a jockey' : 'Click for details') : undefined}
+                    >
+                      {customStatus.action === 'invite' && <ExternalLink size={10} />}
+                      {customStatus.action === 'pending-modal' && <Clock size={10} />}
+                      {customStatus.label}
+                    </span>
                     {statusKey === 'pending' && (
                       <button className="relative z-10 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors shrink-0" title="Cancel registration">
                         <XCircle size={15} />
                       </button>
-                    )}
-                    {statusKey === 'approved' && (
-                      <span className="relative z-10 text-xs text-emerald-400 font-medium flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                        <CheckCircle size={13} /> Approved
-                      </span>
                     )}
                   </motion.div>
                 );
@@ -248,6 +298,97 @@ export function OwnerRegistrationsPage() {
 
         </main>
       </div>
+
+      {/* Pending Jockey Details Modal */}
+      <AnimatePresence>
+        {pendingModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setPendingModal(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              onClick={e => e.stopPropagation()}
+              className="glass-panel rounded-2xl p-8 w-full max-w-md border border-orange-500/20 relative"
+            >
+              <button onClick={() => setPendingModal(null)} className="absolute top-4 right-4 p-1.5 rounded-lg text-muted hover:text-white hover:bg-white/5 transition-colors">
+                <X size={16} />
+              </button>
+              <h2 className="text-xl font-serif text-white mb-1">Awaiting Jockey Response</h2>
+              <p className="text-xs text-muted mb-6">The jockey has not yet responded to your invitation.</p>
+
+              <div className="space-y-4">
+                {/* Horse info */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-glass-border">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 flex items-center justify-center text-lg">🐴</div>
+                  <div>
+                    <div className="text-sm font-medium text-white">{pendingModal.registration.horseName ?? `Horse #${pendingModal.registration.horseId}`}</div>
+                    <div className="text-[10px] text-muted uppercase tracking-wider">{pendingModal.registration.tournamentName ?? `Tournament #${pendingModal.registration.tournamentId}`}</div>
+                  </div>
+                </div>
+
+                {/* Jockey info */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/5 border border-blue-500/15">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-900/20 border border-blue-500/20 flex items-center justify-center font-serif font-bold text-blue-300 text-lg">
+                    {(pendingModal.contract.jockeyName ?? 'J')[0]}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-white">{pendingModal.contract.jockeyName ?? `Jockey #${pendingModal.contract.jockeyId}`}</div>
+                    <div className="text-[10px] text-muted">Invited Jockey</div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border text-orange-400 bg-orange-500/10 border-orange-500/20">
+                    <Clock size={10} /> Pending
+                  </span>
+                </div>
+
+                {/* Countdown */}
+                {pendingModal.contract.invitationExpiredAt && (
+                  <div className="flex items-center justify-center py-3">
+                    <CountdownTimer target={pendingModal.contract.invitationExpiredAt} label="Expires in:" />
+                  </div>
+                )}
+
+                {/* Dates */}
+                {(pendingModal.contract.startDate || pendingModal.contract.endDate) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {pendingModal.contract.startDate && (
+                      <div className="p-2.5 rounded-lg bg-white/[0.03] border border-glass-border">
+                        <div className="text-[10px] text-muted uppercase tracking-wider mb-1">Start Date</div>
+                        <div className="text-xs text-white font-medium">{formatUtcDateTime(pendingModal.contract.startDate)}</div>
+                      </div>
+                    )}
+                    {pendingModal.contract.endDate && (
+                      <div className="p-2.5 rounded-lg bg-white/[0.03] border border-glass-border">
+                        <div className="text-[10px] text-muted uppercase tracking-wider mb-1">End Date</div>
+                        <div className="text-xs text-white font-medium">{formatUtcDateTime(pendingModal.contract.endDate)}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => setPendingModal(null)} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Close</button>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('Cancel this jockey invitation?')) return;
+                    try {
+                      await cancelJockeyContract(pendingModal.contract.id);
+                      setPendingModal(null);
+                      showToast('Success', 'Invitation cancelled', 'success');
+                      load();
+                    } catch (err: unknown) {
+                      showToast('Error', parseApiError(err as Error), 'error');
+                    }
+                  }}
+                  className="flex-1 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 text-sm font-bold transition-colors"
+                >
+                  Cancel Invitation
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

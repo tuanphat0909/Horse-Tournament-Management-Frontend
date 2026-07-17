@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, CheckCircle, XCircle, Clock, Users, Calendar, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -65,6 +65,8 @@ function contractBucket(status: string): ContractFilter {
 
 export function OwnerJockeysPage() {
   const { notifications, showToast } = useNotifications();
+  const searchParams = new URLSearchParams(window.location.search);
+  const prefillApplied = useRef(false);
   const [proposals, setProposals] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
   const [jockeys, setJockeys] = useState<any[]>([]);
@@ -111,6 +113,28 @@ export function OwnerJockeysPage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  // Auto-open invite modal when navigated from OwnerRegistrationsPage with query params
+  useEffect(() => {
+    if (prefillApplied.current || loading) return;
+    const horseId = searchParams.get('horseId');
+    const tournamentId = searchParams.get('tournamentId');
+    if (horseId && tournamentId) {
+      prefillApplied.current = true;
+      // Find the tournament to auto-fill dates
+      const t = tournaments.find((t: any) => String(t.tournamentId) === String(tournamentId));
+      setForm(prev => ({
+        ...prev,
+        horseId,
+        tournamentId,
+        startDate: t ? toDateInputValue(t.startDate) : '',
+        endDate: t ? toDateInputValue(t.endDate) : '',
+      }));
+      setShowInvite(true);
+      // Clear query params from URL without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [loading, tournaments]);
 
   // Auto-refresh list silently in the background when a new notification arrives (e.g. Jockey accepted/cancelled)
   useEffect(() => {
