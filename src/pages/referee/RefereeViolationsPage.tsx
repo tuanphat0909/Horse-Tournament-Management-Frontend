@@ -15,6 +15,11 @@ type Tab = 'active' | 'decided';
 
 const INIT_FORM = { raceId: '', description: '', type: 'warning', horseOrJockey: '' };
 
+const cleanNote = (note: string) => {
+  if (!note) return '';
+  return note.replace(/\[timestamp=\d+\]/, '').trim();
+};
+
 export function RefereeViolationsPage() {
   const [tab, setTab] = useState<Tab>('active');
   const [search, setSearch] = useState('');
@@ -82,7 +87,7 @@ export function RefereeViolationsPage() {
     try {
       const payload = {
         raceId: Number(form.raceId),
-        description: `${form.type} - ${form.horseOrJockey ? '['+form.horseOrJockey+'] ' : ''}${form.description}`,
+        description: `${form.type} - ${form.horseOrJockey ? '['+form.horseOrJockey+'] ' : ''}${form.description} [timestamp=${Date.now()}]`,
         penalty: form.type === 'warning' ? 'None' : form.type === 'penalty' ? 'Time Penalty' : 'Disqualified'
       };
       await createViolation(payload);
@@ -101,9 +106,11 @@ export function RefereeViolationsPage() {
     setSubmitError('');
     setSubmitLoading(true);
     try {
+      const match = (editingVio.note || editingVio.description || '').match(/\[timestamp=(\d+)\]/);
+      const tsPart = match ? ` [timestamp=${match[1]}]` : ` [timestamp=${Date.now()}]`;
       await updateViolation(editingVio.violationId, {
         penalty: editPenalty,
-        description: editDesc
+        description: `${editDesc}${tsPart}`
       });
       setEditingVio(null);
       fetchData();
@@ -205,10 +212,10 @@ export function RefereeViolationsPage() {
                       Violation
                     </span>
                   </div>
-                  <p className="text-sm text-muted line-clamp-3 mb-4">{v.note || v.description || 'No description'}</p>
+                  <p className="text-sm text-muted line-clamp-3 mb-4">{cleanNote(v.note || v.description || 'No description')}</p>
                   <div className="flex justify-between items-center mt-auto">
-                    <div className="text-xs text-muted/60">Penalty: <span className="text-white/80">{v.penalty || 'Undecided'}</span></div>
-                    <button onClick={() => { setEditingVio(v); setEditPenalty(v.penalty || ''); setEditDesc(v.note || v.description || ''); }} className="text-[11px] px-2 py-1 bg-white/5 border border-glass-border hover:bg-gold/10 hover:border-gold/30 hover:text-gold rounded transition-colors text-muted">
+                    <div className="text-xs text-muted/60">Penalty: <span className="text-white/80">{v.penalty || 'None'}</span></div>
+                    <button onClick={() => { setEditingVio(v); setEditPenalty(v.penalty || 'None'); setEditDesc(cleanNote(v.note || v.description || '')); }} className="text-[11px] px-2 py-1 bg-white/5 border border-glass-border hover:bg-gold/10 hover:border-gold/30 hover:text-gold rounded transition-colors text-muted">
                       Update
                     </button>
                   </div>
@@ -303,7 +310,16 @@ export function RefereeViolationsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs text-muted font-medium mb-1.5">Penalty</label>
-                    <input value={editPenalty} onChange={e => setEditPenalty(e.target.value)} placeholder="E.g.: Time Penalty, Disqualified..." className="w-full bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors" />
+                    <select
+                      value={editPenalty}
+                      onChange={e => setEditPenalty(e.target.value)}
+                      className="w-full bg-[#0B1628] border border-glass-border rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-gold/40"
+                      style={{ colorScheme: 'dark' }}
+                    >
+                      <option value="None">None</option>
+                      <option value="Time Penalty">Time Penalty</option>
+                      <option value="Disqualified">Disqualified</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs text-muted font-medium mb-1.5">New Description / Notes</label>

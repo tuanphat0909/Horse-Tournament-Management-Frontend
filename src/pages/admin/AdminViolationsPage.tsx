@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle, ArrowUpCircle, Check, X, Search } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ArrowUpCircle, Check, X, Search, Clock } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -20,6 +20,112 @@ interface Violation {
   penalty: string;
   status: string;
   createdAt: string;
+}
+
+const cleanNote = (note: string) => {
+  if (!note) return '';
+  return note.replace(/\[timestamp=\d+\]/, '').trim();
+};
+
+function ViolationRow({ v, processingId, handleReview }: { v: any; processingId: number | null; handleReview: any }) {
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  const fullDesc = v.note || '';
+  const match = fullDesc.match(/\[timestamp=(\d+)\]/);
+  const createdAtMs = match ? parseInt(match[1]) : null;
+  const noteContent = cleanNote(fullDesc);
+
+  useEffect(() => {
+    if (!createdAtMs) {
+      setTimeLeft(0);
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const now = Date.now();
+      const diffMs = (createdAtMs + 30 * 60 * 1000) - now;
+      return Math.max(0, Math.floor(diffMs / 1000));
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const interval = setInterval(() => {
+      const left = calculateTimeLeft();
+      setTimeLeft(left);
+      if (left <= 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [createdAtMs]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const timerString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const isCountdownActive = timeLeft > 0;
+
+  return (
+    <tr className="hover:bg-white/[0.01] transition-colors">
+      <td className="px-6 py-4 font-mono text-xs text-muted">#{v.violationId}</td>
+      <td className="px-6 py-4 font-medium">{v.raceName}</td>
+      <td className="px-6 py-4 text-orange-400 font-semibold">{v.type}</td>
+      <td className="px-6 py-4 text-muted">
+        <div>{noteContent}</div>
+        {isCountdownActive && (
+          <div className="text-xs text-orange-400 mt-1.5 flex items-center gap-1.5 font-medium">
+            <span className="animate-pulse inline-block w-1.5 h-1.5 rounded-full bg-orange-400" />
+            <span>Appeal window: {timerString} remaining</span>
+          </div>
+        )}
+        {!isCountdownActive && createdAtMs && (
+          <div className="text-xs text-emerald-400 mt-1.5 flex items-center gap-1.5 font-medium">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>Appeal window closed</span>
+          </div>
+        )}
+      </td>
+      <td className="px-6 py-4">
+        <span className="px-2 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded text-xs font-semibold">
+          {v.penalty}
+        </span>
+      </td>
+      <td className="px-6 py-4 text-right">
+        {isCountdownActive ? (
+          <div className="text-xs text-muted/80 italic flex items-center justify-end gap-1.5 bg-white/[0.02] border border-glass-border rounded-lg px-2.5 py-1.5 w-fit ml-auto">
+            <Clock size={11} className="animate-spin text-orange-400" />
+            <span>Awaiting Jockey Appeal (Only details visible)...</span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => handleReview(v.violationId, 'Confirmed')}
+                disabled={processingId === v.violationId}
+                className="px-3 py-1.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all flex items-center gap-1 text-xs font-semibold disabled:opacity-40"
+                title="Confirm Violation"
+              >
+                <Check size={12} />
+                <span>Confirm</span>
+              </button>
+              <button
+                onClick={() => handleReview(v.violationId, 'Rejected')}
+                disabled={processingId === v.violationId}
+                className="px-3 py-1.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all flex items-center gap-1 text-xs font-semibold disabled:opacity-40"
+                title="Dismiss violation"
+              >
+                <X size={12} />
+                <span>Dismiss</span>
+              </button>
+            </div>
+            {createdAtMs && (
+              <div className="text-[10px] text-emerald-400/90 font-medium">Ready: You can now confirm or dismiss.</div>
+            )}
+          </div>
+        )}
+      </td>
+    </tr>
+  );
 }
 
 export function AdminViolationsPage() {
@@ -195,39 +301,12 @@ export function AdminViolationsPage() {
                         </thead>
                         <tbody className="divide-y divide-glass-border/40 text-sm text-white">
                           {pagedViolations.map((v) => (
-                            <tr key={v.violationId} className="hover:bg-white/[0.01] transition-colors">
-                              <td className="px-6 py-4 font-mono text-xs text-muted">#{v.violationId}</td>
-                              <td className="px-6 py-4 font-medium">{v.raceName}</td>
-                              <td className="px-6 py-4 text-orange-400 font-semibold">{v.type}</td>
-                              <td className="px-6 py-4 text-muted">{v.note}</td>
-                              <td className="px-6 py-4">
-                                <span className="px-2 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded text-xs font-semibold">
-                                  {v.penalty}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    onClick={() => handleReview(v.violationId, 'Confirmed')}
-                                    disabled={processingId === v.violationId}
-                                    className="px-3 py-1.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all flex items-center gap-1 text-xs font-semibold disabled:opacity-40"
-                                    title="Confirm Violation"
-                                  >
-                                    <Check size={12} />
-                                    <span>Confirm</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleReview(v.violationId, 'Rejected')}
-                                    disabled={processingId === v.violationId}
-                                    className="px-3 py-1.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all flex items-center gap-1 text-xs font-semibold disabled:opacity-40"
-                                    title="Dismiss violation"
-                                  >
-                                    <X size={12} />
-                                    <span>Dismiss</span>
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
+                            <ViolationRow
+                              key={v.violationId}
+                              v={v}
+                              processingId={processingId}
+                              handleReview={handleReview}
+                            />
                           ))}
                         </tbody>
                       </table>
@@ -264,7 +343,7 @@ export function AdminViolationsPage() {
                               <td className="px-6 py-4 font-mono text-xs text-muted">#{v.violationId}</td>
                               <td className="px-6 py-4 font-medium">{v.raceName}</td>
                               <td className="px-6 py-4 text-red-400 font-semibold">{v.type}</td>
-                              <td className="px-6 py-4 text-muted">{v.note}</td>
+                              <td className="px-6 py-4 text-muted">{cleanNote(v.note)}</td>
                               <td className="px-6 py-4">
                                 <span className="px-2 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded text-xs font-semibold">
                                   {v.penalty}
@@ -313,7 +392,7 @@ export function AdminViolationsPage() {
                               <td className="px-6 py-4 font-mono text-xs text-muted">#{v.violationId}</td>
                               <td className="px-6 py-4 font-medium">{v.raceName}</td>
                               <td className="px-6 py-4 text-emerald-400 font-semibold">{v.type}</td>
-                              <td className="px-6 py-4 text-muted">{v.note}</td>
+                              <td className="px-6 py-4 text-muted">{cleanNote(v.note)}</td>
                               <td className="px-6 py-4 text-muted/65 line-through">{v.penalty}</td>
                               <td className="px-6 py-4">
                                 <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center gap-1 w-fit">
