@@ -11,6 +11,7 @@ import { createRace, deleteRace, createRaceEntry, assignReferee, getRaceReferees
 import { getRaceSchedule, getTournaments, getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
@@ -82,6 +83,7 @@ function formatToDatetimeLocal(v: any): string {
 
 export function AdminRacesPage() {
   const { showToast } = useNotifications();
+  const { t } = useLanguage();
   const [modal, setModal] = useState<Modal>('none');
 
   // List Tournaments and Races
@@ -100,7 +102,7 @@ export function AdminRacesPage() {
   const [sortBy, setSortBy] = useState<SortKey>('newest');
 
   // Lọc theo trạng thái tournaments + tìm kiếm theo tên
-  type StatusFilter = 'all' | 'active' | 'upcoming' | 'completed';
+  type StatusFilter = 'all' | 'pending_scheduling' | 'upcoming' | 'active' | 'completed';
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
 
@@ -134,8 +136,10 @@ export function AdminRacesPage() {
     const allRounds = selectedTour?.rounds ?? [];
     const horseCount = selectedTournamentApprovedHorsesCount;
 
-    // ≤12 ngựa: đấu thẳng Chung kết, chỉ cho chọn vòng Final
-    if (horseCount <= 12 && horseCount > 0) {
+    if (horseCount < 12) {
+      return [];
+    }
+    if (horseCount === 12) {
       return allRounds.filter((r: any) => r.roundNumber === 2 || r.name?.toLowerCase().includes('final'));
     }
     return allRounds;
@@ -506,7 +510,15 @@ export function AdminRacesPage() {
     }
   }
 
-  const groupedTournaments = tournamentsList.map(t => {
+  const closedTournamentsList = tournamentsList.filter(t => {
+    const status = (t.status ?? '').toLowerCase();
+    if (status === 'cancelled') return false;
+    const now = new Date();
+    const regEnd = t.registrationEndDate ? new Date(t.registrationEndDate) : null;
+    return status === 'pendingscheduling' || status === 'upcoming' || status === 'active' || status === 'completed' || (regEnd != null && now >= regEnd);
+  });
+
+  const groupedTournaments = closedTournamentsList.map(t => {
     const tRaces = racesList.filter(r => r.tournamentId === t.tournamentId);
 
     const rounds = (t.rounds ?? []).map((r: any) => {
@@ -606,25 +618,38 @@ export function AdminRacesPage() {
     };
   });
 
+  const getFilterType = (t: any): StatusFilter => {
+    const status = (t.status ?? '').toLowerCase();
+    if (status === 'completed' || status === 'finished') return 'completed';
+    if (status === 'active') return 'active';
+    if (status === 'upcoming') return 'upcoming';
+    return 'pending_scheduling';
+  };
+
   // Đếm số giải theo trạng thái (cho thanh filter)
   const statsCounts: Record<StatusFilter, number> = {
     all: groupedTournaments.length,
-    active: groupedTournaments.filter(t => t.status === 'Active').length,
-    upcoming: groupedTournaments.filter(t => t.status === 'Upcoming').length,
-    completed: groupedTournaments.filter(t => t.status === 'Completed').length,
+    pending_scheduling: groupedTournaments.filter(t => getFilterType(t) === 'pending_scheduling').length,
+    upcoming: groupedTournaments.filter(t => getFilterType(t) === 'upcoming').length,
+    active: groupedTournaments.filter(t => getFilterType(t) === 'active').length,
+    completed: groupedTournaments.filter(t => getFilterType(t) === 'completed').length,
   };
   const FILTER_LABELS: Record<StatusFilter, string> = {
-    all: 'All', active: 'Active', upcoming: 'Upcoming', completed: 'Completed',
+    all: 'All',
+    pending_scheduling: 'Pending Scheduling',
+    upcoming: 'Upcoming',
+    active: 'Active',
+    completed: 'Completed',
   };
 
   const filteredTournaments = groupedTournaments.filter(t => {
     const matchesSearch = (t.name ?? '').toLowerCase().includes(search.toLowerCase());
     if (statusFilter === 'all') return matchesSearch;
-    return matchesSearch && (t.status ?? '').toLowerCase() === statusFilter;
+    return matchesSearch && getFilterType(t) === statusFilter;
   });
 
-  // Sắp xếp theo lựa chọn: mới nhất / cũ nhất (theo days bắt đầu), tên A-Z, trạng thái
-  const STATUS_ORDER: Record<string, number> = { Active: 0, Upcoming: 1, Completed: 2 };
+  // Sắp xếp
+  const STATUS_ORDER: Record<string, number> = { active: 0, upcoming: 1, pendingscheduling: 2, completed: 3 };
   const sortedTournaments = [...filteredTournaments].sort((a, b) => {
     switch (sortBy) {
       case 'oldest':
@@ -632,7 +657,9 @@ export function AdminRacesPage() {
       case 'name':
         return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
       case 'status':
-        return (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
+        const statusA = (a.status ?? '').toLowerCase();
+        const statusB = (b.status ?? '').toLowerCase();
+        return (STATUS_ORDER[statusA] ?? 4) - (STATUS_ORDER[statusB] ?? 4);
       case 'newest':
       default:
         return new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime();
@@ -689,7 +716,7 @@ export function AdminRacesPage() {
 
           {!loadingData && !fetchError && groupedTournaments.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
-              {(['all', 'active', 'upcoming', 'completed'] as StatusFilter[]).map(s => (
+              {(['all', 'pending_scheduling', 'upcoming', 'active', 'completed'] as StatusFilter[]).map(s => (
                 <button
                   key={s}
                   onClick={() => { setStatusFilter(s); setTourPage(1); }}
@@ -697,7 +724,7 @@ export function AdminRacesPage() {
                     statusFilter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
-                  {FILTER_LABELS[s]}
+                  {t(FILTER_LABELS[s])}
                   <span className="ml-2 text-[11px] font-bold text-current opacity-60">{statsCounts[s]}</span>
                 </button>
               ))}
@@ -1012,35 +1039,58 @@ export function AdminRacesPage() {
                   style={{ colorScheme: 'dark' }}
                 >
                   <option value="">-- Select Tournament --</option>
-                  {tournamentsList.map(t => (
-                    <option key={t.tournamentId} value={t.tournamentId}>
-                      {t.name}
-                    </option>
-                  ))}
+                  {closedTournamentsList
+                    .filter(t => {
+                      const status = (t.status ?? '').toLowerCase();
+                      return status !== 'completed' && status !== 'finished';
+                    })
+                    .map(t => (
+                      <option key={t.tournamentId} value={t.tournamentId}>
+                        {t.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               {selectedTournamentId && (
-                <div className="text-xs px-3 py-2.5 rounded-lg bg-gold/10 border border-gold/20 text-gold/90 flex items-center gap-2 my-2">
-                  <span>📢</span>
-                  <span>
-                    This tournament has <strong>{selectedTournamentApprovedHorsesCount}</strong> approved horses.
-                    {selectedTournamentApprovedHorsesCount <= 12 ? " (Straight to Final)" : " (Prelims & Final required)"}
-                  </span>
-                </div>
+                selectedTournamentApprovedHorsesCount < 12 ? (
+                  <div className="text-xs px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-start gap-2 my-2 animate-pulse">
+                    <span className="mt-0.5">⚠️</span>
+                    <div>
+                      <p className="font-bold mb-0.5">
+                        {t("This tournament does not have enough 12 horses.") || "Giải đấu này chưa đủ 12 con ngựa."}
+                      </p>
+                      <p className="opacity-80">
+                        {t("Cannot schedule races. Please reopen registration or cancel the tournament.") || "Không thể xếp lịch thi đấu. Vui lòng mở lại đăng ký hoặc hủy giải đấu."}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs px-3 py-2.5 rounded-lg bg-gold/10 border border-gold/20 text-gold/90 flex items-center gap-2 my-2">
+                    <span>📢</span>
+                    <span>
+                      This tournament has <strong>{selectedTournamentApprovedHorsesCount}</strong> approved horses.
+                      {selectedTournamentApprovedHorsesCount === 12 ? " (Straight to Final)" : " (Prelims & Final required)"}
+                    </span>
+                  </div>
+                )
               )}
               <div>
                 <label className={LABEL}>Round *</label>
                 <select
                   value={raceForm.roundId}
                   onChange={e => setR('roundId', e.target.value)}
-                  disabled={!selectedTournamentId}
+                  disabled={!selectedTournamentId || selectedTournamentApprovedHorsesCount < 12}
                   className={`${INPUT} bg-navy disabled:opacity-60 disabled:cursor-not-allowed`}
                   style={{ colorScheme: 'dark' }}
                 >
                   <option value="">
-                    {selectedTournamentId ? "-- Select Round --" : "-- Select Tournament first --"}
+                    {!selectedTournamentId 
+                      ? "-- Select Tournament first --" 
+                      : selectedTournamentApprovedHorsesCount < 12 
+                        ? "-- Not enough horses --" 
+                        : "-- Select Round --"}
                   </option>
-                  {availableRounds.map((r: any) => (
+                  {selectedTournamentApprovedHorsesCount >= 12 && availableRounds.map((r: any) => (
                     <option key={r.roundId} value={r.roundId}>
                       {r.name} (Round {r.roundNumber})
                     </option>
@@ -1098,7 +1148,11 @@ export function AdminRacesPage() {
 
             <div className="flex gap-3 mt-6">
               <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
-              <button onClick={handleCreateRace} disabled={raceLoading} className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed">
+              <button
+                onClick={handleCreateRace}
+                disabled={raceLoading || (selectedTournamentId !== '' && selectedTournamentApprovedHorsesCount < 12)}
+                className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 {raceLoading ? 'Creating...' : 'Save Race'}
               </button>
             </div>
