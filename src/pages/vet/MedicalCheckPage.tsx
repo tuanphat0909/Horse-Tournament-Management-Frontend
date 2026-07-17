@@ -86,6 +86,20 @@ export function MedicalCheckPage() {
   const [failReason, setFailReason] = useState('');
   const [notes, setNotes] = useState('');
 
+  // ✅ Business Rule: A horse can only Pass if ALL vital signs and weight are within safe range
+  const isEligibleForPass =
+    parseFloat(temperature) >= 37.2 && parseFloat(temperature) <= 38.3 &&
+    parseInt(heartRate)     >= 28   && parseInt(heartRate)     <= 44 &&
+    parseFloat(weight)      >= 300  && parseFloat(weight)      <= 700 &&
+    dopingResult === 'Negative';
+
+  // Auto-force medicalResult to 'Fail' if not eligible for Pass
+  useEffect(() => {
+    if (!isEligibleForPass && medicalResult === 'Pass') {
+      setMedicalResult('Fail');
+    }
+  }, [isEligibleForPass]);
+
   useEffect(() => { loadData(); }, []);
 
   function loadData() {
@@ -459,12 +473,37 @@ export function MedicalCheckPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase mb-1">Medical Assessment *</label>
-                      <select value={medicalResult} onChange={e => setMedicalResult(e.target.value)} className={INPUT_CLS}>
-                        <option value="Pass" className="bg-[#0f172a]">Pass (Pass)</option>
+                      <select
+                        value={medicalResult}
+                        onChange={e => setMedicalResult(e.target.value)}
+                        className={INPUT_CLS}
+                      >
+                        <option
+                          value="Pass"
+                          disabled={!isEligibleForPass}
+                          className="bg-[#0f172a]"
+                          style={!isEligibleForPass ? { color: '#6b7280', cursor: 'not-allowed' } : {}}
+                        >
+                          {isEligibleForPass ? 'Pass (✔ Eligible)' : 'Pass (⛔ Ineligible)'}
+                        </option>
                         <option value="Fail" className="bg-[#0f172a]">Fail (Fail)</option>
                       </select>
                     </div>
                   </div>
+
+                  {/* ⚠️ Health threshold warning — shown when vital signs or weight are out of safe range */}
+                  {!isEligibleForPass && (
+                    <div className="flex items-start gap-2.5 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <span className="text-red-400 text-base mt-0.5 shrink-0">⚠️</span>
+                      <div>
+                        <p className="text-xs font-bold text-red-400 mb-0.5">Horse does not meet health and physical standards for competition</p>
+                        <p className="text-[11px] text-red-300/80 leading-relaxed">
+                          Temperature: 37.2-38.3°C &nbsp;•&nbsp; Heart Rate: 28-44 bpm &nbsp;•&nbsp; Weight: 300-700 kg &nbsp;•&nbsp; Doping: Negative<br />
+                          Must select <strong className="text-red-300">Fail</strong> result.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* FailReason — required for recheck with Fail result */}
                   {modalType === 'recheck' && medicalResult === 'Fail' && (
@@ -480,7 +519,7 @@ export function MedicalCheckPage() {
                   )}
 
                   <div>
-                    <label className="block text-xs font-bold text-muted uppercase mb-1">Notes y khoa</label>
+                    <label className="block text-xs font-bold text-muted uppercase mb-1">Medical notes</label>
                     <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional notes..." rows={3} className={`${INPUT_CLS} resize-none`} />
                   </div>
 
@@ -488,7 +527,12 @@ export function MedicalCheckPage() {
 
                   <div className="pt-4 flex justify-end gap-3 border-t border-glass-border">
                     <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border border-glass-border hover:bg-white/[0.05] rounded-lg text-sm text-muted hover:text-white transition-all">Cancel</button>
-                    <button type="submit" disabled={loading} className="bg-gold hover:bg-gold/80 text-black font-bold px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-60">
+                    <button
+                      type="submit"
+                      disabled={loading || (medicalResult === 'Pass' && !isEligibleForPass)}
+                      title={medicalResult === 'Pass' && !isEligibleForPass ? 'Cannot save: Horse is not eligible for Pass' : ''}
+                      className="bg-gold hover:bg-gold/80 text-black font-bold px-4 py-2 rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
                       {loading ? 'Saving...' : modalType === 'recheck' ? 'Save Recheck Result' : 'Save Result'}
                     </button>
                   </div>
