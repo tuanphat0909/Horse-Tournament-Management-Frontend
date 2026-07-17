@@ -13,6 +13,7 @@ import {
   getAssignedEntries,
   performRecheck,
 } from '../../api/vetService';
+import { parseApiError } from '../../api/authService';
 
 type Tab = 'pending' | 'assigned' | 'history';
 
@@ -176,6 +177,7 @@ export function MedicalCheckPage() {
       heartRate: heartRate ? parseInt(heartRate) : null,
       dopingResult,
       medicalResult,
+      failReason: failReason || null,
       notes: notes || null,
     };
 
@@ -184,14 +186,14 @@ export function MedicalCheckPage() {
     if (modalType === 'create') {
       createMedicalCheck({ registrationId: selectedRegId, ...base })
         .then(() => { setSuccess('Inspection result saved!'); setShowModal(false); loadData(); })
-        .catch((err: any) => { setError(err.response?.data?.message ?? 'Error creating.'); setLoading(false); });
+        .catch((err: any) => { setError(parseApiError(err)); setLoading(false); });
     } else if (modalType === 'edit') {
       updateMedicalCheck(selectedRecordId!, base)
         .then(() => { setSuccess('Medical record updated!'); setShowModal(false); loadData(); })
-        .catch((err: any) => { setError(err.response?.data?.message ?? 'Error updating.'); setLoading(false); });
+        .catch((err: any) => { setError(parseApiError(err)); setLoading(false); });
     } else {
       // recheck
-      performRecheck({ registrationId: selectedRegId, ...base, failReason: failReason || null })
+      performRecheck({ registrationId: selectedRegId, ...base })
         .then((res: any) => {
           const withdrawn = res?.result?.horseWithdrawn;
           setSuccess(withdrawn
@@ -199,7 +201,7 @@ export function MedicalCheckPage() {
             : `Recheck completed — Horse continues to compete (Passed).`);
           setShowModal(false); loadData();
         })
-        .catch((err: any) => { setError(err.response?.data?.message ?? 'Error during re-inspection.'); setLoading(false); });
+        .catch((err: any) => { setError(parseApiError(err)); setLoading(false); });
     }
   }
 
