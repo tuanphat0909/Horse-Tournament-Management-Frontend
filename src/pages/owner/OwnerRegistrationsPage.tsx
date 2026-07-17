@@ -5,7 +5,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { createRegistration, getMyRegistrations, getMyHorses } from '../../api/ownerService';
+import { createRegistration, getMyRegistrations, getMyHorses, getMyProposals } from '../../api/ownerService';
 import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
@@ -31,6 +31,7 @@ export function OwnerRegistrationsPage() {
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
   const [tournaments, setTournaments] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<Tab>('pending');
@@ -43,14 +44,16 @@ export function OwnerRegistrationsPage() {
   async function load() {
     setLoading(true); setError('');
     try {
-      const [regData, horseData, tournamentData] = await Promise.all([
+      const [regData, horseData, tournamentData, propData] = await Promise.all([
         getMyRegistrations(),
         getMyHorses(),
         getTournaments(),
+        getMyProposals().catch(() => ({ result: [] })),
       ]);
       setRegistrations(regData?.result ?? (Array.isArray(regData) ? regData : []));
       setHorses(horseData?.result ?? (Array.isArray(horseData) ? horseData : []));
       setTournaments(tournamentData?.result ?? (Array.isArray(tournamentData) ? tournamentData : []));
+      setProposals(propData?.result ?? (Array.isArray(propData) ? propData : []));
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
@@ -171,7 +174,36 @@ export function OwnerRegistrationsPage() {
             <div className="space-y-3">
               {filtered.map((r, i) => {
                 const statusKey = normalizeStatus(r.status);
-                const cfg = STATUS_CONFIG[statusKey];
+                let customStatus = {
+                  label: 'Pending Admin approval',
+                  color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
+                };
+
+                if (statusKey === 'pending') {
+                  const contract = proposals.find(
+                    p => String(p.horseId) === String(r.horseId) && String(p.tournamentId) === String(r.tournamentId)
+                  );
+                  const contractStatus = (contract?.status ?? '').toLowerCase();
+                  if (contractStatus === 'accepted' || contractStatus === 'active') {
+                    customStatus = {
+                      label: 'Pending Admin approval',
+                      color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
+                    };
+                  } else if (contractStatus === 'pending') {
+                    customStatus = {
+                      label: 'Awaiting Jockey Response',
+                      color: 'text-orange-400 bg-orange-500/10 border-orange-500/20'
+                    };
+                  } else {
+                    customStatus = {
+                      label: 'No Jockey Yet',
+                      color: 'text-red-400 bg-red-500/10 border-red-500/20'
+                    };
+                  }
+                } else {
+                  customStatus = STATUS_CONFIG[statusKey];
+                }
+
                 return (
                   <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                     className="glass-panel rounded-xl p-5 flex items-center gap-5 border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group relative overflow-hidden">
@@ -186,7 +218,7 @@ export function OwnerRegistrationsPage() {
                         {r.createdAt && <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted"><Calendar size={10} className="text-gold/60" /> {r.createdAt}</span>}
                       </div>
                     </div>
-                    <span className={`relative z-10 text-[11px] font-bold px-3 py-1 rounded-full border shrink-0 ${cfg.color}`}>{cfg.label}</span>
+                    <span className={`relative z-10 text-[11px] font-bold px-3 py-1 rounded-full border shrink-0 ${customStatus.color}`}>{customStatus.label}</span>
                     {statusKey === 'pending' && (
                       <button className="relative z-10 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors shrink-0" title="Cancel registration">
                         <XCircle size={15} />
