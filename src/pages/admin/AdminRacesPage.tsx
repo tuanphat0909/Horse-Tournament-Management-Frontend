@@ -1053,15 +1053,27 @@ export function AdminRacesPage() {
               </div>
               <div>
                 <label className={LABEL}>Race Date & Time *</label>
-                <input
-                  type="datetime-local"
-                  value={raceForm.raceDate}
-                  onChange={e => setR('raceDate', e.target.value)}
-                  min={selectedRound ? formatToDatetimeLocal(selectedRound.startDate) : undefined}
-                  max={selectedRound ? formatToDatetimeLocal(selectedRound.endDate) : undefined}
-                  className={INPUT}
-                  style={{ colorScheme: 'dark' }}
-                />
+                <div className="relative">
+                  <input
+                    type="datetime-local"
+                    value={raceForm.raceDate}
+                    onChange={e => setR('raceDate', e.target.value)}
+                    min={selectedRound ? formatToDatetimeLocal(selectedRound.startDate) : undefined}
+                    max={selectedRound ? formatToDatetimeLocal(selectedRound.endDate) : undefined}
+                    className={`${INPUT} pr-10`}
+                    style={{ colorScheme: 'dark' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                      input?.showPicker?.();
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                  >
+                    <Calendar size={15} />
+                  </button>
+                </div>
                 {selectedRound && (selectedRound.startDate || selectedRound.endDate) && (
                   <div className="text-xs text-gold/80 mt-1.5 flex items-center gap-1.5">
                     <span>⏰</span>

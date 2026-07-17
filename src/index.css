@@ -595,3 +595,9 @@ html { scroll-behavior: smooth; }
   }
   html { scroll-behavior: auto; }
 }
+
+/* 12. Hide native calendar picker indicator in Chrome/Safari/Edge */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}

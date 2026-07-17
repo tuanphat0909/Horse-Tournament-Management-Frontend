@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Loader, Plus, Search, Shuffle, Trophy, Clock, ArrowUpDown } from 'lucide-react';
+import { Loader, Plus, Search, Shuffle, Trophy, Clock, ArrowUpDown, Calendar } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -14,24 +14,68 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
-type StatusFilter = 'all' | 'pendingregistration' | 'pendingscheduling' | 'upcoming' | 'active' | 'completed';
+type StatusFilter = 'all' | 'upcoming_registration' | 'registration_open' | 'registration_closed' | 'scheduled' | 'racing' | 'completed' | 'cancelled';
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  active: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  upcoming: { label: 'Upcoming', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
-  completed: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
-  'registration open': { label: 'Registration Open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  'registration suspended': { label: 'Registration Suspended', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400' },
-  'registration closed': { label: 'Registration Closed', color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20', dot: 'bg-zinc-400' },
-  'medical checking': { label: 'Medical Checking', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
-  'ready to arrange': { label: 'Ready To Arrange', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-400' },
-  'pre round': { label: 'Pre Round', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', dot: 'bg-purple-400' },
-  'final round': { label: 'Final Round', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20', dot: 'bg-pink-400' },
-  'prize distribution': { label: 'Prize Distribution', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400' },
-  'cancelled': { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
-  pendingregistration: { label: 'Awaiting Registrations', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400' },
-  pendingscheduling: { label: 'Awaiting Scheduling', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
+const CUSTOM_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
+  'Upcoming Registration': { label: 'Upcoming Registration', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
+  'Registration Open': { label: 'Registration Open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
+  'Registration Closed': { label: 'Registration Closed', color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20', dot: 'bg-zinc-400' },
+  'Scheduled': { label: 'Scheduled', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-400' },
+  'Racing': { label: 'Racing', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
+  'Completed': { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
+  'Cancelled': { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' }
 };
+
+function getTournamentCustomStatus(tour: any) {
+  const status = (tour.status ?? '').toLowerCase();
+  if (status === 'cancelled') {
+    return 'Cancelled';
+  }
+  if (status === 'completed' || status === 'finished') {
+    return 'Completed';
+  }
+
+  const now = new Date();
+  const regStart = tour.registrationStartDate ? new Date(tour.registrationStartDate) : null;
+  const regEnd = tour.registrationEndDate ? new Date(tour.registrationEndDate) : null;
+  const start = tour.startDate ? new Date(tour.startDate) : null;
+
+  // 1. Upcoming Registration: Chưa đến thời gian mở đăng ký
+  if (regStart && now < regStart) {
+    return 'Upcoming Registration';
+  }
+
+  // 2. Registration Open: Đang trong thời gian đăng ký
+  if (regStart && regEnd && now >= regStart && now < regEnd && (status === 'pendingregistration' || status === 'registration open')) {
+    return 'Registration Open';
+  }
+
+  // 3. Registration Closed: Đã đóng đăng ký và chưa xếp lịch
+  const rounds = tour.rounds ?? tour.Rounds ?? [];
+  if (status === 'pendingscheduling' || (regEnd && now >= regEnd && rounds.length === 0)) {
+    return 'Registration Closed';
+  }
+
+  // 4. Scheduled: Đã xếp lịch nhưng chưa thi đấu
+  if (status === 'upcoming' || (rounds.length > 0 && start && now < start)) {
+    return 'Scheduled';
+  }
+
+  // 5. Racing: Đang thi đấu
+  if (status === 'active' || (start && now >= start)) {
+    return 'Racing';
+  }
+
+  // Fallbacks
+  if (status === 'upcoming') return 'Scheduled';
+  if (status === 'active') return 'Racing';
+  if (status === 'completed') return 'Completed';
+  if (status === 'cancelled') return 'Cancelled';
+  if (status === 'pendingregistration') return 'Registration Open';
+  if (status === 'pendingscheduling') return 'Registration Closed';
+
+  return 'Scheduled';
+}
 
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
@@ -290,58 +334,41 @@ export function AdminTournamentsPage() {
 
   const statsCounts: Record<StatusFilter, number> = {
     all: tournaments.length,
-    pendingregistration: tournaments.filter(t => {
-      const s = (t.status ?? '').toLowerCase();
-      return s === 'pendingregistration' || s === 'registration open' || s === 'registration suspended';
-    }).length,
-    pendingscheduling: tournaments.filter(t => (t.status ?? '').toLowerCase() === 'pendingscheduling').length,
-    upcoming: tournaments.filter(t => (t.status ?? '').toLowerCase() === 'upcoming').length,
-    active: tournaments.filter(t => {
-      const s = (t.status ?? '').toLowerCase();
-      return s === 'active' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution';
-    }).length,
-    completed: tournaments.filter(t => {
-      const s = (t.status ?? '').toLowerCase();
-      return s === 'completed' || s === 'cancelled';
-    }).length,
+    upcoming_registration: tournaments.filter(t => getTournamentCustomStatus(t) === 'Upcoming Registration').length,
+    registration_open: tournaments.filter(t => getTournamentCustomStatus(t) === 'Registration Open').length,
+    registration_closed: tournaments.filter(t => getTournamentCustomStatus(t) === 'Registration Closed').length,
+    scheduled: tournaments.filter(t => getTournamentCustomStatus(t) === 'Scheduled').length,
+    racing: tournaments.filter(t => getTournamentCustomStatus(t) === 'Racing').length,
+    completed: tournaments.filter(t => getTournamentCustomStatus(t) === 'Completed').length,
+    cancelled: tournaments.filter(t => getTournamentCustomStatus(t) === 'Cancelled').length,
   };
 
   const filteredTournaments = tournaments.filter(t => {
     const matchesSearch = (t.name ?? '').toLowerCase().includes(search.toLowerCase());
-    if (filter === 'all') return matchesSearch;
-    const s = (t.status ?? '').toLowerCase();
-    if (filter === 'pendingregistration') return matchesSearch && (s === 'pendingregistration' || s === 'registration open' || s === 'registration suspended');
-    if (filter === 'pendingscheduling') return matchesSearch && s === 'pendingscheduling';
-    if (filter === 'active') {
-      return matchesSearch && (
-        s === 'active' ||
-        s === 'registration closed' ||
-        s === 'medical checking' ||
-        s === 'ready to arrange' ||
-        s === 'pre round' ||
-        s === 'final round' ||
-        s === 'prize distribution'
-      );
-    }
-    if (filter === 'upcoming') return matchesSearch && s === 'upcoming';
-    if (filter === 'completed') return matchesSearch && (s === 'completed' || s === 'cancelled');
-    return matchesSearch;
+    if (!matchesSearch) return false;
+    if (filter === 'all') return true;
+    
+    const customStatus = getTournamentCustomStatus(t);
+    if (filter === 'upcoming_registration') return customStatus === 'Upcoming Registration';
+    if (filter === 'registration_open') return customStatus === 'Registration Open';
+    if (filter === 'registration_closed') return customStatus === 'Registration Closed';
+    if (filter === 'scheduled') return customStatus === 'Scheduled';
+    if (filter === 'racing') return customStatus === 'Racing';
+    if (filter === 'completed') return customStatus === 'Completed';
+    if (filter === 'cancelled') return customStatus === 'Cancelled';
+    
+    return true;
   });
 
-  // Sắp xếp theo lựa chọn: mới nhất / cũ nhất (theo days bắt đầu), tên A-Z, trạng thái
+  // Sắp xếp theo lựa chọn
   const STATUS_ORDER: Record<string, number> = {
-    'active': 0,
+    'upcoming registration': 0,
     'registration open': 1,
-    'registration suspended': 2,
-    'registration closed': 3,
-    'medical checking': 4,
-    'ready to arrange': 5,
-    'pre round': 6,
-    'final round': 7,
-    'prize distribution': 8,
-    'upcoming': 9,
-    'completed': 10,
-    'cancelled': 11
+    'registration closed': 2,
+    'scheduled': 3,
+    'racing': 4,
+    'completed': 5,
+    'cancelled': 6
   };
   const sortedTournaments = [...filteredTournaments].sort((a, b) => {
     switch (sortBy) {
@@ -350,7 +377,9 @@ export function AdminTournamentsPage() {
       case 'name':
         return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
       case 'status':
-        return (STATUS_ORDER[(a.status ?? '').toLowerCase()] ?? 11) - (STATUS_ORDER[(b.status ?? '').toLowerCase()] ?? 11);
+        const statusA = getTournamentCustomStatus(a).toLowerCase();
+        const statusB = getTournamentCustomStatus(b).toLowerCase();
+        return (STATUS_ORDER[statusA] ?? 6) - (STATUS_ORDER[statusB] ?? 6);
       case 'newest':
       default:
         return new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime();
@@ -438,21 +467,33 @@ export function AdminTournamentsPage() {
           />
 
           {/* Status Filters */}
-          <div className="flex items-center gap-2">
-            {(['all', 'pendingregistration', 'pendingscheduling', 'upcoming', 'active', 'completed'] as StatusFilter[]).map(s => (
-              <button
-                key={s}
-                onClick={() => setFilter(s)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-                  filter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
-                }`}
-              >
-                {s === 'all' ? t('All') : t(STATUS_CONFIG[s].label)}
-                <span className="ml-2 text-[11px] font-bold text-current opacity-60">
-                  {statsCounts[s] ?? 0}
-                </span>
-              </button>
-            ))}
+          <div className="flex items-center gap-2 flex-wrap">
+            {(['all', 'upcoming_registration', 'registration_open', 'registration_closed', 'scheduled', 'racing', 'completed', 'cancelled'] as StatusFilter[]).map(s => {
+              const labelMap: Record<StatusFilter, string> = {
+                all: 'All',
+                upcoming_registration: 'Upcoming Registration',
+                registration_open: 'Registration Open',
+                registration_closed: 'Registration Closed',
+                scheduled: 'Scheduled',
+                racing: 'Racing',
+                completed: 'Completed',
+                cancelled: 'Cancelled'
+              };
+              return (
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                    filter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  {t(labelMap[s])}
+                  <span className="ml-2 text-[11px] font-bold text-current opacity-60">
+                    {statsCounts[s] ?? 0}
+                  </span>
+                </button>
+              );
+            })}
             <div className="ml-auto flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-64">
               <Search size={14} className="text-muted shrink-0" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("Search tournaments...")} className="bg-transparent text-sm text-white placeholder:text-muted/60 outline-none focus:outline-none focus:ring-0 border-0 w-full" style={{ boxShadow: 'none' }} />
@@ -486,14 +527,8 @@ export function AdminTournamentsPage() {
             <div className="overflow-y-auto pr-1.5 -mr-1.5 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 330px)' }}>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {sortedTournaments.map((tour, i) => {
-                const now = new Date();
-                const regEnd = tour.registrationEndDate ? new Date(tour.registrationEndDate) : null;
-                const regEnded = regEnd ? now >= regEnd : false;
-                const cancelCount = tour.cancelCount ?? tour.CancelCount ?? 0;
-                const s = (tour.status?.toLowerCase() === 'registration open' && regEnded && cancelCount === 0)
-                  ? 'registration suspended'
-                  : (tour.status?.toLowerCase() ?? 'upcoming');
-                const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
+                const customStatus = getTournamentCustomStatus(tour);
+                const config = CUSTOM_STATUS_CONFIG[customStatus] ?? CUSTOM_STATUS_CONFIG.Scheduled;
                 const raceState = getTournamentRaceState(tour);
                 const isGenerating = generatingForTournament === tour.tournamentId;
                 return (
@@ -514,26 +549,37 @@ export function AdminTournamentsPage() {
                       </div>
                       {/* Hàng 2: badge loại rounds + đếm ngược thời gian — min-h giữ chỗ để card không bị lệch khi thiếu badge */}
                       <div className="flex items-center gap-2 flex-wrap min-h-[26px]">
-                        {(() => {
-                          const now = Date.now();
-                          const endMs = tour.registrationEndDate ? new Date(tour.registrationEndDate).getTime() : null;
-                          const daysLeft = endMs !== null ? Math.ceil((endMs - now) / 86400000) : null;
-                          if (daysLeft === null) return null;
-                          if (daysLeft < 0) return (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">🔒 Reg. closed</span>
-                          );
-                          if (daysLeft <= 12) return (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-yellow-500/40 bg-yellow-500/10 text-yellow-400 shrink-0">⚡ Final · {daysLeft}d left</span>
-                          );
-                          return (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 text-emerald-400 shrink-0">✓ Reg. open</span>
-                          );
-                        })()}
-                        {raceState.regNotStarted && tour.registrationStartDate ? (
-                          <CountdownTimer target={tour.registrationStartDate} utc={false} label="Reg. opens in:" />
-                        ) : tour.registrationEndDate ? (
-                          <CountdownTimer target={tour.registrationEndDate} utc={false} hideWhenExpired />
-                        ) : null}
+                        {customStatus === 'Upcoming Registration' && (
+                          <>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-500/30 bg-blue-500/8 text-blue-400 shrink-0">Reg. Upcoming</span>
+                            {tour.registrationStartDate && (
+                              <CountdownTimer target={tour.registrationStartDate} utc={false} label="Opens in:" />
+                            )}
+                          </>
+                        )}
+                        {customStatus === 'Registration Open' && (
+                          <>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 text-emerald-400 shrink-0">Reg. Open</span>
+                            {tour.registrationEndDate && (
+                              <CountdownTimer target={tour.registrationEndDate} utc={false} label="Remaining:" />
+                            )}
+                          </>
+                        )}
+                        {customStatus === 'Registration Closed' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">🔒 Reg. Closed</span>
+                        )}
+                        {customStatus === 'Scheduled' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-400 shrink-0">📅 Scheduled</span>
+                        )}
+                        {customStatus === 'Racing' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/40 bg-orange-500/10 text-orange-400 shrink-0">🏃 Racing</span>
+                        )}
+                        {customStatus === 'Completed' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-zinc-500/40 bg-zinc-500/10 text-zinc-400 shrink-0">🏆 Completed</span>
+                        )}
+                        {customStatus === 'Cancelled' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">❌ Cancelled</span>
+                        )}
                       </div>
                     </div>
                     <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-1 line-clamp-1">{tour.name}</h3>
@@ -586,56 +632,96 @@ export function AdminTournamentsPage() {
                       </div>
                     </div>
                     {/* mt-auto đẩy hàng nút xuống đáy card — các card trong cùng hàng luôn thẳng nhau */}
-                    <div className="mt-auto pt-4 flex flex-wrap gap-2">
-                      {s === 'registration suspended' && (tour.cancelCount ?? tour.CancelCount ?? 0) === 0 && (
-                        <button
-                          onClick={() => {
-                            setExtendingTournament(tour);
-                            setAdditionalDays(1);
-                          }}
-                          disabled={isGenerating}
-                          className="px-3 py-2 rounded-lg text-xs font-bold text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
-                        >
-                          <Clock size={13} />
-                          {t('Extend Registration')}
-                        </button>
+                    <div className="mt-auto pt-4 flex flex-wrap gap-2 w-full">
+                      {customStatus === 'Registration Open' && (
+                        <div className="flex gap-2 w-full">
+                          <button
+                            onClick={() => handleCloseRegistrationClick(tour)}
+                            disabled={isGenerating}
+                            className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            {isGenerating ? <Loader size={13} className="animate-spin" /> : <Clock size={13} />}
+                            {isGenerating ? t('Closing...') : t('Close Registration')}
+                          </button>
+                          <button
+                            onClick={() => setCancelWarningTournament(tour)}
+                            disabled={isGenerating}
+                            className="px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            {t('Cancel')}
+                          </button>
+                        </div>
                       )}
-                      {raceState.regOpen && (
-                        <button
-                          onClick={() => handleCloseRegistrationClick(tour)}
-                          disabled={isGenerating}
-                          className="px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
-                        >
-                          {isGenerating ? <Loader size={13} className="animate-spin" /> : <Clock size={13} />}
-                          {isGenerating ? t('Closing...') : t('Close Registration')}
-                        </button>
+
+                      {customStatus === 'Registration Closed' && (
+                        <div className="flex gap-2 w-full">
+                          {raceState.canAutoArrange ? (
+                            <button
+                              onClick={() => handleGenerateRaces(tour.tournamentId)}
+                              disabled={isGenerating}
+                              className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-blue-400 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+                            >
+                              {isGenerating ? <Loader size={13} className="animate-spin" /> : <Shuffle size={13} />}
+                              {isGenerating ? t('Assigning...') : t('Auto Assign Pre-lanes')}
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-muted border border-glass-border bg-white/[0.04] cursor-not-allowed text-center"
+                            >
+                              {t('Awaiting Scheduling')}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setCancelWarningTournament(tour)}
+                            disabled={isGenerating}
+                            className="px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            {t('Cancel')}
+                          </button>
+                        </div>
                       )}
-                      {raceState.canAutoArrange && (
-                        <button
-                          onClick={() => handleGenerateRaces(tour.tournamentId)}
-                          disabled={isGenerating}
-                          className="px-3 py-2 rounded-lg text-xs font-bold text-blue-400 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
-                        >
-                          {isGenerating ? <Loader size={13} className="animate-spin" /> : <Shuffle size={13} />}
-                          {isGenerating ? t('Assigning...') : t('Auto Assign Pre-lanes')}
-                        </button>
+
+                      {customStatus === 'Scheduled' && (
+                        <div className="flex gap-2 w-full">
+                          {raceState.canGenerateFinal ? (
+                            <button
+                              onClick={() => handleGenerateFinal(tour.tournamentId)}
+                              disabled={isGenerating}
+                              className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+                            >
+                              {isGenerating ? <Loader size={13} className="animate-spin" /> : <Trophy size={13} />}
+                              {isGenerating ? t('Assigning...') : t('Auto Assign Final')}
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-muted border border-glass-border bg-white/[0.04] cursor-not-allowed text-center"
+                            >
+                              {t('Scheduled & Ready')}
+                            </button>
+                          )}
+                        </div>
                       )}
-                      {raceState.canGenerateFinal && (
-                        <button
-                          onClick={() => handleGenerateFinal(tour.tournamentId)}
-                          disabled={isGenerating}
-                          className="px-3 py-2 rounded-lg text-xs font-bold text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 disabled:opacity-60 transition-colors flex items-center gap-1.5"
-                        >
-                          {isGenerating ? <Loader size={13} className="animate-spin" /> : <Trophy size={13} />}
-                          {isGenerating ? t('Assigning...') : t('Auto Assign Final')}
-                        </button>
+
+                      {customStatus === 'Upcoming Registration' && (
+                        <div className="flex gap-2 w-full">
+                          <button
+                            onClick={() => setCancelWarningTournament(tour)}
+                            disabled={isGenerating}
+                            className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            {t('Cancel')}
+                          </button>
+                        </div>
                       )}
-                      {!raceState.regOpen && !raceState.canAutoArrange && !raceState.canGenerateFinal && raceState.statusLabel && (
+
+                      {customStatus !== 'Registration Open' && customStatus !== 'Registration Closed' && customStatus !== 'Scheduled' && customStatus !== 'Upcoming Registration' && (
                         <button
                           disabled
-                          className="px-3 py-2 rounded-lg text-xs font-bold text-muted border border-glass-border bg-white/[0.04] cursor-not-allowed"
+                          className="w-full px-3 py-2 rounded-lg text-xs font-bold text-muted border border-glass-border bg-white/[0.04] cursor-not-allowed text-center"
                         >
-                          {t(raceState.statusLabel)}
+                          {t(customStatus)}
                         </button>
                       )}
                     </div>
@@ -682,46 +768,94 @@ export function AdminTournamentsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={LABEL}>{t("Open Registration *")}</label>
-                  <input
-                    type="datetime-local"
-                    value={form.registrationStartDate}
-                    onChange={e => set('registrationStartDate', e.target.value)}
-                    className={INPUT}
-                    style={{ colorScheme: 'dark' }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={form.registrationStartDate}
+                      onChange={e => set('registrationStartDate', e.target.value)}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className={LABEL}>{t("Close Registration *")}</label>
-                  <input
-                    type="datetime-local"
-                    value={form.registrationEndDate}
-                    onChange={e => set('registrationEndDate', e.target.value)}
-                    className={INPUT}
-                    style={{ colorScheme: 'dark' }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={form.registrationEndDate}
+                      onChange={e => set('registrationEndDate', e.target.value)}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={LABEL}>{t("Tournament Start *")}</label>
-                  <input
-                    type="datetime-local"
-                    value={form.startDate}
-                    onChange={e => set('startDate', e.target.value)}
-                    className={INPUT}
-                    style={{ colorScheme: 'dark' }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={form.startDate}
+                      onChange={e => set('startDate', e.target.value)}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className={LABEL}>{t("Tournament End *")}</label>
-                  <input
-                    type="datetime-local"
-                    value={form.endDate}
-                    onChange={e => set('endDate', e.target.value)}
-                    className={INPUT}
-                    style={{ colorScheme: 'dark' }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={form.endDate}
+                      onChange={e => set('endDate', e.target.value)}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
