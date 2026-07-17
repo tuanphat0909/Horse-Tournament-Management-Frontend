@@ -18,6 +18,8 @@ const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 export function SpectatorDashboardPage() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const statusLower = user?.status?.toLowerCase();
+  const isLocked = statusLower !== 'active';
   const { t, language } = useLanguage();
   const [balance, setBalance] = useState(0);
   const [bets, setBets] = useState<any[]>([]);
@@ -68,8 +70,16 @@ export function SpectatorDashboardPage() {
                 <button onClick={() => navigate('/spectator/live')} className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold">
                   {t('View live results')} <Eye size={13} />
                 </button>
-                <button onClick={() => navigate('/spectator/predictions')} className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
-                  {t('My Predictions')}
+                <button 
+                  onClick={() => { if (!isLocked) navigate('/spectator/predictions'); }}
+                  disabled={isLocked}
+                  className={`px-5 py-2 rounded-lg text-xs font-medium border transition-colors ${
+                    isLocked 
+                      ? 'border-glass-border bg-white/5 text-muted/50 cursor-not-allowed' 
+                      : 'text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10'
+                  }`}
+                >
+                  {t('My Predictions')} {isLocked && '🔒'}
                 </button>
               </>
             }
@@ -83,20 +93,28 @@ export function SpectatorDashboardPage() {
               { title: t('Tournaments'), value: String(new Set(upcoming.filter(r => r.status?.toLowerCase() !== 'finished').map(r => r.tournamentId)).size), trend: t('Following'), icon: Trophy, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/spectator/tournaments' },
               { title: t('Predictions'), value: String(bets.length), trend: `${pendingBets} ${t('pending results')}`, icon: BarChart3, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/spectator/predictions' },
               { title: t('Notifications'), value: String(notifCount), trend: t('Unread'), icon: Bell, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/spectator/notifications' },
-            ].map((m, i) => (
-              <motion.div key={i} variants={child} onClick={() => navigate(m.path)}
-                className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer" style={{ height: '130px' }}>
-                <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
-                <div className="relative z-10 flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.bg} border border-white/[0.08] flex items-center justify-center ${m.color}`}><m.icon size={18} /></div>
-                  <div className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">{m.trend}</div>
-                </div>
-                <div className="relative z-10">
-                  <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
-                  <div className="text-[11px] text-muted/70 font-medium">{m.title}</div>
-                </div>
-              </motion.div>
-            ))}
+            ].map((m, i) => {
+              const isForbidden = isLocked && (m.path === '/spectator/tournaments' || m.path === '/spectator/predictions');
+              return (
+                <motion.div key={i} variants={child} 
+                  onClick={() => { if (!isForbidden) navigate(m.path); }}
+                  className={`glass-panel rounded-xl p-5 relative overflow-hidden group transition-all ${
+                    isForbidden 
+                      ? 'opacity-40 cursor-not-allowed border-glass-border' 
+                      : 'cursor-pointer hover:border-gold/30'
+                  }`} style={{ height: '130px' }}>
+                  <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
+                  <div className="relative z-10 flex items-start justify-between mb-3">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.bg} border border-white/[0.08] flex items-center justify-center ${m.color}`}><m.icon size={18} /></div>
+                    <div className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">{m.trend}</div>
+                  </div>
+                  <div className="relative z-10">
+                    <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
+                    <div className="text-[11px] text-muted/70 font-medium">{m.title} {isForbidden && '🔒'}</div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
 
           {/* Live race + Upcoming */}

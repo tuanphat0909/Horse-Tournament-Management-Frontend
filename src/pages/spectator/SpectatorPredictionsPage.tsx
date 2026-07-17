@@ -7,7 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getMyBets, placeBet } from '../../api/spectatorService';
 import { getRaceSchedule, getRaceEntries } from '../../api/publicService';
-import { parseApiError } from '../../api/authService';
+import { parseApiError, getCurrentUser } from '../../api/authService';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type BetStatus = 'correct' | 'incorrect' | 'pending';
@@ -31,6 +31,9 @@ const TABS: [Tab, string][] = [['all', 'All'], ['pending', 'Pending'], ['correct
 const INPUT = 'w-full bg-[#0B1628] border border-glass-border rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 
 export function SpectatorPredictionsPage() {
+  const user = getCurrentUser();
+  const statusLower = user?.status?.toLowerCase();
+  const isLocked = statusLower !== 'active';
   const [bets, setBets] = useState<any[]>([]);
   const [races, setRaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,8 +138,16 @@ export function SpectatorPredictionsPage() {
             imageUrl="/images/hero-spectator.jpg"
             imagePosition="center 50%"
             actions={
-              <button onClick={() => setShowAdd(true)} className="btn-gold px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5">
-                <Plus size={14} /> Place Bet
+              <button 
+                onClick={() => { if (!isLocked) setShowAdd(true); }} 
+                disabled={isLocked}
+                className={`px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-all ${
+                  isLocked 
+                    ? 'bg-white/5 border-glass-border text-muted/50 cursor-not-allowed' 
+                    : 'btn-gold'
+                }`}
+              >
+                <Plus size={14} /> Place Bet {isLocked && '🔒'}
               </button>
             }
           />

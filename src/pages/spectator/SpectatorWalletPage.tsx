@@ -75,6 +75,8 @@ export function SpectatorWalletPage() {
   const coinsPreview = effectiveUsd * COINS_PER_USD;
 
   const user = getCurrentUser();
+  const statusLower = user?.status?.toLowerCase();
+  const isLocked = statusLower !== 'active';
   const [showVNPayModal, setShowVNPayModal] = useState(false);
 
   const handleOpenVNPay = () => {
@@ -208,7 +210,14 @@ export function SpectatorWalletPage() {
                   <div className="grid grid-cols-4 gap-2">
                     {QUICK_AMTS.map(amt => (
                       <button key={amt} onClick={() => { setQuickAmt(quickAmt === amt ? null : amt); setUsdInput(''); }}
-                        className={`py-2 rounded-lg text-sm font-bold border transition-all ${quickAmt === amt ? 'bg-gold/15 border-gold/40 text-gold' : 'bg-white/[0.03] border-glass-border text-muted hover:text-white hover:border-white/20'}`}>
+                        disabled={isLocked}
+                        className={`py-2 rounded-lg text-sm font-bold border transition-all ${
+                          isLocked 
+                            ? 'opacity-40 cursor-not-allowed bg-white/5 border-glass-border text-muted/30' 
+                            : quickAmt === amt 
+                            ? 'bg-gold/15 border-gold/40 text-gold' 
+                            : 'bg-white/[0.03] border-glass-border text-muted hover:text-white hover:border-white/20'
+                        }`}>
                         ${amt}
                       </button>
                     ))}
@@ -220,9 +229,10 @@ export function SpectatorWalletPage() {
                   <div className="relative">
                     <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                     <input type="number" min="1" value={usdInput}
+                      disabled={isLocked}
                       onChange={e => { setUsdInput(e.target.value); setQuickAmt(null); }}
                       placeholder="0.00"
-                      className="w-full bg-white/[0.04] border border-glass-border rounded-lg pl-8 pr-4 py-2.5 text-sm text-white placeholder:text-muted/50 outline-none focus:border-gold/40 transition-colors" />
+                      className={`w-full bg-white/[0.04] border border-glass-border rounded-lg pl-8 pr-4 py-2.5 text-sm text-white placeholder:text-muted/50 outline-none focus:border-gold/40 transition-colors ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`} />
                   </div>
                 </div>
 
@@ -238,9 +248,21 @@ export function SpectatorWalletPage() {
                 {depositErr && <div className="mb-3 text-xs text-red-400 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">{depositErr}</div>}
                 {depositMsg && <div className="mb-3 text-xs text-emerald-400 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">{depositMsg}</div>}
 
-                <button onClick={handleOpenVNPay} disabled={coinsPreview <= 0 || depositLoading}
-                  className={`w-full py-2.5 rounded-lg text-sm font-bold transition-all ${coinsPreview > 0 ? 'btn-gold' : 'bg-white/5 text-muted cursor-not-allowed border border-glass-border'}`}>
-                  {depositLoading ? 'Depositing...' : coinsPreview > 0 ? `Deposit $${effectiveUsd} → ${coinsPreview.toLocaleString()} coins` : 'Select Amount'}
+                <button onClick={handleOpenVNPay} disabled={coinsPreview <= 0 || depositLoading || isLocked}
+                  className={`w-full py-2.5 rounded-lg text-sm font-bold transition-all ${
+                    isLocked 
+                      ? 'bg-red-500/10 border border-red-500/20 text-red-400 cursor-not-allowed' 
+                      : coinsPreview > 0 
+                      ? 'btn-gold' 
+                      : 'bg-white/5 text-muted cursor-not-allowed border border-glass-border'
+                  }`}>
+                  {isLocked 
+                    ? '🔒 Deposits Disabled' 
+                    : depositLoading 
+                    ? 'Depositing...' 
+                    : coinsPreview > 0 
+                    ? `Deposit $${effectiveUsd} → ${coinsPreview.toLocaleString()} coins` 
+                    : 'Select Amount'}
                 </button>
               </motion.div>
 

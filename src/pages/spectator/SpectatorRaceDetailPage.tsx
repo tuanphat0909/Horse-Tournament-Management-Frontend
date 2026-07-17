@@ -10,6 +10,7 @@ import { getBalance, placeBet, getRaceBettingInfo } from '../../api/spectatorSer
 import { formatDateTime, formatWinProbability } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { getCurrentUser } from '../../api/authService';
 const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   live: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   ongoing: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
@@ -21,12 +22,15 @@ const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: st
 
 export function SpectatorRaceDetailPage() {
   const { raceId } = useParams();
+  const user = getCurrentUser();
+  const statusLower = user?.status?.toLowerCase();
+  const isLocked = statusLower !== 'active';
 
   const [race, setRace] = useState<any>(null);
   const [entries, setEntries] = useState<any[]>([]);
   const [balance, setBalance] = useState(0);
   const [canBet, setCanBet] = useState(false);
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -46,7 +50,7 @@ export function SpectatorRaceDetailPage() {
     if (!raceId) return;
     // eslint-disable-next-line react-hooks/immutability
     loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raceId]);
 
   async function loadData() {
@@ -84,11 +88,11 @@ export function SpectatorRaceDetailPage() {
         raceEntryId: selectedEntry.raceEntryId,
         amount: amount
       });
-      
+
       setBetSuccess('Bet placed successfully!');
       setSelectedEntry(null);
       setAmountStr('');
-      
+
       // Refetch balance after betting
       const bal = await getBalance();
       setBalance(bal?.result?.balance ?? 0);
@@ -101,7 +105,7 @@ export function SpectatorRaceDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen px-8 py-16 max-w-4xl mx-auto" style={{backgroundColor: '#0b101e'}}>
+      <div className="min-h-screen px-8 py-16 max-w-4xl mx-auto" style={{ backgroundColor: '#0b101e' }}>
         <LoadingSkeleton rows={6} h="h-16" />
       </div>
     );
@@ -109,7 +113,7 @@ export function SpectatorRaceDetailPage() {
 
   if (error || !race) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-400" style={{backgroundColor: '#0b101e'}}>
+      <div className="min-h-screen flex items-center justify-center text-red-400" style={{ backgroundColor: '#0b101e' }}>
         {error || 'Race not found.'}
       </div>
     );
@@ -121,18 +125,18 @@ export function SpectatorRaceDetailPage() {
 
 
   const invalidTournamentStatuses = ['finished', 'completed', 'cancelled', 'ended'];
-  
-  const isBettingAllowed = canBet;
+
+  const isBettingAllowed = canBet && !isLocked;
 
   return (
-    <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
       <div className="flex-1 min-w-0 overflow-y-auto relative">
         <PageAmbience accent="purple" />
         <Topbar />
-        
+
         <main className="relative z-10 max-w-[1200px] mx-auto px-8 py-6 flex flex-col xl:flex-row gap-6">
-          
+
           <div className="flex-1 space-y-6">
             <Link to={`/spectator/tournaments/${race.round?.tournamentId || ''}`} className="inline-flex items-center gap-2 text-sm text-muted hover:text-white transition-colors">
               <ArrowLeft size={16} /> Back to Races List
@@ -149,7 +153,7 @@ export function SpectatorRaceDetailPage() {
               </div>
               <p className="text-muted text-sm mb-1">{race.round?.tournament?.name || 'Tournament Name'}</p>
               <h1 className="text-3xl font-serif font-bold text-white mb-4">{race.name}</h1>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-glass-border/40">
                 <div className="space-y-1">
                   <div className="text-xs text-muted">Start</div>
@@ -174,24 +178,23 @@ export function SpectatorRaceDetailPage() {
 
             {/* Horses List */}
             <h2 className="text-xl font-serif font-bold text-white mt-8 mb-4">Horse List ({entries.length})</h2>
-            
+
             {entries.length === 0 ? (
-               <div className="glass-panel rounded-xl p-12 text-center text-muted">
-                 No horses participating in this race.
-               </div>
+              <div className="glass-panel rounded-xl p-12 text-center text-muted">
+                No horses participating in this race.
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {entries.map(e => {
                   const isSelected = selectedEntry?.raceEntryId === e.raceEntryId;
-                  
+
                   return (
                     <motion.div
                       key={e.raceEntryId}
                       whileHover={isBettingAllowed ? { scale: 1.01 } : {}}
                       onClick={() => isBettingAllowed && setSelectedEntry(e)}
-                      className={`glass-panel rounded-xl p-4 border transition-all ${
-                        isBettingAllowed ? 'cursor-pointer hover:border-gold/50' : 'opacity-75 cursor-not-allowed border-glass-border'
-                      } ${isSelected ? 'border-gold bg-gold/5 ring-1 ring-gold/20' : 'border-glass-border'}`}
+                      className={`glass-panel rounded-xl p-4 border transition-all ${isBettingAllowed ? 'cursor-pointer hover:border-gold/50' : 'opacity-75 cursor-not-allowed border-glass-border'
+                        } ${isSelected ? 'border-gold bg-gold/5 ring-1 ring-gold/20' : 'border-glass-border'}`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-xs font-bold text-navy bg-gold px-2 py-0.5 rounded-sm">Lane {e.laneNo}</span>
@@ -200,7 +203,7 @@ export function SpectatorRaceDetailPage() {
                           <div className="text-[10px] text-muted">Odds</div>
                         </div>
                       </div>
-                      
+
                       <h3 className="text-lg font-bold text-white mb-1">{e.horseName}</h3>
                       <div className="text-xs text-muted mb-3 flex items-center gap-1">
                         <ShieldCheck size={12} className="text-gold/60" />
@@ -238,7 +241,7 @@ export function SpectatorRaceDetailPage() {
           {/* Betting Sidebar */}
           <AnimatePresence>
             {selectedEntry && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
@@ -253,9 +256,11 @@ export function SpectatorRaceDetailPage() {
                   {!isBettingAllowed && (
                     <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
                       <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                      {invalidTournamentStatuses.includes(tournamentStatusKey) 
-                        ? 'Tournament has ended, betting is disabled.'
-                        : 'Betting is not allowed for this race currently.'}
+                      {isLocked
+                        ? 'Your account is locked or inactive. Betting is disabled!'
+                        : invalidTournamentStatuses.includes(tournamentStatusKey)
+                          ? 'Tournament has ended, betting is disabled.'
+                          : 'Betting is not allowed for this race currently.'}
                     </div>
                   )}
 
@@ -289,7 +294,7 @@ export function SpectatorRaceDetailPage() {
                   <div className="space-y-4 mb-6">
                     <div>
                       <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-2">Bet Amount (Coins)</label>
-                      <input 
+                      <input
                         type="number"
                         min="0"
                         step="100"
@@ -324,7 +329,7 @@ export function SpectatorRaceDetailPage() {
                     </div>
                   </div>
 
-                  <button 
+                  <button
                     onClick={handlePlaceBet}
                     disabled={!isBettingAllowed || betLoading || amount <= 0 || amount > balance}
                     className="w-full bg-gradient-to-r from-gold to-gold-light text-navy font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"

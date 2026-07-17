@@ -29,6 +29,8 @@ const SPARKS = [
 export function OwnerDashboardPage() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const statusLower = user?.status?.toLowerCase();
+  const isLocked = statusLower !== 'active';
   const { t } = useLanguage();
   const [horses, setHorses] = useState<any[]>([]);
   const [horsesLoading, setHorsesLoading] = useState(true);
@@ -71,14 +73,28 @@ export function OwnerDashboardPage() {
               </div>
             }
             actions={
-              <>
-                <button onClick={() => navigate('/owner/horses')} className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold">
-                  {t('Manage Horses')} <ChevronRight size={14} />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { if (!isLocked) navigate('/owner/horses'); }}
+                  disabled={isLocked}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-all ${isLocked
+                      ? 'bg-white/5 border-glass-border text-muted/50 cursor-not-allowed'
+                      : 'btn-gold'
+                    }`}
+                >
+                  {t('Manage Horses')} {isLocked ? '🔒' : <ChevronRight size={14} />}
                 </button>
-                <button onClick={() => navigate('/owner/registrations')} className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
-                  {t('Race Registration')}
+                <button
+                  onClick={() => { if (!isLocked) navigate('/owner/registrations'); }}
+                  disabled={isLocked}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-all ${isLocked
+                      ? 'border-glass-border text-muted/50 cursor-not-allowed bg-white/5'
+                      : 'text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10'
+                    }`}
+                >
+                  {t('Race Registration')} {isLocked && '🔒'}
                 </button>
-              </>
+              </div>
             }
           />
 
@@ -89,33 +105,41 @@ export function OwnerDashboardPage() {
               { title: t('Competing'), value: '—', trend: '+1', icon: Activity, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', spark: SPARKS[1], to: '/owner/registrations' },
               { title: t('Upcoming'), value: scheduleLoading ? '…' : String(schedule.length), trend: t('3 days left'), icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2], to: '/owner/tournaments' },
               { title: t('Prize Money'), value: '—', trend: '+18%', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3], to: '/owner/results' },
-            ].map((m, i) => (
-              <motion.div key={i} variants={child} onClick={() => navigate(m.to)} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer hover:border-gold/30 transition-colors" style={{ height: '140px' }}>
-                <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
-                <div className="relative z-10 flex items-start justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.bg} border border-white/[0.08] flex items-center justify-center ${m.color}`}>
-                    <m.icon size={18} />
+            ].map((m, i) => {
+              const isForbidden = isLocked && (m.to === '/owner/horses' || m.to === '/owner/registrations' || m.to === '/owner/tournaments');
+              return (
+                <motion.div key={i} variants={child}
+                  onClick={() => { if (!isForbidden) navigate(m.to); }}
+                  className={`glass-panel rounded-xl p-5 relative overflow-hidden group transition-colors ${isForbidden
+                      ? 'opacity-40 cursor-not-allowed border-glass-border'
+                      : 'cursor-pointer hover:border-gold/30'
+                    }`} style={{ height: '140px' }}>
+                  <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
+                  <div className="relative z-10 flex items-start justify-between mb-3">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${m.bg} border border-white/[0.08] flex items-center justify-center ${m.color}`}>
+                      <m.icon size={18} />
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                      <TrendingUp size={10} /> {m.trend}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                    <TrendingUp size={10} /> {m.trend}
+                  <div className="relative z-10">
+                    <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
+                    <div className="text-[11px] text-muted/70 font-medium">{m.title} {isForbidden && '🔒'}</div>
                   </div>
-                </div>
-                <div className="relative z-10">
-                  <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
-                  <div className="text-[11px] text-muted/70 font-medium">{m.title}</div>
-                </div>
-                <svg className="absolute bottom-0 left-0 w-full h-10 opacity-10 group-hover:opacity-25 transition-opacity" viewBox="0 0 100 20" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id={`sf-${i}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.6" />
-                      <stop offset="100%" stopColor="var(--color-gold)" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path d={`${m.spark} L100,20 L0,20 Z`} fill={`url(#sf-${i})`} />
-                  <path d={m.spark} fill="none" stroke="var(--color-gold)" strokeWidth="0.4" />
-                </svg>
-              </motion.div>
-            ))}
+                  <svg className="absolute bottom-0 left-0 w-full h-10 opacity-10 group-hover:opacity-25 transition-opacity" viewBox="0 0 100 20" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id={`sf-${i}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-gold)" stopOpacity="0.6" />
+                        <stop offset="100%" stopColor="var(--color-gold)" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={`${m.spark} L100,20 L0,20 Z`} fill={`url(#sf-${i})`} />
+                    <path d={m.spark} fill="none" stroke="var(--color-gold)" strokeWidth="0.4" />
+                  </svg>
+                </motion.div>
+              );
+            })}
           </motion.div>
 
           {/* ROW 3: HORSES + RACES */}

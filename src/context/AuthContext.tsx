@@ -7,6 +7,7 @@ interface AuthUser {
   fullName: string;
   email: string;
   role: string;
+  status: string;
 }
 
 interface AuthContextValue {
@@ -22,7 +23,7 @@ const BASE_URL =
   'https://hrms-backend-a4dwfmgmgfagf7ax.southeastasia-01.azurewebsites.net/api';
 
 // Raw fetch — bypass api.js interceptor so we can handle 401 cleanly here.
-async function validateTokenWithServer(token: string): Promise<string | null> {
+async function validateTokenWithServer(token: string): Promise<{ role: string | null; status: string | null }> {
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 8000);
@@ -31,12 +32,16 @@ async function validateTokenWithServer(token: string): Promise<string | null> {
       signal: ctrl.signal,
     });
     clearTimeout(timer);
-    if (!res.ok) return null;
+    if (!res.ok) return { role: null, status: null };
     const data = await res.json();
     const role = data?.role ?? null;
-    return role && role !== 'None' ? role : null;
+    const status = data?.status ?? null;
+    return {
+      role: role && role !== 'None' ? role : null,
+      status: status
+    };
   } catch {
-    return null;
+    return { role: null, status: null };
   }
 }
 
@@ -66,7 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    validateTokenWithServer(token).then(serverRole => {
+    validateTokenWithServer(token).then(result => {
+      const serverRole = result.role;
+      const serverStatus = result.status;
       if (!serverRole) {
         // Token expired or invalid — clear everything
         logout();
@@ -80,11 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             fullName: stored?.fullName ?? '',
             email: stored?.email ?? '',
             role: serverRole,
+            status: serverStatus || stored?.status || 'Active',
           };
           localStorage.setItem('user', JSON.stringify(verified));
           setUserState(verified);
         } catch {
-          setUserState({ id: 0, fullName: '', email: '', role: serverRole });
+          setUserState({ id: 0, fullName: '', email: '', role: serverRole, status: serverStatus || 'Active' });
         }
       }
     }).finally(() => {

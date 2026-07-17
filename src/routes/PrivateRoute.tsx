@@ -53,5 +53,21 @@ export function PrivateRoute({ children, allowedRoles }: PrivateRouteProps) {
     }
   }
 
+  const statusLower = user.status?.toLowerCase();
+  if (statusLower !== 'active') {
+    const forbiddenPaths = [
+      '/spectator/tournaments',
+      '/spectator/predictions',
+      '/owner/horses',
+      '/owner/tournaments',
+      '/owner/registrations',
+      '/owner/jockeys'
+    ];
+    const path = window.location.pathname;
+    if (forbiddenPaths.some(p => path.startsWith(p))) {
+      return <Navigate to="/spectator/wallet" replace />;
+    }
+  }
+
   return <>{children}</>;
 }

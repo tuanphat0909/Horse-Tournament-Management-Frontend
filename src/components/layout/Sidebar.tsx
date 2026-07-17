@@ -112,17 +112,33 @@ export function Sidebar() {
         <div className="text-[10px] uppercase tracking-[0.15em] text-muted/50 font-bold px-3 mb-2">{t("Menu")}</div>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const statusLower = user?.status?.toLowerCase();
+          const isLocked = statusLower !== 'active';
+          const isDisabledPath = isLocked && (
+            item.path === '/spectator/tournaments' ||
+            item.path === '/spectator/predictions' ||
+            item.path === '/owner/horses' ||
+            item.path === '/owner/tournaments' ||
+            item.path === '/owner/registrations' ||
+            item.path === '/owner/jockeys'
+          );
+
           return (
             <button
               key={item.path}
+              disabled={isDisabledPath}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium mb-0.5 transition-all duration-200 ${isActive
-                ? 'bg-gold/10 text-champagne border border-gold/20'
-                : 'text-muted hover:text-white hover:bg-white/[0.04] border border-transparent'
-                }`}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium mb-0.5 transition-all duration-200 ${
+                isDisabledPath
+                  ? 'opacity-40 cursor-not-allowed text-muted/50'
+                  : isActive
+                  ? 'bg-gold/10 text-champagne border border-gold/20'
+                  : 'text-muted hover:text-white hover:bg-white/[0.04] border border-transparent'
+              }`}
             >
-              <item.icon size={18} className={isActive ? 'text-gold' : ''} />
-              {t(item.label)}
+              <item.icon size={18} className={isActive && !isDisabledPath ? 'text-gold' : ''} />
+              <span className="flex-grow text-left">{t(item.label)}</span>
+              {isDisabledPath && <span className="text-[10px] text-red-400 font-bold">🔒</span>}
             </button>
           );
         })}
