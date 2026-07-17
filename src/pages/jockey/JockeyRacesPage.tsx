@@ -23,7 +23,10 @@ const getStatusConfig = (status: string) => {
   return { label: status || 'Unknown', color: 'text-muted bg-white/5 border-glass-border' };
 };
 
+type Tab = 'upcoming' | 'completed';
+
 export function JockeyRacesPage() {
+  const [tab, setTab] = useState<Tab>('upcoming');
   const [races, setRaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +44,23 @@ export function JockeyRacesPage() {
     })();
   }, []);
 
+  const upcomingRaces = races.filter(r => {
+    const s = (r.status ?? '').toLowerCase();
+    return s !== 'finished' && s !== 'completed';
+  });
+
+  const completedRaces = races.filter(r => {
+    const s = (r.status ?? '').toLowerCase();
+    return s === 'finished' || s === 'completed';
+  });
+
+  const tabCounts = {
+    upcoming: upcomingRaces.length,
+    completed: completedRaces.length,
+  };
+
+  const activeRaces = tab === 'upcoming' ? upcomingRaces : completedRaces;
+
   return (
     <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
       <Sidebar />
@@ -56,6 +76,31 @@ export function JockeyRacesPage() {
             imagePosition="center 25%"
           />
 
+          <div className="flex items-center gap-1 border-b border-glass-border pb-0">
+            <button
+              onClick={() => setTab('upcoming')}
+              className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${
+                tab === 'upcoming' ? 'text-yellow-400 border-yellow-400' : 'text-muted border-transparent hover:text-white'
+              }`}
+            >
+              Upcoming Races
+              <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold ${tab === 'upcoming' ? 'bg-yellow-400/10 text-yellow-400' : 'bg-white/5 text-muted'}`}>
+                {tabCounts.upcoming}
+              </span>
+            </button>
+            <button
+              onClick={() => setTab('completed')}
+              className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${
+                tab === 'completed' ? 'text-emerald-400 border-emerald-400' : 'text-muted border-transparent hover:text-white'
+              }`}
+            >
+              Completed Races
+              <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold ${tab === 'completed' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-white/5 text-muted'}`}>
+                {tabCounts.completed}
+              </span>
+            </button>
+          </div>
+
           {loading ? (
             <LoadingSkeleton />
           ) : error ? (
@@ -64,15 +109,15 @@ export function JockeyRacesPage() {
               <div className="text-4xl opacity-40 mb-3">⚠️</div>
               <div className="text-red-400 text-sm">{error}</div>
             </div>
-          ) : races.length === 0 ? (
+          ) : activeRaces.length === 0 ? (
             <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
               <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
               <div className="text-4xl opacity-40 mb-3">🏁</div>
-              <div className="text-muted text-sm">No data available</div>
+              <div className="text-muted text-sm">No {tab === 'upcoming' ? 'upcoming' : 'completed'} races available</div>
             </div>
           ) : (
             <div className="space-y-4">
-              {races.map((r, i) => {
+              {activeRaces.map((r, i) => {
                 const cfg = getStatusConfig(r.status);
                 return (
                   <motion.div key={r.id ?? i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
