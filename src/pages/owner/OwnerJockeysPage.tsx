@@ -290,7 +290,12 @@ export function OwnerJockeysPage() {
 
   const filteredTournamentsForSelect = form.horseId
     ? tournaments.filter((t: any) => 
-        registrations.some((r: any) => String(r.horseId) === String(form.horseId) && r.tournamentId === t.tournamentId)
+        registrations.some((r: any) => 
+          String(r.horseId) === String(form.horseId) && 
+          r.tournamentId === t.tournamentId &&
+          r.status?.toLowerCase() !== 'pendingvet' &&
+          r.status?.toLowerCase() !== 'pending_vet'
+        )
       )
     : [];
 
