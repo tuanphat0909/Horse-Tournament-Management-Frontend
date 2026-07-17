@@ -242,6 +242,44 @@ export function OwnerJockeysPage() {
       )
     : [];
 
+  const getExpirationOptions = () => {
+    const selected = tournaments.find((t: any) => String(t.tournamentId) === String(form.tournamentId));
+    if (!selected || !selected.registrationEndDate) {
+      return [
+        { value: '24', label: '24 hours' },
+        { value: '48', label: '48 hours' },
+        { value: '72', label: '72 hours' }
+      ];
+    }
+    const regEnd = new Date(selected.registrationEndDate);
+    const remainingMs = regEnd.getTime() - Date.now();
+    const remainingHours = Math.max(0.1, remainingMs / (1000 * 60 * 60));
+
+    const defaultHours = [24, 48, 72];
+    const validHours = defaultHours.filter(h => h < remainingHours);
+
+    const opts = validHours.map(h => ({
+      value: String(h),
+      label: `${h} hours`
+    }));
+
+    if (remainingHours >= 1) {
+      const wholeHours = Math.floor(remainingHours);
+      opts.push({
+        value: String(remainingHours),
+        label: `Until registration close (${wholeHours} hours)`
+      });
+    } else {
+      const remainingMinutes = Math.max(1, Math.floor(remainingMs / (1000 * 60)));
+      opts.push({
+        value: String(remainingHours),
+        label: `Until registration close (${remainingMinutes} mins)`
+      });
+    }
+
+    return opts;
+  };
+
   return (
     <div className="min-h-screen text-body font-sans flex" style={{backgroundColor: '#0b101e'}}>
       <Sidebar />
@@ -394,11 +432,23 @@ export function OwnerJockeysPage() {
                   onChange={e => {
                     const tId = e.target.value;
                     const selected = tournaments.find((t: any) => String(t.tournamentId) === String(tId));
+                    
+                    let defaultExp = '24';
+                    if (selected && selected.registrationEndDate) {
+                      const regEnd = new Date(selected.registrationEndDate);
+                      const remainingMs = regEnd.getTime() - Date.now();
+                      const remainingHours = Math.max(0.1, remainingMs / (1000 * 60 * 60));
+                      if (remainingHours < 24) {
+                        defaultExp = String(remainingHours);
+                      }
+                    }
+
                     setForm(p => ({
                       ...p, 
                       tournamentId: tId, 
                       startDate: selected ? toDateInputValue(selected.startDate) : '', 
-                      endDate: selected ? toDateInputValue(selected.endDate) : ''
+                      endDate: selected ? toDateInputValue(selected.endDate) : '',
+                      expirationHours: defaultExp
                     }));
                   }} 
                   className={INPUT}
@@ -440,9 +490,9 @@ export function OwnerJockeysPage() {
               <div>
                 <label className={LABEL}>Response Deadline *</label>
                 <select value={form.expirationHours} onChange={e => setForm(p => ({...p, expirationHours: e.target.value}))} className={INPUT}>
-                  <option value="24">24 hours</option>
-                  <option value="48">48 hours</option>
-                  <option value="72">72 hours</option>
+                  {getExpirationOptions().map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
               {submitError &&<div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{submitError}</div>}
