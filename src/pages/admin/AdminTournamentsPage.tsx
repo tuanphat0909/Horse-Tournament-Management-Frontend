@@ -22,7 +22,7 @@ const CUSTOM_STATUS_CONFIG: Record<string, { label: string; color: string; dot: 
   'Registration Open': { label: 'Registration Open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   'Registration Closed': { label: 'Registration Closed', color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20', dot: 'bg-zinc-400' },
   'Scheduled': { label: 'Scheduled', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-400' },
-  'Pending Admin Attention': { label: 'Cần phân công trọng tài', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20 border-dashed animate-pulse', dot: 'bg-rose-400' },
+  'Pending Admin Attention': { label: 'Referee assignment needed', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20 border-dashed animate-pulse', dot: 'bg-rose-400' },
   'Racing': { label: 'Racing', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
   'Completed': { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
   'Cancelled': { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' }
@@ -99,7 +99,7 @@ const INIT_FORM = {
 
 export function AdminTournamentsPage() {
   const navigate = useNavigate();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { showToast } = useNotifications();
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
@@ -558,13 +558,13 @@ export function AdminTournamentsPage() {
                             {show24hWarning && (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/15 text-red-400 shrink-0 flex items-center gap-1 animate-pulse">
                                 <AlertTriangle size={10} className="text-red-400 shrink-0" />
-                                {t("Thiếu trọng tài!")}
+                                {t("Missing referees!")}
                               </span>
                             )}
                           </div>
                         )}
                         {customStatus === 'Pending Admin Attention' && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-400 shrink-0 animate-pulse">⚠️ {t("Cần phân công trọng tài")}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-400 shrink-0 animate-pulse">⚠️ {t("Referee assignment needed")}</span>
                         )}
                         {customStatus === 'Racing' && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/40 bg-orange-500/10 text-orange-400 shrink-0">🏃 Racing</span>
@@ -669,7 +669,7 @@ export function AdminTournamentsPage() {
                                 className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-blue-400 border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-1.5"
                               >
                                 <Calendar size={13} />
-                                {t('Xếp lịch đua')}
+                                {t('Schedule Races')}
                               </button>
                               <button
                                 onClick={() => setCancelWarningTournament(tour)}
@@ -690,7 +690,7 @@ export function AdminTournamentsPage() {
                               <div className="space-y-2 w-full">
                                 <div className="text-red-400 font-bold text-[11px] flex items-center gap-1 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5 animate-pulse">
                                   <AlertCircle size={13} className="shrink-0" />
-                                  <span>{t('Chưa đủ ngựa vào giải')} ({tour.qualifiedRegistration ?? 0}/12)</span>
+                                  <span>{t('Not enough qualified horses')} ({tour.qualifiedRegistration ?? 0}/12)</span>
                                 </div>
                                 <div className="flex gap-2 w-full">
                                   <button
@@ -700,16 +700,16 @@ export function AdminTournamentsPage() {
                                     }}
                                     disabled={!canExtend}
                                     className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-amber-400 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5"
-                                    title={!canExtend ? (cancelCount >= 1 ? t('Đã gia hạn 1 lần, không thể gia hạn thêm') : t('Thời gian bắt đầu giải đấu còn dưới 2 ngày, không thể gia hạn')) : ''}
+                                    title={!canExtend ? (cancelCount >= 1 ? t('Already extended once, cannot extend again') : t('Tournament starts in less than 2 days, cannot extend')) : ''}
                                   >
                                     <Clock size={13} />
-                                    {t('Gia hạn')}
+                                    {t('Extend')}
                                   </button>
                                   <button
                                     onClick={() => setCancelWarningTournament(tour)}
                                     className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5"
                                   >
-                                    {t('Hủy giải')}
+                                    {t('Cancel Tournament')}
                                   </button>
                                 </div>
                               </div>
@@ -723,7 +723,7 @@ export function AdminTournamentsPage() {
                           {show24hWarning && (
                             <div className="text-red-400 font-bold text-[11px] flex items-start gap-1.5 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5 animate-pulse mb-1">
                               <AlertTriangle size={13} className="shrink-0 mt-0.5 text-red-400" />
-                              <span>{t("Cần gán trọng tài khẩn cấp (còn lại dưới 24h trước khi giải đấu diễn ra!)")}</span>
+                              <span>{t("Urgent: referees must be assigned (less than 24h before the tournament starts!)")}</span>
                             </div>
                           )}
                           <div className="flex gap-2 w-full">
@@ -734,7 +734,7 @@ export function AdminTournamentsPage() {
                                   className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 animate-pulse"
                                 >
                                   <Calendar size={13} />
-                                  {t('Phân công trọng tài')}
+                                  {t('Assign referees')}
                                 </button>
                                 <button
                                   onClick={() => setCancelWarningTournament(tour)}
@@ -768,7 +768,7 @@ export function AdminTournamentsPage() {
                         <div className="flex flex-col gap-2.5 w-full">
                           <div className="text-red-400 font-bold text-[11px] flex items-start gap-1.5 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5 animate-pulse">
                             <AlertCircle size={13} className="shrink-0 mt-0.5 text-red-400" />
-                            <span>{t("Có cuộc đua chưa phân công trọng tài. Vui lòng phân công trọng tài để giải đấu bắt đầu!")}</span>
+                            <span>{t("Some races have no referee assigned. Please assign referees so the tournament can start!")}</span>
                           </div>
                           <div className="flex gap-2 w-full">
                             <button
@@ -776,13 +776,13 @@ export function AdminTournamentsPage() {
                               className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 animate-pulse transition-colors flex items-center justify-center gap-1.5"
                             >
                               <Calendar size={13} />
-                              {t('Phân công trọng tài')}
+                              {t('Assign referees')}
                             </button>
                             <button
                               onClick={() => setCancelWarningTournament(tour)}
                               className="px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5"
                             >
-                              {t('Hủy giải')}
+                              {t('Cancel Tournament')}
                             </button>
                           </div>
                         </div>
@@ -1021,7 +1021,7 @@ export function AdminTournamentsPage() {
 
                 <div>
                    <label className={LABEL}>
-                     {t("Additional days")} {maxDays > 0 && (language === 'vi' ? ` (Tối đa ${maxDays} ngày)` : ` (Max ${maxDays} days)`)}
+                     {t("Additional days")} {maxDays > 0 && ` (Max ${maxDays} days)`}
                    </label>
                    <input
                      type="number"

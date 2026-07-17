@@ -1065,10 +1065,10 @@ export function AdminRacesPage() {
                     <span className="mt-0.5">⚠️</span>
                     <div>
                       <p className="font-bold mb-0.5">
-                        {t("This tournament does not have enough 12 horses.") || "Giải đấu này chưa đủ 12 con ngựa."}
+                        {t("This tournament does not have enough 12 horses.")}
                       </p>
                       <p className="opacity-80">
-                        {t("Cannot schedule races. Please reopen registration or cancel the tournament.") || "Không thể xếp lịch thi đấu. Vui lòng mở lại đăng ký hoặc hủy giải đấu."}
+                        {t("Cannot schedule races. Please reopen registration or cancel the tournament.")}
                       </p>
                     </div>
                   </div>
