@@ -17,14 +17,6 @@ const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.
 const INIT_CREATE = { name: '', breed: '', age: '', gender: 'Male' };
 const INIT_EDIT   = { name: '', breed: '', age: '', gender: 'Male', healthStatus: 'Healthy' };
 
-// Giá trị lưu bằng tiếng Anh cho khớp dữ liệu BE (Horse.HealthStatus mặc định "Healthy")
-const HEALTH_OPTIONS = [
-  { value: 'Healthy',    label: 'Healthy' },
-  { value: 'Injured',    label: 'Injured' },
-  { value: 'Sick',       label: 'Sick' },
-  { value: 'Recovering', label: 'Recovering' },
-  { value: 'Retired',    label: 'Retired' },
-];
 
 export function OwnerHorsesPage() {
   const { showToast } = useNotifications();
