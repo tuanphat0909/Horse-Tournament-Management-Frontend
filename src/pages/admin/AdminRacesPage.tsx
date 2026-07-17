@@ -777,6 +777,17 @@ export function AdminRacesPage() {
             <div className="space-y-6">
               {pagedTournaments.map(t => {
                 const isOpen = openTournaments.has(t.tournamentId);
+                const isAutoAssignLanesDisabled = 
+                  t.hasAnyRaces || 
+                  t.status === 'Ongoing' || 
+                  t.status === 'Finished' || 
+                  t.status === 'Completed' ||
+                  t.rounds.some((r: any) => r.races.some((race: any) => 
+                    race.status === 'Live' || 
+                    race.status === 'Finished' || 
+                    race.status === 'Completed' ||
+                    race.status === 'InProgress'
+                  ));
                 return (
                 <div key={t.tournamentId} className={`glass-panel rounded-xl p-6 relative overflow-hidden animate-fade-in ${isOpen ? 'space-y-6' : ''}`}>
                   <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent pointer-events-none" />
@@ -816,9 +827,14 @@ export function AdminRacesPage() {
                       {/* Prefinal generation — chỉ cho bấm khi đã đóng đăng ký */}
                       {t.canGeneratePre && !t.regOpen && !t.regNotStarted && (
                         <button
-                          onClick={() => handleGenerateRaces(t.tournamentId)}
-                          disabled={generatingForTournament === t.tournamentId}
-                          className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
+                          onClick={() => { if (!isAutoAssignLanesDisabled) handleGenerateRaces(t.tournamentId); }}
+                          disabled={isAutoAssignLanesDisabled || generatingForTournament === t.tournamentId}
+                          title={isAutoAssignLanesDisabled ? "Làn đua đã được sắp xếp cố định" : undefined}
+                          className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 border ${
+                            isAutoAssignLanesDisabled
+                              ? 'bg-white/5 border-glass-border text-muted/40 cursor-not-allowed'
+                              : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30'
+                          }`}
                         >
                           {generatingForTournament === t.tournamentId ? (
                             <>
@@ -826,7 +842,9 @@ export function AdminRacesPage() {
                               Creating...
                             </>
                           ) : (
-                            'Auto Assign Lanes'
+                            <>
+                              Auto Assign Lanes {isAutoAssignLanesDisabled && '🔒'}
+                            </>
                           )}
                         </button>
                       )}
