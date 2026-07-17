@@ -68,9 +68,12 @@ export function OwnerTournamentsPage() {
     all: tournaments.length,
     active: tournaments.filter(t => {
       const s = (t.status ?? '').toLowerCase();
-      return s === 'active' || s === 'registration open' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution';
+      return s === 'active' || s === 'registration open' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution' || s === 'pendingscheduling';
     }).length,
-    upcoming: tournaments.filter(t => (t.status ?? '').toLowerCase() === 'upcoming').length,
+    upcoming: tournaments.filter(t => {
+      const s = (t.status ?? '').toLowerCase();
+      return s === 'upcoming' || s === 'pendingregistration';
+    }).length,
     completed: tournaments.filter(t => {
       const s = (t.status ?? '').toLowerCase();
       return s === 'completed' || s === 'cancelled';
@@ -83,9 +86,9 @@ export function OwnerTournamentsPage() {
       if (filter === 'all') return true;
       const s = (t.status ?? '').toLowerCase();
       if (filter === 'active') {
-        return s === 'active' || s === 'registration open' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution';
+        return s === 'active' || s === 'registration open' || s === 'registration closed' || s === 'medical checking' || s === 'ready to arrange' || s === 'pre round' || s === 'final round' || s === 'prize distribution' || s === 'pendingscheduling';
       }
-      if (filter === 'upcoming') return s === 'upcoming';
+      if (filter === 'upcoming') return s === 'upcoming' || s === 'pendingregistration';
       if (filter === 'completed') return s === 'completed' || s === 'cancelled';
       return false;
     })
