@@ -329,13 +329,14 @@ export function OwnerHorsesPage() {
               </div>
               <div>
                 <label className={LABEL}>Health Status</label>
-                <select value={editForm.healthStatus} disabled className="flex w-full px-4 py-2.5 rounded-lg border border-glass-border bg-white/5 text-muted text-sm cursor-not-allowed" style={{colorScheme: 'dark'}}>
-                  {HEALTH_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  {/* Dữ liệu cũ nhập tay không nằm trong danh sách chuẩn — giữ lại để không bị mất khi lưu */}
-                  {editForm.healthStatus && !HEALTH_OPTIONS.some(o => o.value === editForm.healthStatus) && (
-                    <option value={editForm.healthStatus}>{editForm.healthStatus} (legacy value)</option>
-                  )}
-                </select>
+                <input 
+                  value={editForm.healthStatus} 
+                  disabled 
+                  className={`${INPUT} bg-navy/20 cursor-not-allowed opacity-75`} 
+                />
+                <p className="text-[11px] text-muted/70 italic mt-1">
+                  * Only Veterinarians can update health status via medical checkups.
+                </p>
               </div>
               {editError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{editError}</div>}
             </div>
