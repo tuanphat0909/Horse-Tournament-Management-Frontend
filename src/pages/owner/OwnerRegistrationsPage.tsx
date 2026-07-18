@@ -14,16 +14,18 @@ import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { formatUtcDateTime, formatDateOnly } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
-type Tab = 'pending' | 'approved' | 'rejected';
+type Tab = 'pending' | 'approved' | 'rejected' | 'pending_vet';
 
 function normalizeStatus(s: string): Tab {
   const key = (s ?? '').toLowerCase();
   if (key === 'approved') return 'approved';
   if (key === 'rejected') return 'rejected';
+  if (key === 'pendingvet' || key === 'pending_vet') return 'pending_vet';
   return 'pending';
 }
 
 const STATUS_CONFIG = {
+  pending_vet: { label: 'Pending Vet Health Check', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
   pending:  { label: 'Pending Admin approval', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
   approved: { label: 'Approved',        color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
   rejected: { label: 'Rejected',      color: 'text-red-400 bg-red-500/10 border-red-500/20' },
@@ -127,6 +129,7 @@ export function OwnerRegistrationsPage() {
       || (r.tournamentName ?? '').toLowerCase().includes(q);
   });
   const counts = {
+    pending_vet: registrations.filter(r => normalizeStatus(r.status) === 'pending_vet').length,
     pending:  registrations.filter(r => normalizeStatus(r.status) === 'pending').length,
     approved: registrations.filter(r => normalizeStatus(r.status) === 'approved').length,
     rejected: registrations.filter(r => normalizeStatus(r.status) === 'rejected').length,
@@ -185,7 +188,7 @@ export function OwnerRegistrationsPage() {
           {error && <div className="glass-panel rounded-xl p-5 text-red-400 text-sm border border-red-500/20">{error}</div>}
 
           <div className="flex items-center gap-1 border-b border-glass-border pb-0">
-            {([['pending', 'Awaiting Approval'], ['approved', 'Approved'], ['rejected', 'Rejected']] as [Tab, string][]).map(([t, label]) => (
+            {([['pending_vet', 'Vet Check'], ['pending', 'Awaiting Approval'], ['approved', 'Approved'], ['rejected', 'Rejected']] as [Tab, string][]).map(([t, label]) => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${tab === t ? 'text-gold border-gold' : 'text-muted border-transparent hover:text-white'}`}>
                 {label}

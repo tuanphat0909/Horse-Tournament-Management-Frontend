@@ -8,7 +8,7 @@ import { getCurrentUser } from '../../api/authService';
 export function Topbar() {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, fetchRecent } = useNotifications();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -105,8 +105,14 @@ export function Topbar() {
 
         <div className="flex items-center gap-4 relative" ref={dropdownRef}>
           {/* Bell Button */}
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+          <button 
+            onClick={() => {
+              const nextOpen = !dropdownOpen;
+              setDropdownOpen(nextOpen);
+              if (nextOpen) {
+                fetchRecent();
+              }
+            }}
             className={`relative text-muted hover:text-white transition-colors p-2 rounded-lg hover:bg-white/[0.04] ${dropdownOpen ? 'text-white bg-white/[0.04]' : ''}`}
           >
             <Bell size={18} />
@@ -140,8 +146,9 @@ export function Topbar() {
                     <div
                       key={noti.id}
                       onClick={() => handleNotiClick(noti)}
-                      className={`px-4 py-3 hover:bg-white/[0.03] transition-colors cursor-pointer flex items-start gap-3 relative ${!noti.isRead ? 'bg-gold/[0.01]' : ''
-                        }`}
+                      className={`px-4 py-3 hover:bg-white/[0.03] transition-colors cursor-pointer flex items-start gap-3 relative ${
+                        !noti.isRead ? 'bg-gold/[0.01]' : ''
+                      }`}
                     >
                       {/* Unread indicator */}
                       {!noti.isRead && (
@@ -152,7 +159,7 @@ export function Topbar() {
                         {getNotiIcon(noti.type)}
                       </div>
 
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-grow min-w-0">
                         <div className="flex items-center justify-between gap-1 mb-0.5">
                           <span className={`text-xs font-bold truncate ${!noti.isRead ? 'text-white' : 'text-white/70'}`}>
                             {noti.title}
@@ -197,4 +204,3 @@ export function Topbar() {
     </div>
   );
 }
-
