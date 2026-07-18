@@ -177,11 +177,13 @@ export function OwnerTournamentsPage() {
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5 whitespace-nowrap shrink-0`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                       </span>
-                      {regNotStarted ? (
-                        <CountdownTimer target={tour.registrationStartDate} utc={false} label="Reg. opens in:" />
-                      ) : tour.registrationEndDate ? (
-                        <CountdownTimer target={tour.registrationEndDate} utc={false} hideWhenExpired />
-                      ) : null}
+                      {s !== 'cancelled' && s !== 'completed' && s !== 'finished' && (
+                        regNotStarted ? (
+                          <CountdownTimer target={tour.registrationStartDate} utc={false} label="Reg. opens in:" />
+                        ) : tour.registrationEndDate ? (
+                          <CountdownTimer target={tour.registrationEndDate} utc={false} hideWhenExpired />
+                        ) : null
+                      )}
                     </div>
                     <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-1 line-clamp-1">{tour.name}</h3>
                     <p className="text-xs text-muted/80 line-clamp-2 min-h-[32px] mb-3">{tour.description || t("No detailed description available.")}</p>

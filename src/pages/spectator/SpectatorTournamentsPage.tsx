@@ -178,11 +178,13 @@ export function SpectatorTournamentsPage() {
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${config.color} flex items-center gap-1.5 whitespace-nowrap shrink-0`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {t(config.label)}
                       </span>
-                      {regNotStarted ? (
-                        <CountdownTimer target={tour.registrationStartDate} utc={false} label="Reg. opens in:" />
-                      ) : tour.registrationEndDate ? (
-                        <CountdownTimer target={tour.registrationEndDate} utc={false} hideWhenExpired />
-                      ) : null}
+                      {s !== 'cancelled' && s !== 'completed' && s !== 'finished' && (
+                        regNotStarted ? (
+                          <CountdownTimer target={tour.registrationStartDate} utc={false} label="Reg. opens in:" />
+                        ) : tour.registrationEndDate ? (
+                          <CountdownTimer target={tour.registrationEndDate} utc={false} hideWhenExpired />
+                        ) : null
+                      )}
                     </div>
                     <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-3 line-clamp-1">{tour.name}</h3>
                     <div className="space-y-1.5 text-xs text-muted pt-3 border-t border-glass-border/40">
