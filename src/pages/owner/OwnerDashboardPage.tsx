@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Trophy, Activity, Calendar, ChevronRight, TrendingUp,
+  Trophy, Calendar, ChevronRight, TrendingUp,
   Star, Clock, ShieldCheck, Flag, Wallet,
 } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';

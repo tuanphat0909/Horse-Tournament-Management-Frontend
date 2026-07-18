@@ -5,7 +5,7 @@ import {
   Bell, LogOut, Users, ClipboardList,
   ShieldCheck, FileText, Target, Star, Activity,
   Megaphone, UserCheck, AlertTriangle, Wallet,
-  Settings,
+  Settings, ChevronDown, LayoutList, ArrowDownLeft, ArrowUpRight,
 } from 'lucide-react';
 import { getCurrentUser } from '../../api/authService';
 import { useAuth } from '../../context/AuthContext';
@@ -16,6 +16,7 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  isWalletGroup?: boolean;
 }
 
 const NAV_BY_ROLE: Record<string, NavItem[]> = {
@@ -32,7 +33,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   ],
   owner: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/owner/dashboard' },
-    { icon: Wallet, label: 'My Wallet', path: '/owner/wallet' },
+    { icon: Wallet, label: 'My Wallet', path: '/owner/wallet', isWalletGroup: true },
     { icon: Flag, label: 'My Horses', path: '/owner/horses' },
     { icon: Trophy, label: 'Tournaments', path: '/owner/tournaments' },
     { icon: ClipboardList, label: 'Race Entry', path: '/owner/registrations' },
@@ -56,7 +57,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   ],
   spectator: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/spectator/dashboard' },
-    { icon: Wallet, label: 'My Wallet', path: '/spectator/wallet' },
+    { icon: Wallet, label: 'My Wallet', path: '/spectator/wallet', isWalletGroup: true },
     { icon: Trophy, label: 'Tournaments & Schedule', path: '/spectator/tournaments' },
     { icon: Activity, label: 'Live Results', path: '/spectator/live' },
     { icon: Target, label: 'My Bets', path: '/spectator/predictions' },
@@ -65,6 +66,19 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   veterinarian: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/vet/dashboard' },
     { icon: ClipboardList, label: 'Medical Check', path: '/vet/medical-check' },
+  ],
+};
+
+const WALLET_SUB_ITEMS: Record<string, { icon: React.ElementType; label: string; path: string }[]> = {
+  owner: [
+    { icon: LayoutList,    label: 'Asset Overview', path: '/owner/wallet/overview' },
+    { icon: ArrowDownLeft, label: 'Deposit',         path: '/owner/wallet/deposit' },
+    { icon: ArrowUpRight,  label: 'Withdraw',        path: '/owner/wallet/withdraw' },
+  ],
+  spectator: [
+    { icon: LayoutList,    label: 'Asset Overview', path: '/spectator/wallet/overview' },
+    { icon: ArrowDownLeft, label: 'Deposit',         path: '/spectator/wallet/deposit' },
+    { icon: ArrowUpRight,  label: 'Withdraw',        path: '/spectator/wallet/withdraw' },
   ],
 };
 
@@ -89,30 +103,32 @@ export function Sidebar() {
   const user = getCurrentUser();
   const roleKey = toRoleKey(user?.role);
   const navItems = NAV_BY_ROLE[roleKey] ?? NAV_BY_ROLE.spectator;
+  const walletSubItems = WALLET_SUB_ITEMS[roleKey] ?? [];
+  const walletBasePath = `/${roleKey}/wallet`;
 
   const { setUser } = useAuth();
   const { t } = useLanguage();
 
   const [showSettings, setShowSettings] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(
+    () => location.pathname.startsWith(walletBasePath)
+  );
 
   function handleLogout() {
-    setUser(null);                       // clear React state + localStorage atomically
-    navigate('/login', { replace: true }); // replace: Back không quay lại dashboard cũ
+    setUser(null);
+    navigate('/login', { replace: true });
   }
 
   return (
     <aside className="w-[280px] shrink-0 h-screen sticky top-0 border-r border-glass-border bg-[#0A1220] flex flex-col z-40 relative">
-      {/* Logo */}
       <div className="px-6 h-16 flex items-center gap-2.5 border-b border-glass-border shrink-0">
         <BrandLogo size={44} />
         <span className="font-serif text-lg font-bold text-champagne tracking-wider">EQUESTRIA</span>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <div className="text-[10px] uppercase tracking-[0.15em] text-muted/50 font-bold px-3 mb-2">{t("Menu")}</div>
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
           const statusLower = user?.status?.toLowerCase();
           const isLocked = statusLower !== 'active';
           const isDisabledPath = isLocked && (
@@ -124,6 +140,55 @@ export function Sidebar() {
             item.path === '/owner/jockeys'
           );
 
+          if (item.isWalletGroup) {
+            const isWalletActive = location.pathname.startsWith(walletBasePath);
+            return (
+              <div key={item.path}>
+                <button
+                  onClick={() => setWalletOpen(prev => !prev)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium mb-0.5 transition-all duration-200 ${
+                    isWalletActive
+                      ? 'bg-gold/10 text-champagne border border-gold/20'
+                      : 'text-muted hover:text-white hover:bg-white/[0.04] border border-transparent'
+                  }`}
+                >
+                  <item.icon size={18} className={isWalletActive ? 'text-gold' : ''} />
+                  <span className="flex-grow text-left">{t(item.label)}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-200 ${walletOpen ? 'rotate-180 text-gold' : 'text-muted'}`}
+                  />
+                </button>
+
+                {walletOpen && (
+                  <div className="ml-4 pl-3 border-l border-gold/20 mb-1 space-y-0.5">
+                    {walletSubItems.map((sub) => {
+                      const isSubActive = location.pathname === sub.path;
+                      return (
+                        <button
+                          key={sub.path}
+                          onClick={() => navigate(sub.path)}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 ${
+                            isSubActive
+                              ? 'bg-gold/15 text-gold border border-gold/25'
+                              : 'text-muted/80 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                          }`}
+                        >
+                          <sub.icon size={13} className={isSubActive ? 'text-gold' : 'text-muted/60'} />
+                          <span>{t(sub.label)}</span>
+                          {isSubActive && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          const isActive = location.pathname === item.path;
           return (
             <button
               key={item.path}
@@ -145,7 +210,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User Profile */}
       <div className="px-4 py-4 border-t border-glass-border shrink-0 relative">
         <div className="flex items-center justify-between p-3 bg-white/[0.02] border border-glass-border rounded-xl">
           <div className="flex items-center gap-3">
@@ -166,7 +230,6 @@ export function Sidebar() {
           </button>
         </div>
 
-        {/* Click Outside Overlay Backdrop */}
         {showSettings && (
           <div
             className="fixed inset-0 z-40 bg-transparent"
@@ -174,7 +237,6 @@ export function Sidebar() {
           />
         )}
 
-        {/* Settings Popover */}
         {showSettings && (
           <div className="absolute bottom-20 left-4 right-4 z-50 glass-panel-elevated rounded-xl p-4 shadow-2xl border border-gold-border flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
             <div className="flex items-center justify-between border-b border-glass-border pb-2">
@@ -187,7 +249,6 @@ export function Sidebar() {
               </button>
             </div>
 
-            {/* Logout Action */}
             <div className="border-t border-glass-border pt-3">
               <button
                 onClick={() => {

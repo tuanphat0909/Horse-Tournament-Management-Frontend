@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Wallet, ArrowDownLeft, ArrowUpRight, Trophy,
-  Clock, CheckCircle, Plus, Minus, DollarSign, Coins, History,
-  Star,
+  CheckCircle, Plus, Minus, DollarSign, Coins, History,
 } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';

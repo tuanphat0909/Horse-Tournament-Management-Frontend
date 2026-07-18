@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
@@ -23,7 +23,9 @@ import { OwnerJockeysPage } from '../pages/owner/OwnerJockeysPage';
 import { OwnerRegistrationsPage } from '../pages/owner/OwnerRegistrationsPage';
 import { OwnerResultsPage } from '../pages/owner/OwnerResultsPage';
 import { OwnerTournamentsPage } from '../pages/owner/OwnerTournamentsPage';
-import { OwnerWalletPage } from '../pages/owner/OwnerWalletPage';
+import { OwnerWalletOverviewPage } from '../pages/owner/OwnerWalletOverviewPage';
+import { OwnerDepositPage } from '../pages/owner/OwnerDepositPage';
+import { OwnerWithdrawPage } from '../pages/owner/OwnerWithdrawPage';
 
 // Jockey
 import { JockeyDashboardPage } from '../pages/jockey/JockeyDashboardPage';
@@ -48,7 +50,9 @@ import { SpectatorRaceDetailPage } from '../pages/spectator/SpectatorRaceDetailP
 import { SpectatorLiveResultsPage } from '../pages/spectator/SpectatorLiveResultsPage';
 import { SpectatorPredictionsPage } from '../pages/spectator/SpectatorPredictionsPage';
 import { SpectatorNotificationsPage } from '../pages/spectator/SpectatorNotificationsPage';
-import { SpectatorWalletPage } from '../pages/spectator/SpectatorWalletPage';
+import { SpectatorWalletOverviewPage } from '../pages/spectator/SpectatorWalletOverviewPage';
+import { SpectatorDepositPage } from '../pages/spectator/SpectatorDepositPage';
+import { SpectatorWithdrawPage } from '../pages/spectator/SpectatorWithdrawPage';
 
 // Veterinarian
 import { VetDashboardPage } from '../pages/vet/VetDashboardPage';
@@ -80,9 +84,12 @@ export function AppRoutes() {
         <Route path="/admin/predictions" element={<PrivateRoute><AdminPredictionsPage /></PrivateRoute>} />
         <Route path="/admin/violations" element={<PrivateRoute><AdminViolationsPage /></PrivateRoute>} />
 
-        {/* Owner */}
+        {/* Owner — wallet sub-routes (/owner/wallet → redirect to /withdraw) */}
         <Route path="/owner/dashboard" element={<PrivateRoute><OwnerDashboardPage /></PrivateRoute>} />
-        <Route path="/owner/wallet" element={<PrivateRoute><OwnerWalletPage /></PrivateRoute>} />
+        <Route path="/owner/wallet" element={<Navigate to="/owner/wallet/withdraw" replace />} />
+        <Route path="/owner/wallet/overview" element={<PrivateRoute><OwnerWalletOverviewPage /></PrivateRoute>} />
+        <Route path="/owner/wallet/deposit" element={<PrivateRoute><OwnerDepositPage /></PrivateRoute>} />
+        <Route path="/owner/wallet/withdraw" element={<PrivateRoute><OwnerWithdrawPage /></PrivateRoute>} />
         <Route path="/owner/horses" element={<PrivateRoute><OwnerHorsesPage /></PrivateRoute>} />
         <Route path="/owner/jockeys" element={<PrivateRoute><OwnerJockeysPage /></PrivateRoute>} />
         <Route path="/owner/registrations" element={<PrivateRoute><OwnerRegistrationsPage /></PrivateRoute>} />
@@ -104,15 +111,18 @@ export function AppRoutes() {
         <Route path="/referee/confirm-results" element={<PrivateRoute><RefereeConfirmResultsPage /></PrivateRoute>} />
         <Route path="/referee/reports" element={<PrivateRoute><RefereeReportsPage /></PrivateRoute>} />
 
-        {/* Spectator */}
+        {/* Spectator — wallet sub-routes (/spectator/wallet → redirect to /withdraw) */}
         <Route path="/spectator/dashboard" element={<PrivateRoute><SpectatorDashboardPage /></PrivateRoute>} />
+        <Route path="/spectator/wallet" element={<Navigate to="/spectator/wallet/withdraw" replace />} />
+        <Route path="/spectator/wallet/overview" element={<PrivateRoute><SpectatorWalletOverviewPage /></PrivateRoute>} />
+        <Route path="/spectator/wallet/deposit" element={<PrivateRoute><SpectatorDepositPage /></PrivateRoute>} />
+        <Route path="/spectator/wallet/withdraw" element={<PrivateRoute><SpectatorWithdrawPage /></PrivateRoute>} />
         <Route path="/spectator/tournaments" element={<PrivateRoute><SpectatorTournamentsPage /></PrivateRoute>} />
         <Route path="/spectator/tournaments/:tournamentId" element={<PrivateRoute><SpectatorTournamentDetailPage /></PrivateRoute>} />
         <Route path="/spectator/races/:raceId" element={<PrivateRoute><SpectatorRaceDetailPage /></PrivateRoute>} />
         <Route path="/spectator/live" element={<PrivateRoute><SpectatorLiveResultsPage /></PrivateRoute>} />
         <Route path="/spectator/predictions" element={<PrivateRoute><SpectatorPredictionsPage /></PrivateRoute>} />
         <Route path="/spectator/notifications" element={<PrivateRoute><SpectatorNotificationsPage /></PrivateRoute>} />
-        <Route path="/spectator/wallet" element={<PrivateRoute><SpectatorWalletPage /></PrivateRoute>} />
         
         {/* Veterinarian */}
         <Route path="/vet/dashboard" element={<PrivateRoute><VetDashboardPage /></PrivateRoute>} />

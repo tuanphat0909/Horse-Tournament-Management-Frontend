@@ -22,3 +22,7 @@ export const getOwnerWalletBalance = () => api.get('/owner/wallet/balance');
 export const getOwnerWalletHistory = () => api.get('/owner/wallet/history');
 export const ownerDeposit = (amount) => api.post('/owner/wallet/deposit', { amount });
 export const ownerWithdraw = (amount) => api.post('/owner/wallet/withdraw', { amount });
+
+// Withdraw — maps to POST /owner/wallet/withdraw (payload: { amount })
+// The 'on-chain' variant did not exist on backend; use the standard endpoint.
+export const ownerWithdrawOnChain = (payload) => api.post('/owner/wallet/withdraw', { amount: payload.amount });

@@ -58,8 +58,8 @@ const CONTRACT_FILTER_LABELS: Record<ContractFilter, string> = {
 function contractBucket(status: string): ContractFilter {
   const s = (status ?? '').toLowerCase();
   if (s === 'active' || s === 'accepted') return 'accepted';
-  if (s === 'rejected' || s === 'declined' || s === 'cancelled') return 'rejected';
-  if (s === 'expired') return 'expired';
+  if (s === 'rejected' || s === 'declined') return 'rejected';
+  if (s === 'expired' || s === 'cancelled') return 'expired';
   return 'pending';
 }
 
@@ -78,6 +78,7 @@ export function OwnerJockeysPage() {
   const [search, setSearch] = useState('');
   const [showInvite, setShowInvite] = useState(false);
   const [form, setForm] = useState(INIT_FORM);
+  const [isPrefilled, setIsPrefilled] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState('');
@@ -121,6 +122,7 @@ export function OwnerJockeysPage() {
     const tournamentId = searchParams.get('tournamentId');
     if (horseId && tournamentId) {
       prefillApplied.current = true;
+      setIsPrefilled(true);
       // Find the tournament to auto-fill dates
       const t = tournaments.find((t: any) => String(t.tournamentId) === String(tournamentId));
       setForm(prev => ({
@@ -267,6 +269,7 @@ export function OwnerJockeysPage() {
     setSubmitError(''); setSubmitSuccess('');
     setJockeyBusyError('');
     setHorseBusyError('');
+    setIsPrefilled(false);
     setForm(INIT_FORM);
   }
 
@@ -290,7 +293,12 @@ export function OwnerJockeysPage() {
 
   const filteredTournamentsForSelect = form.horseId
     ? tournaments.filter((t: any) => 
-        registrations.some((r: any) => String(r.horseId) === String(form.horseId) && r.tournamentId === t.tournamentId)
+        registrations.some((r: any) => 
+          String(r.horseId) === String(form.horseId) && 
+          r.tournamentId === t.tournamentId &&
+          r.status?.toLowerCase() !== 'pendingvet' &&
+          r.status?.toLowerCase() !== 'pending_vet'
+        )
       )
     : [];
 
@@ -416,7 +424,12 @@ export function OwnerJockeysPage() {
             <div className="space-y-4">
               <div>
                 <label className={LABEL}>Select Horse *</label>
-                <select value={form.horseId} onChange={e => setForm(p => ({...p, horseId: e.target.value, tournamentId: '', startDate: '', endDate: ''}))} className={INPUT}>
+                <select 
+                  value={form.horseId} 
+                  disabled={isPrefilled}
+                  onChange={e => setForm(p => ({...p, horseId: e.target.value, tournamentId: '', startDate: '', endDate: ''}))} 
+                  className={`${INPUT} disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
                   <option value="">-- Select Your Horse --</option>
                   {horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                 </select>
@@ -444,6 +457,7 @@ export function OwnerJockeysPage() {
                 <label className={LABEL}>Select Tournament *</label>
                 <select 
                   value={form.tournamentId} 
+                  disabled={isPrefilled || !form.horseId}
                   onChange={e => {
                     const tId = e.target.value;
                     const selected = tournaments.find((t: any) => String(t.tournamentId) === String(tId));
@@ -466,8 +480,7 @@ export function OwnerJockeysPage() {
                       expirationHours: defaultExp
                     }));
                   }} 
-                  className={INPUT}
-                  disabled={!form.horseId}
+                  className={`${INPUT} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <option value="">
                     {!form.horseId ? '-- Select Previous Horse --' : '-- Select Tournament --'}
