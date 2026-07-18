@@ -50,6 +50,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   ],
   referee: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/referee/dashboard' },
+    { icon: Trophy, label: 'Tournaments', path: '/spectator/tournaments' },
     { icon: ShieldCheck, label: 'Horse Inspection', path: '/referee/horse-check' },
     { icon: Activity, label: 'Record Violations', path: '/referee/violations' },
     { icon: Flag, label: 'Confirm Results', path: '/referee/confirm-results' },
