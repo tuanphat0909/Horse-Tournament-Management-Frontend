@@ -208,7 +208,7 @@ export function SpectatorNotificationsPage() {
           />
 
           {/* Controls Bar */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#111A2E]/80 border border-glass-border rounded-2xl p-4 backdrop-blur-xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface border border-gold-border/30 rounded-2xl p-4 backdrop-blur-xl">
             {/* Filter buttons */}
             <div className="flex flex-wrap gap-1.5">
               {filtersList.map((f) => (
@@ -352,7 +352,7 @@ export function SpectatorNotificationsPage() {
 
           {/* Pagination Controls */}
           {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 bg-[#111A2E]/50 border border-glass-border/60 rounded-xl py-3 px-6 max-w-xs mx-auto">
+            <div className="flex items-center justify-center gap-4 bg-surface border border-gold-border/30 rounded-xl py-3 px-6 max-w-xs mx-auto">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
