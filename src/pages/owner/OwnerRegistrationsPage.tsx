@@ -354,10 +354,21 @@ export function OwnerRegistrationsPage() {
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted mt-1">
                         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-champagne"><Trophy size={10} className="text-gold/60" /> {r.tournamentName ?? `Tournament #${r.tournamentId}`}</span>
                         {r.createdAt && <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/[0.04] border border-glass-border text-muted"><Calendar size={10} className="text-gold/60" /> {r.createdAt}</span>}
-                        {/* Show jockey name inline — only from registration API or accepted/active contract */}
-                        {((resolvedStatus === 'accepted' || resolvedStatus === 'active') && (r.jockeyName || contract?.jockeyName)) && (
-                          <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300">
-                            <User size={10} className="text-blue-400/60" /> {r.jockeyName || contract?.jockeyName}
+                        {/* Show jockey name inline */}
+                        {(r.jockeyName || contract?.jockeyName) && (
+                          <span className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                            (resolvedStatus === 'accepted' || resolvedStatus === 'active')
+                              ? 'bg-blue-500/10 border-blue-500/20 text-blue-300'
+                              : (resolvedStatus === 'rejected' || resolvedStatus === 'declined')
+                              ? 'bg-red-500/10 border-red-500/20 text-red-300'
+                              : 'bg-white/5 border-glass-border text-muted'
+                          }`}>
+                            <User size={10} className="text-current opacity-60" /> 
+                            {r.jockeyName || contract?.jockeyName}
+                            {(resolvedStatus === 'rejected' || resolvedStatus === 'declined') && ' (Declined)'}
+                            {resolvedStatus === 'cancelled' && ' (Cancelled)'}
+                            {resolvedStatus === 'expired' && ' (Expired)'}
+                            {resolvedStatus === 'pending' && ' (Awaiting response)'}
                           </span>
                         )}
                       </div>
