@@ -53,7 +53,7 @@ export function RefereeDashboardPage() {
   }, []);
 
   const statsDisplay = [
-    { title: t('Total Supervised Races'), value: loading ? '...' : (data?.assignedRaceCount ?? 0), trend: t('Season 2026'), icon: Flag, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/referee/confirm-results' },
+    { title: t('Total Supervised Races'), value: loading ? '...' : (data?.assignedRaceCount ?? 0), trend: t('Season 2026'), icon: Flag, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/referee/schedule' },
     { title: t('Reports Pending'), value: loading ? '...' : (data?.pendingReportCount ?? 0), trend: t('To Be Done'), icon: ShieldCheck, color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/referee/horse-check' },
     { title: t('Violations Recorded'), value: loading ? '...' : (data?.violationsCreatedCount ?? 0), trend: t('Needs Review'), icon: AlertTriangle, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', path: '/referee/violations' },
     { title: t('Reports Submitted'), value: loading ? '...' : (data?.completedReportCount ?? 0), trend: t('Completed'), icon: FileText, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/referee/reports' },
@@ -125,7 +125,7 @@ export function RefereeDashboardPage() {
                   <h2 className="text-lg font-serif text-white">{t('Race Schedule')}</h2>
                   <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
                 </div>
-                <button onClick={() => navigate('/referee/confirm-results')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0 ml-3 font-bold">{t('View all')} <ChevronRight size={14} /></button>
+                <button onClick={() => navigate('/referee/schedule')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium shrink-0 ml-3 font-bold">{t('View all')} <ChevronRight size={14} /></button>
               </div>
 
               {loading ? (
