@@ -728,9 +728,8 @@ export function AdminRacesPage() {
                 <button
                   key={s}
                   onClick={() => { setStatusFilter(s); setTourPage(1); }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-                    statusFilter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${statusFilter === s ? 'border-gold/40 bg-gold/10 text-champagne' : 'border-glass-border text-muted hover:text-white hover:bg-white/[0.04]'
+                    }`}
                 >
                   {t(FILTER_LABELS[s])}
                   <span className="ml-2 text-[11px] font-bold text-current opacity-60">{statsCounts[s]}</span>
@@ -774,264 +773,261 @@ export function AdminRacesPage() {
           {!loadingData && !fetchError && sortedTournaments.length > 0 && (() => {
             const { paged: pagedTournaments, totalPages: tourTotalPages, total: tourTotal, page: tourSafePage } = paginate(sortedTournaments, tourPage, 5);
             return (
-            <div className="space-y-6">
-              {pagedTournaments.map(t => {
-                const isOpen = openTournaments.has(t.tournamentId);
-                const isAutoAssignLanesDisabled = 
-                  t.hasAnyRaces || 
-                  t.status === 'Ongoing' || 
-                  t.status === 'Finished' || 
-                  t.status === 'Completed' ||
-                  t.rounds.some((r: any) => r.races.some((race: any) => 
-                    race.status === 'Live' || 
-                    race.status === 'Finished' || 
-                    race.status === 'Completed' ||
-                    race.status === 'InProgress'
-                  ));
-                return (
-                <div key={t.tournamentId} className={`glass-panel rounded-xl p-6 relative overflow-hidden animate-fade-in ${isOpen ? 'space-y-6' : ''}`}>
-                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent pointer-events-none" />
+              <div className="space-y-6">
+                {pagedTournaments.map(t => {
+                  const isOpen = openTournaments.has(t.tournamentId);
+                  const isAutoAssignLanesDisabled =
+                    t.hasAnyRaces ||
+                    t.status === 'Ongoing' ||
+                    t.status === 'Finished' ||
+                    t.status === 'Completed' ||
+                    t.rounds.some((r: any) => r.races.some((race: any) =>
+                      race.status === 'Live' ||
+                      race.status === 'Finished' ||
+                      race.status === 'Completed' ||
+                      race.status === 'InProgress'
+                    ));
+                  return (
+                    <div key={t.tournamentId} className={`glass-panel rounded-xl p-6 relative overflow-hidden animate-fade-in ${isOpen ? 'space-y-6' : ''}`}>
+                      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent pointer-events-none" />
 
-                  {/* Tournament Header — bấm để đổ detail vòng & races */}
-                  <div className={`flex flex-wrap items-center justify-between gap-4 ${isOpen ? 'border-b border-glass-border pb-4' : ''}`}>
-                    <button onClick={() => toggleTournament(t.tournamentId)} className="text-left group flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        {isOpen ? <ChevronUp size={16} className="text-gold shrink-0" /> : <ChevronDown size={16} className="text-muted group-hover:text-gold shrink-0 transition-colors" />}
-                        <Trophy size={18} className="text-gold" />
-                        <h2 className="text-lg font-serif text-white font-bold truncate group-hover:text-champagne transition-colors">{t.name}</h2>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border shrink-0 ${
-                          t.status === 'Active' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' :
-                          t.status === 'Upcoming' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
-                          'text-muted bg-white/5 border-glass-border'
-                        }`}>
-                          {t.status === 'Active' ? 'Active' : t.status === 'Upcoming' ? 'Upcoming' : 'Completed'}
-                        </span>
-                        {!isOpen && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-champagne shrink-0">
-                            {t.rounds.reduce((s: number, r: any) => s + r.races.length, 0)} races
-                          </span>
-                        )}
-                      </div>
-                      {t.startDate && t.endDate && (
-                        <p className="text-xs text-muted/80 mt-1 pl-6">
-                          Time: {new Date(t.startDate).toLocaleDateString()} - {new Date(t.endDate).toLocaleDateString()}
-                        </p>
-                      )}
-                      <span className={`inline-flex items-center gap-1.5 mt-2 ml-6 text-[10px] font-bold px-2.5 py-1 rounded-full border ${HINT_TONE[t.genHint.tone]}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${t.genHint.tone === 'wait' ? 'bg-yellow-400' : t.genHint.tone === 'ready' ? 'bg-emerald-400' : t.genHint.tone === 'progress' ? 'bg-blue-400' : 'bg-muted'}`} />
-                        {t.genHint.label}
-                      </span>
-                    </button>
-
-                    <div className="flex items-center gap-3">
-                      {/* Prefinal generation — chỉ cho bấm khi đã đóng đăng ký */}
-                      {t.canGeneratePre && !t.regOpen && !t.regNotStarted && (
-                        <button
-                          onClick={() => { if (!isAutoAssignLanesDisabled) handleGenerateRaces(t.tournamentId); }}
-                          disabled={isAutoAssignLanesDisabled || generatingForTournament === t.tournamentId}
-                          title={isAutoAssignLanesDisabled ? "Làn đua đã được sắp xếp cố định" : undefined}
-                          className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 border ${
-                            isAutoAssignLanesDisabled
-                              ? 'bg-white/5 border-glass-border text-muted/40 cursor-not-allowed'
-                              : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30'
-                          }`}
-                        >
-                          {generatingForTournament === t.tournamentId ? (
-                            <>
-                              <Loader size={12} className="animate-spin" />
-                              Creating...
-                            </>
-                          ) : (
-                            <>
-                              Auto Assign Lanes {isAutoAssignLanesDisabled && '🔒'}
-                            </>
-                          )}
-                        </button>
-                      )}
-
-                      {/* Register chưa mở / còn mở → chưa thể xếp lanes */}
-                      {(t.regOpen || t.regNotStarted) && !t.hasAnyRaces && (
-                        <button
-                          disabled
-                          title={t.regNotStarted
-                            ? `Registration opens at ${fmtDate(t.registrationStartDate)}, closes at ${fmtDate(t.registrationEndDate)}.`
-                            : `Registration closed at ${fmtDate(t.registrationEndDate)}. Pending registration expiry to assign lanes.`}
-                          className="px-4 py-2 bg-white/[0.04] text-muted border border-glass-border text-xs font-bold rounded-lg cursor-not-allowed flex items-center gap-1.5"
-                        >
-                          <AlertCircle size={12} /> {t.regNotStarted ? 'Registration not open' : 'Awaiting registration close'}
-                        </button>
-                      )}
-
-                      {/* Final generation */}
-                      {t.canGenerateFinal && (
-                        <button
-                          onClick={() => handleGenerateFinal(t.tournamentId)}
-                          disabled={generatingForTournament === t.tournamentId}
-                          className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold border border-gold/30 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 animate-pulse"
-                        >
-                          {generatingForTournament === t.tournamentId ? (
-                            <>
-                              <Loader size={12} className="animate-spin" />
-                              Creating...
-                            </>
-                          ) : (
-                            'Auto Assign Final (Top 12)'
-                          )}
-                        </button>
-                      )}
-                      {t.rounds?.[0]?.races?.length > 0 && !t.canGenerateFinal && t.waitingLabel && (
-                        <button
-                          disabled
-                          className="px-4 py-2 bg-white/[0.04] text-muted border border-glass-border text-xs font-bold rounded-lg cursor-not-allowed"
-                        >
-                          {t.waitingLabel}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Rounds — chỉ hiển thị khi tournaments được mở rộng */}
-                  {isOpen && (
-                  <div className="grid grid-cols-1 gap-6">
-                    {/* Banner trạng thái xếp lanes */}
-                    <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${HINT_TONE[t.genHint.tone]}`}>
-                      {t.genHint.tone === 'wait' ? <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                        : t.genHint.tone === 'ready' ? <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
-                        : t.genHint.tone === 'progress' ? <Loader size={16} className="shrink-0 mt-0.5 animate-spin" />
-                        : <Flag size={16} className="shrink-0 mt-0.5" />}
-                      <div className="min-w-0">
-                        <div className="text-sm font-bold">{t.genHint.label}</div>
-                        {t.genHint.detail && <div className="text-xs opacity-90 mt-0.5">{t.genHint.detail}</div>}
-                        {t.genHint.tone === 'wait' && (
-                          <div className="mt-2">
-                            {t.regNotStarted && t.registrationStartDate ? (
-                              <CountdownTimer target={t.registrationStartDate} utc={false} label="Registration opens in:" />
-                            ) : t.registrationEndDate ? (
-                              <CountdownTimer target={t.registrationEndDate} utc={false} />
-                            ) : null}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {t.rounds.length === 0 && (
-                      <div className="text-xs text-muted/50 italic py-2 text-center">
-                        No rounds. After registration closes, use 'Auto Assign Lanes' to generate Pre-round.
-                      </div>
-                    )}
-
-                    {t.rounds.map((r: any) => (
-                      <div key={r.roundId} className="space-y-3 bg-navy/20 p-4 rounded-xl border border-glass-border/40">
-                        <div className="flex items-center justify-between border-b border-glass-border/30 pb-2">
-                          <h3 className="text-sm font-bold text-champagne uppercase tracking-wider flex items-center gap-2">
-                            <span>{r.name}</span>
-                            <span className="text-[10px] text-muted normal-case font-normal">
-                              ({r.roundNumber === 1 ? 'Prefinal Round - Qualifier' : 'Final Round - Finals'})
+                      {/* Tournament Header — bấm để đổ detail vòng & races */}
+                      <div className={`flex flex-wrap items-center justify-between gap-4 ${isOpen ? 'border-b border-glass-border pb-4' : ''}`}>
+                        <button onClick={() => toggleTournament(t.tournamentId)} className="text-left group flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {isOpen ? <ChevronUp size={16} className="text-gold shrink-0" /> : <ChevronDown size={16} className="text-muted group-hover:text-gold shrink-0 transition-colors" />}
+                            <Trophy size={18} className="text-gold" />
+                            <h2 className="text-lg font-serif text-white font-bold truncate group-hover:text-champagne transition-colors">{t.name}</h2>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border shrink-0 ${t.status === 'Active' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' :
+                                t.status === 'Upcoming' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
+                                  'text-muted bg-white/5 border-glass-border'
+                              }`}>
+                              {t.status === 'Active' ? 'Active' : t.status === 'Upcoming' ? 'Upcoming' : 'Completed'}
                             </span>
-                          </h3>
-                          <button
-                            onClick={() => openRaceModal(r.roundId)}
-                            className="text-[11px] text-gold hover:underline flex items-center gap-1 font-semibold"
-                          >
-                            <Plus size={12} /> Add Race Manually
-                          </button>
+                            {!isOpen && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-champagne shrink-0">
+                                {t.rounds.reduce((s: number, r: any) => s + r.races.length, 0)} races
+                              </span>
+                            )}
+                          </div>
+                          {t.startDate && t.endDate && (
+                            <p className="text-xs text-muted/80 mt-1 pl-6">
+                              Time: {new Date(t.startDate).toLocaleDateString()} - {new Date(t.endDate).toLocaleDateString()}
+                            </p>
+                          )}
+                          <span className={`inline-flex items-center gap-1.5 mt-2 ml-6 text-[10px] font-bold px-2.5 py-1 rounded-full border ${HINT_TONE[t.genHint.tone]}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${t.genHint.tone === 'wait' ? 'bg-yellow-400' : t.genHint.tone === 'ready' ? 'bg-emerald-400' : t.genHint.tone === 'progress' ? 'bg-blue-400' : 'bg-muted'}`} />
+                            {t.genHint.label}
+                          </span>
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                          {/* Prefinal generation — chỉ cho bấm khi đã đóng đăng ký */}
+                          {t.canGeneratePre && !t.regOpen && !t.regNotStarted && (
+                            <button
+                              onClick={() => { if (!isAutoAssignLanesDisabled) handleGenerateRaces(t.tournamentId); }}
+                              disabled={isAutoAssignLanesDisabled || generatingForTournament === t.tournamentId}
+                              title={isAutoAssignLanesDisabled ? "Làn đua đã được sắp xếp cố định" : undefined}
+                              className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 border ${isAutoAssignLanesDisabled
+                                  ? 'bg-white/5 border-glass-border text-muted/40 cursor-not-allowed'
+                                  : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30'
+                                }`}
+                            >
+                              {generatingForTournament === t.tournamentId ? (
+                                <>
+                                  <Loader size={12} className="animate-spin" />
+                                  Creating...
+                                </>
+                              ) : (
+                                <>
+                                  Auto Assign Lanes {isAutoAssignLanesDisabled && '🔒'}
+                                </>
+                              )}
+                            </button>
+                          )}
+
+                          {/* Register chưa mở / còn mở → chưa thể xếp lanes */}
+                          {(t.regOpen || t.regNotStarted) && !t.hasAnyRaces && (
+                            <button
+                              disabled
+                              title={t.regNotStarted
+                                ? `Registration opens at ${fmtDate(t.registrationStartDate)}, closes at ${fmtDate(t.registrationEndDate)}.`
+                                : `Registration closed at ${fmtDate(t.registrationEndDate)}. Pending registration expiry to assign lanes.`}
+                              className="px-4 py-2 bg-white/[0.04] text-muted border border-glass-border text-xs font-bold rounded-lg cursor-not-allowed flex items-center gap-1.5"
+                            >
+                              <AlertCircle size={12} /> {t.regNotStarted ? 'Registration not open' : 'Awaiting registration close'}
+                            </button>
+                          )}
+
+                          {/* Final generation */}
+                          {t.canGenerateFinal && (
+                            <button
+                              onClick={() => handleGenerateFinal(t.tournamentId)}
+                              disabled={generatingForTournament === t.tournamentId}
+                              className="px-4 py-2 bg-gold/20 hover:bg-gold/30 text-gold border border-gold/30 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 animate-pulse"
+                            >
+                              {generatingForTournament === t.tournamentId ? (
+                                <>
+                                  <Loader size={12} className="animate-spin" />
+                                  Creating...
+                                </>
+                              ) : (
+                                'Auto Assign Final (Top 12)'
+                              )}
+                            </button>
+                          )}
+                          {t.rounds?.[0]?.races?.length > 0 && !t.canGenerateFinal && t.waitingLabel && (
+                            <button
+                              disabled
+                              className="px-4 py-2 bg-white/[0.04] text-muted border border-glass-border text-xs font-bold rounded-lg cursor-not-allowed"
+                            >
+                              {t.waitingLabel}
+                            </button>
+                          )}
                         </div>
-
-                        {r.races.length === 0 ? (
-                          <div className="text-xs text-muted/50 italic py-4">
-                            No races scheduled. Use auto-assign or add manually.
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {r.races.map((race: any) => {
-                              return (
-                                <div
-                                  key={race.raceId}
-                                  className="bg-navy/40 border rounded-xl overflow-hidden transition-all duration-300 border-glass-border hover:border-white/10"
-                                >
-                                  <div className="p-4 space-y-3">
-                                    <div className="flex items-start justify-between gap-2">
-                                      <div>
-                                        <h4 className="text-sm font-bold text-white flex items-center gap-1.5 flex-wrap">
-                                          🏁 {race.name}
-                                          {raceTypeBadge(race.name) && (
-                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${raceTypeBadge(race.name)!.cls}`}>
-                                              {raceTypeBadge(race.name)!.label}
-                                            </span>
-                                          )}
-                                        </h4>
-                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                                          (race.status === 'Finished' || race.status === 'Completed') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                          race.status === 'Live' ? 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse' :
-                                          'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                        }`}>
-                                          {(race.status === 'Finished' || race.status === 'Completed') ? 'Completed' : race.status === 'Live' ? 'Active' : 'Scheduled'}
-                                        </span>
-                                      </div>
-                                      <div className="text-right">
-                                        <div className="text-[11px] text-muted flex items-center gap-1 justify-end">
-                                          <Calendar size={11} />
-                                          {new Date(race.raceDate).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
-                                        </div>
-                                        <div className="text-[10px] text-muted/80 mt-0.5">
-                                          Distance: {race.distanceMeter}m | Max lanes: {race.maxLanes}
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-glass-border/30">
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          onClick={() => openDetail(race)}
-                                          title="Details & 3D Lane Map"
-                                          className="p-1.5 rounded-lg text-champagne hover:bg-gold/15 border border-transparent hover:border-gold/20 transition-colors"
-                                        >
-                                          <Eye size={13} />
-                                        </button>
-                                        <button
-                                          onClick={() => openLanes(race.raceId)}
-                                          title="Assign horse to lanes"
-                                          className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 transition-colors"
-                                        >
-                                          <ListOrdered size={13} />
-                                        </button>
-                                        <button
-                                          onClick={() => openRefereeModal(race.raceId)}
-                                          title="Assign referees"
-                                          className="p-1.5 rounded-lg text-cyan-400 hover:bg-cyan-500/10 border border-transparent hover:border-cyan-500/20 transition-colors"
-                                        >
-                                          <UserCheck size={13} />
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteRace(race.raceId, race.name)}
-                                          title="Delete race"
-                                          className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-colors"
-                                        >
-                                          <Trash2 size={13} />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
                       </div>
-                    ))}
-                  </div>
-                  )}
-                </div>
-                );
-              })}
 
-              {/* Phân trang danh sách tournaments */}
-              {tourTotalPages > 1 && (
-                <div className="glass-panel rounded-xl overflow-hidden">
-                  <Pager page={tourSafePage} totalPages={tourTotalPages} total={tourTotal} onChange={setTourPage} />
-                </div>
-              )}
-            </div>
+                      {/* Rounds — chỉ hiển thị khi tournaments được mở rộng */}
+                      {isOpen && (
+                        <div className="grid grid-cols-1 gap-6">
+                          {/* Banner trạng thái xếp lanes */}
+                          <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${HINT_TONE[t.genHint.tone]}`}>
+                            {t.genHint.tone === 'wait' ? <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                              : t.genHint.tone === 'ready' ? <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
+                                : t.genHint.tone === 'progress' ? <Loader size={16} className="shrink-0 mt-0.5 animate-spin" />
+                                  : <Flag size={16} className="shrink-0 mt-0.5" />}
+                            <div className="min-w-0">
+                              <div className="text-sm font-bold">{t.genHint.label}</div>
+                              {t.genHint.detail && <div className="text-xs opacity-90 mt-0.5">{t.genHint.detail}</div>}
+                              {t.genHint.tone === 'wait' && (
+                                <div className="mt-2">
+                                  {t.regNotStarted && t.registrationStartDate ? (
+                                    <CountdownTimer target={t.registrationStartDate} utc={false} label="Registration opens in:" />
+                                  ) : t.registrationEndDate ? (
+                                    <CountdownTimer target={t.registrationEndDate} utc={false} />
+                                  ) : null}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {t.rounds.length === 0 && (
+                            <div className="text-xs text-muted/50 italic py-2 text-center">
+                              No rounds. After registration closes, use 'Auto Assign Lanes' to generate Pre-round.
+                            </div>
+                          )}
+
+                          {t.rounds.map((r: any) => (
+                            <div key={r.roundId} className="space-y-3 bg-navy/20 p-4 rounded-xl border border-glass-border/40">
+                              <div className="flex items-center justify-between border-b border-glass-border/30 pb-2">
+                                <h3 className="text-sm font-bold text-champagne uppercase tracking-wider flex items-center gap-2">
+                                  <span>{r.name}</span>
+                                  <span className="text-[10px] text-muted normal-case font-normal">
+                                    ({r.roundNumber === 1 ? 'Prefinal Round - Qualifier' : 'Final Round - Finals'})
+                                  </span>
+                                </h3>
+                                <button
+                                  onClick={() => openRaceModal(r.roundId)}
+                                  className="text-[11px] text-gold hover:underline flex items-center gap-1 font-semibold"
+                                >
+                                  <Plus size={12} /> Add Race Manually
+                                </button>
+                              </div>
+
+                              {r.races.length === 0 ? (
+                                <div className="text-xs text-muted/50 italic py-4">
+                                  No races scheduled. Use auto-assign or add manually.
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  {r.races.map((race: any) => {
+                                    return (
+                                      <div
+                                        key={race.raceId}
+                                        className="bg-navy/40 border rounded-xl overflow-hidden transition-all duration-300 border-glass-border hover:border-white/10"
+                                      >
+                                        <div className="p-4 space-y-3">
+                                          <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                              <h4 className="text-sm font-bold text-white flex items-center gap-1.5 flex-wrap">
+                                                🏁 {race.name}
+                                                {raceTypeBadge(race.name) && (
+                                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${raceTypeBadge(race.name)!.cls}`}>
+                                                    {raceTypeBadge(race.name)!.label}
+                                                  </span>
+                                                )}
+                                              </h4>
+                                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${(race.status === 'Finished' || race.status === 'Completed') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                                  race.status === 'Live' ? 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse' :
+                                                    'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                                }`}>
+                                                {(race.status === 'Finished' || race.status === 'Completed') ? 'Completed' : race.status === 'Live' ? 'Active' : 'Scheduled'}
+                                              </span>
+                                            </div>
+                                            <div className="text-right">
+                                              <div className="text-[11px] text-muted flex items-center gap-1 justify-end">
+                                                <Calendar size={11} />
+                                                {new Date(race.raceDate).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                                              </div>
+                                              <div className="text-[10px] text-muted/80 mt-0.5">
+                                                Distance: {race.distanceMeter}m | Max lanes: {race.maxLanes}
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-glass-border/30">
+                                            <div className="flex items-center gap-2">
+                                              <button
+                                                onClick={() => openDetail(race)}
+                                                title="Details & 3D Lane Map"
+                                                className="p-1.5 rounded-lg text-champagne hover:bg-gold/15 border border-transparent hover:border-gold/20 transition-colors"
+                                              >
+                                                <Eye size={13} />
+                                              </button>
+                                              <button
+                                                onClick={() => openLanes(race.raceId)}
+                                                title="Assign horse to lanes"
+                                                className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 transition-colors"
+                                              >
+                                                <ListOrdered size={13} />
+                                              </button>
+                                              <button
+                                                onClick={() => openRefereeModal(race.raceId)}
+                                                title="Assign referees"
+                                                className="p-1.5 rounded-lg text-cyan-400 hover:bg-cyan-500/10 border border-transparent hover:border-cyan-500/20 transition-colors"
+                                              >
+                                                <UserCheck size={13} />
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteRace(race.raceId, race.name)}
+                                                title="Delete race"
+                                                className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-colors"
+                                              >
+                                                <Trash2 size={13} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Phân trang danh sách tournaments */}
+                {tourTotalPages > 1 && (
+                  <div className="glass-panel rounded-xl overflow-hidden">
+                    <Pager page={tourSafePage} totalPages={tourTotalPages} total={tourTotal} onChange={setTourPage} />
+                  </div>
+                )}
+              </div>
             );
           })()}
 
@@ -1110,10 +1106,10 @@ export function AdminRacesPage() {
                   style={{ colorScheme: 'dark' }}
                 >
                   <option value="">
-                    {!selectedTournamentId 
-                      ? "-- Select Tournament first --" 
-                      : selectedTournamentApprovedHorsesCount < 12 
-                        ? "-- Not enough horses --" 
+                    {!selectedTournamentId
+                      ? "-- Select Tournament first --"
+                      : selectedTournamentApprovedHorsesCount < 12
+                        ? "-- Not enough horses --"
                         : "-- Select Round --"}
                   </option>
                   {selectedTournamentApprovedHorsesCount >= 12 && availableRounds.map((r: any) => (
