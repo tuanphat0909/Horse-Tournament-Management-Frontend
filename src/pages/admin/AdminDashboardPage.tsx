@@ -161,7 +161,7 @@ export function AdminDashboardPage() {
             {[
               { title: t('Users'), value: stats ? stats.totalUsers : '—', trend: t('Active'), icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
               { title: t('Tournaments'), value: stats ? stats.totalTournaments : '—', trend: t('Season 2026'), icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
-              { title: t('Profit (VND)'), value: stats ? new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US').format(stats.profit) : '—', trend: t('Betting Revenue'), icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/results' },
+              { title: t('Profit (VND)'), value: stats ? new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US').format(stats.profit) : '—', trend: t('Betting Revenue'), icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/wallet' },
               { title: t('Races'), value: stats ? stats.activeRaces : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} ${t('total')}` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
             ].map((m, i) => (
               <motion.div

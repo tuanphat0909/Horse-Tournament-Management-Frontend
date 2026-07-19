@@ -15,6 +15,8 @@ import { AdminRefereesPage } from '../pages/admin/AdminRefereesPage';
 import { AdminResultsPage } from '../pages/admin/AdminResultsPage';
 import { AdminPredictionsPage } from '../pages/admin/AdminPredictionsPage';
 import { AdminViolationsPage } from '../pages/admin/AdminViolationsPage';
+import { AdminWalletPage } from '../pages/admin/AdminWalletPage';
+import { AdminNotificationsPage } from '../pages/admin/AdminNotificationsPage';
 
 // Owner
 import { OwnerDashboardPage } from '../pages/owner/OwnerDashboardPage';
@@ -84,6 +86,8 @@ export function AppRoutes() {
         <Route path="/admin/results" element={<PrivateRoute><AdminResultsPage /></PrivateRoute>} />
         <Route path="/admin/predictions" element={<PrivateRoute><AdminPredictionsPage /></PrivateRoute>} />
         <Route path="/admin/violations" element={<PrivateRoute><AdminViolationsPage /></PrivateRoute>} />
+        <Route path="/admin/wallet" element={<PrivateRoute><AdminWalletPage /></PrivateRoute>} />
+        <Route path="/admin/notifications" element={<PrivateRoute><AdminNotificationsPage /></PrivateRoute>} />
 
         {/* Owner — wallet sub-routes (/owner/wallet → redirect to /withdraw) */}
         <Route path="/owner/dashboard" element={<PrivateRoute><OwnerDashboardPage /></PrivateRoute>} />
