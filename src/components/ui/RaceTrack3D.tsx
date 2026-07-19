@@ -174,17 +174,33 @@ function Podium3D({ entries }: { entries: Entry[] }) {
 
       {/* Các hạng còn lại */}
       {rest.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-white/10">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-1.5 text-center">Other positions</div>
-          <div className="flex flex-wrap justify-center gap-1.5">
+        <div className="mt-4 pt-3 border-t border-white/20">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-amber-400 mb-3 text-center flex items-center justify-center gap-2">
+            <span className="flex-1 h-px bg-amber-400/30" />
+            🏅 Other Positions
+            <span className="flex-1 h-px bg-amber-400/30" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
             {rest.map((e, i) => (
-              <span key={i} className="text-[10px] px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/70">
-                {e.finishPosition != null ? `#${e.finishPosition} ` : ''}🐴 {horseLabel(e)}{e.jockeyName ? ` • ${e.jockeyName}` : ''}
-              </span>
+              <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border"
+                style={{ background: 'rgba(255,255,255,0.12)', borderColor: 'rgba(255,255,255,0.25)' }}>
+                {/* Huy hiệu vị trí */}
+                <span className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-extrabold"
+                  style={{ background: 'rgba(251,191,36,0.25)', border: '1.5px solid rgba(251,191,36,0.7)', color: '#fbbf24' }}>
+                  {e.finishPosition ?? i + 4}
+                </span>
+                <span className="text-lg leading-none shrink-0">🐴</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-bold truncate" style={{ color: '#ffffff' }}>{horseLabel(e)}</div>
+                  <div className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.7)' }}>{e.jockeyName ?? '—'}</div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       )}
+
+
     </div>
   );
 }

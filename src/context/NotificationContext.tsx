@@ -79,14 +79,31 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Get first page (latest 10)
       const res = await getNotifications({ page: 1, pageSize: 10 });
       const items = res?.result?.items || res?.result || [];
-      setNotifications(Array.isArray(items) ? items : []);
+      
+      const isAdmin = currentUser.role?.toLowerCase() === 'admin' || currentUser.role?.toLowerCase() === 'systemadministrator';
+      let filteredItems = Array.isArray(items) ? items : [];
+      if (isAdmin) {
+        filteredItems = filteredItems.filter(noti => 
+          noti.type?.toLowerCase() !== 'race' && 
+          noti.title !== 'Race Results Published' &&
+          !(noti.actionUrl && noti.actionUrl.toLowerCase().includes('/spectator/'))
+        );
+      }
+      setNotifications(filteredItems);
 
       // Also get all unread to get the accurate count
       const allRes = await getNotifications({ page: 1, pageSize: 100, isRead: false });
       const unreadItems = allRes?.result?.items || allRes?.result || [];
-      const count = allRes?.result?.totalCount !== undefined 
-        ? allRes.result.totalCount 
-        : (Array.isArray(unreadItems) ? unreadItems.length : 0);
+      
+      let filteredUnread = Array.isArray(unreadItems) ? unreadItems : [];
+      if (isAdmin) {
+        filteredUnread = filteredUnread.filter(noti => 
+          noti.type?.toLowerCase() !== 'race' && 
+          noti.title !== 'Race Results Published' &&
+          !(noti.actionUrl && noti.actionUrl.toLowerCase().includes('/spectator/'))
+        );
+      }
+      const count = filteredUnread.length;
       
       setUnreadCount(count);
     } catch (err) {
@@ -160,6 +177,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       .build();
 
     newConnection.on('ReceiveNotification', (noti: NotificationItem) => {
+      const currentUser = getCurrentUser();
+      const isAdmin = currentUser?.role?.toLowerCase() === 'admin' || currentUser?.role?.toLowerCase() === 'systemadministrator';
+      if (isAdmin && (
+        noti.type?.toLowerCase() === 'race' || 
+        noti.title === 'Race Results Published' ||
+        (noti.actionUrl && noti.actionUrl.toLowerCase().includes('/spectator/'))
+      )) {
+        return; // Ignore spectator race notifications for Admin
+      }
       showToast(noti.title || 'New Notification', noti.content || noti.message, 'info');
       fetchRecent();
     });

@@ -57,3 +57,6 @@ export const getActivityLog = () => api.get('/admin/activity-log');
 
 export const withdrawRaceEntry = (raceEntryId, reason) =>
   api.post(`/admin/races/entries/${raceEntryId}/withdraw`, { reason });
+
+export const getAdminWalletBalance = () => api.get('/admin/wallet/balance');
+export const getAdminWalletHistory = () => api.get('/admin/wallet/history');

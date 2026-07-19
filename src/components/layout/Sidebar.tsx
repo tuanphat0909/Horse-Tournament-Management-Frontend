@@ -30,6 +30,8 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { icon: Megaphone, label: 'Publish Results', path: '/admin/results' },
     { icon: AlertTriangle, label: 'Violations', path: '/admin/violations' },
     { icon: Target, label: 'Predictions', path: '/admin/predictions' },
+    { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
+    { icon: Wallet, label: 'Wallet', path: '/admin/wallet' },
   ],
   owner: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/owner/dashboard' },

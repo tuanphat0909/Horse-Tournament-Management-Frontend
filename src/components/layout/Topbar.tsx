@@ -33,10 +33,12 @@ export function Topbar() {
     if (!noti.isRead) {
       await markAsRead(noti.id);
     }
+    const user = getCurrentUser();
+    const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'systemadministrator';
     if (noti.actionUrl) {
       navigate(noti.actionUrl);
     } else {
-      navigate('/notifications');
+      navigate(isAdmin ? '/admin/notifications' : '/notifications');
     }
   };
 
@@ -187,7 +189,9 @@ export function Topbar() {
                 <button
                   onClick={() => {
                     setDropdownOpen(false);
-                    navigate('/notifications');
+                    const user = getCurrentUser();
+                    const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'systemadministrator';
+                    navigate(isAdmin ? '/admin/notifications' : '/notifications');
                   }}
                   className="w-full py-2.5 text-[11px] font-bold text-champagne hover:text-white transition-colors cursor-pointer"
                 >
