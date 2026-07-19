@@ -7,6 +7,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
+import { HighlightQuoted } from '../../components/ui/HighlightQuoted';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { 
@@ -292,7 +293,7 @@ export function SpectatorNotificationsPage() {
                             </span>
                           </div>
                           <p className="text-xs text-muted leading-relaxed pr-6">
-                            {n.content || n.message}
+                            <HighlightQuoted text={n.content || n.message} />
                           </p>
                         </div>
                       </div>

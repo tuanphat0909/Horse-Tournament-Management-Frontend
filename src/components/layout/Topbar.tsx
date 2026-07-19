@@ -4,6 +4,7 @@ import { Bell, Search, Trophy, Activity, Sparkles, Wallet, Info, CheckCheck, Ale
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { getCurrentUser } from '../../api/authService';
+import { HighlightQuoted } from '../ui/HighlightQuoted';
 
 export function Topbar() {
   const { t, language } = useLanguage();
@@ -169,7 +170,7 @@ export function Topbar() {
                           </span>
                         </div>
                         <p className="text-[11px] text-muted/80 line-clamp-2 leading-relaxed">
-                          {noti.content || noti.message}
+                          <HighlightQuoted text={noti.content || noti.message} />
                         </p>
                       </div>
                     </div>

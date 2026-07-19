@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
 import { motion, AnimatePresence } from 'framer-motion';
+import { HighlightQuoted } from '../components/ui/HighlightQuoted';
 import {
   getNotifications,
   markNotificationRead,
@@ -230,7 +231,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   Close
                 </button>
               </div>
-              <p className="text-xs text-white/90 leading-relaxed font-sans">{toast.content}</p>
+              <p className="text-xs text-white/90 leading-relaxed font-sans"><HighlightQuoted text={toast.content} /></p>
             </motion.div>
           );
         })()}
