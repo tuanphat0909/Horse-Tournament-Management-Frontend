@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
+import { SectionScroller } from '../components/landing/SectionScroller';
 
 // Nội dung bám đúng những gì hệ thống đang làm được, không phóng đại tính năng.
 const ROLES = [
@@ -34,7 +35,7 @@ export function AboutPage() {
 
       <main className="max-w-6xl mx-auto px-6 pt-32 pb-20 space-y-20">
         {/* Intro */}
-        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+        <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="landing-section text-center">
           <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-gold">About Equestria</span>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-white mt-3 mb-5">
             One platform for the <span className="text-champagne italic">whole racing season</span>
@@ -48,7 +49,7 @@ export function AboutPage() {
         </motion.section>
 
         {/* Roles */}
-        <section>
+        <section className="landing-section">
           <h2 className="font-serif text-2xl text-white font-bold mb-2">Built around six roles</h2>
           <p className="text-sm text-muted mb-8">Each account only sees the work that belongs to it.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -72,7 +73,7 @@ export function AboutPage() {
         </section>
 
         {/* Flow */}
-        <section>
+        <section className="landing-section">
           <h2 className="font-serif text-2xl text-white font-bold mb-2">How a tournament runs</h2>
           <p className="text-sm text-muted mb-8">
             The system enforces this order, so a race cannot start with an unapproved or unfit horse.
@@ -97,7 +98,7 @@ export function AboutPage() {
         </section>
 
         {/* Highlights */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <section className="landing-section grid grid-cols-1 md:grid-cols-3 gap-5">
           {[
             { icon: Bell, title: 'Real-time notifications', desc: 'Contract responses, health results and published standings arrive the moment they happen.' },
             { icon: Wallet, title: 'Wallet & prize payouts', desc: 'Deposits, withdrawals and prize money are tracked per account with a full transaction history.' },
@@ -119,7 +120,7 @@ export function AboutPage() {
         </section>
 
         {/* CTA */}
-        <section className="glass-panel rounded-2xl p-10 text-center border border-gold/20 relative overflow-hidden">
+        <section className="landing-section glass-panel rounded-2xl p-10 text-center border border-gold/20 relative overflow-hidden">
           <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-gold to-transparent opacity-60" />
           <h2 className="font-serif text-2xl text-white font-bold mb-3">Ready to join the season?</h2>
           <p className="text-sm text-muted mb-6 max-w-md mx-auto">
@@ -140,6 +141,7 @@ export function AboutPage() {
       </main>
 
       <Footer />
+      <SectionScroller />
     </div>
   );
 }
