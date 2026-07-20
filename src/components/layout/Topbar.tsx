@@ -117,13 +117,30 @@ export function Topbar() {
                 fetchRecent();
               }
             }}
-            className={`relative text-muted hover:text-white transition-colors p-2 rounded-lg hover:bg-white/[0.04] ${dropdownOpen ? 'text-white bg-white/[0.04]' : ''}`}
+            className={`relative transition-colors p-2 rounded-lg hover:bg-white/[0.04] ${
+              dropdownOpen ? 'text-white bg-white/[0.04]' : unreadCount > 0 ? 'text-[#FFC53D] hover:text-[#FFD966]' : 'text-muted hover:text-white'
+            }`}
           >
-            <Bell size={18} />
+            <Bell
+              size={18}
+              className={unreadCount > 0 ? 'drop-shadow-[0_0_6px_rgba(255,197,61,0.8)]' : ''}
+            />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-gradient-to-br from-gold to-champagne text-[#0b101e] text-[9px] font-bold flex items-center justify-center ring-2 ring-[#0B1628] shadow-[0_0_8px_rgba(201,168,76,0.5)]">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
+              <>
+                {/* Vòng sáng lan tỏa để hút mắt khi có thông báo mới */}
+                <span className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full bg-[#FFC53D] opacity-70 animate-ping pointer-events-none" />
+                {/* Màu vàng sáng cố định — biến --color-gold bị đổi sang nâu sạm ở light theme */}
+                <span
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-extrabold flex items-center justify-center ring-2 ring-white/85"
+                  style={{
+                    background: 'linear-gradient(135deg,#FFE07A 0%,#FFC53D 55%,#F5A623 100%)',
+                    color: '#2A1D00',
+                    boxShadow: '0 0 10px rgba(255,197,61,0.95), 0 2px 6px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              </>
             )}
           </button>
 
