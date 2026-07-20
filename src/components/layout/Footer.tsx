@@ -22,7 +22,7 @@ export function Footer() {
             <a href="#about" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all" aria-label="Contact">
               <MessageCircle className="w-4 h-4" />
             </a>
-            <a href="#about" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all" aria-label="About">
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=dackimvo@gmail.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-muted hover:text-gold hover:border-gold/50 transition-all" aria-label="Email">
               <Mail className="w-4 h-4" />
             </a>
           </div>
