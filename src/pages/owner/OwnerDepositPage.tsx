@@ -5,9 +5,10 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getOwnerWalletBalance, ownerDeposit } from '../../api/ownerService';
+import { getOwnerWalletBalance } from '../../api/ownerService';
 import { parseApiError, getCurrentUser } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { api } from '../../services/api';
 
 const COINS_PER_USD = 100;
 const QUICK_AMTS = [5, 10, 20, 50];
@@ -20,7 +21,7 @@ export function OwnerDepositPage() {
   const [depositLoading, setDepLoading] = useState(false);
   const [depositMsg, setDepMsg]       = useState('');
   const [depositErr, setDepErr]       = useState('');
-  const [showVNPayModal, setShowModal] = useState(false);
+
 
   const user      = getCurrentUser();
   const isLocked  = (user?.status?.toLowerCase() ?? '') !== 'active';
@@ -39,26 +40,23 @@ export function OwnerDepositPage() {
 
   useEffect(() => { loadBalance(); }, []);
 
-  const handleOpenVNPay = () => {
-    if (effectiveUsd <= 0) return;
-    setDepErr(''); setDepMsg('');
-    setShowModal(true);
-  };
-
   async function handleDeposit() {
     if (effectiveUsd <= 0) return;
-    setShowModal(false);
     setDepLoading(true); setDepErr(''); setDepMsg('');
     try {
-      await ownerDeposit(coinsPreview);
-      setDepMsg(`Deposit of $${effectiveUsd} USD (${coinsPreview.toLocaleString()} coins) successful!`);
-      setUsdInput(''); setQuickAmt(null);
-      loadBalance();
+      const vndAmount = effectiveUsd * 25000;
+      const res = await api.post('/payments/vnpay/create-deposit', {
+        amount: vndAmount,
+        orderInfo: `Nap tien vao vi tai khoan owner: $${effectiveUsd}`
+      });
+      if (res && res.paymentUrl) {
+        window.location.href = res.paymentUrl;
+      } else {
+        throw new Error('Không thể khởi tạo liên kết thanh toán VNPay.');
+      }
     } catch (err: unknown) {
       setDepErr(parseApiError(err as Error));
-    } finally {
       setDepLoading(false);
-      setTimeout(() => { setDepMsg(''); setDepErr(''); }, 4000);
     }
   }
 
@@ -169,7 +167,7 @@ export function OwnerDepositPage() {
 
             {/* Action button */}
             <button
-              onClick={handleOpenVNPay}
+              onClick={handleDeposit}
               disabled={coinsPreview <= 0 || depositLoading || isLocked}
               className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all ${
                 isLocked
@@ -182,63 +180,15 @@ export function OwnerDepositPage() {
               {isLocked
                 ? '🔒 Deposits Disabled'
                 : depositLoading
-                ? 'Processing...'
+                ? 'Redirecting to VNPay...'
                 : coinsPreview > 0
-                ? `Deposit $${effectiveUsd} → ${coinsPreview.toLocaleString()} coins`
+                ? `Deposit $${effectiveUsd} via VNPay`
                 : 'Select Amount'}
             </button>
           </motion.div>
 
         </main>
       </div>
-
-      {/* VNPay Mock Modal */}
-      {showVNPayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-[#0B101E] border border-gold-border/40 rounded-2xl shadow-2xl overflow-hidden relative flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-glass-border flex items-center justify-between bg-white/[0.01]">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <span className="text-xs font-bold text-champagne uppercase tracking-wider">VNPAY Payment (Simulated)</span>
-              </div>
-              <button onClick={() => setShowModal(false)} className="text-muted hover:text-white text-xs font-semibold uppercase cursor-pointer">Close</button>
-            </div>
-            <div className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
-              <div className="flex flex-col items-center justify-center gap-3">
-                <div className="p-3 bg-white rounded-xl border border-glass-border shadow-inner">
-                  <img
-                    src={`https://img.vietqr.io/image/vietinbank-1234567890-print.png?amount=${effectiveUsd * 25000}&addInfo=EQUESTRIA_OWNER_${user?.userId ?? 0}&accountName=DU%20AN%20EQUESTRIA`}
-                    alt="VNPAY VietQR Mock"
-                    className="w-44 h-44 object-contain"
-                  />
-                </div>
-                <span className="text-[10px] text-muted italic">Dynamic QR code based on deposit amount</span>
-              </div>
-              <div className="space-y-3 bg-white/[0.02] border border-glass-border rounded-xl p-4 text-xs">
-                {[
-                  ['Bank', 'VietinBank'],
-                  ['Account Number', '1234567890'],
-                  ['Amount', `${(effectiveUsd * 25000).toLocaleString('vi-VN')} VND`],
-                  ['Transfer Memo', `EQUESTRIA OWNER ${user?.userId ?? 0}`],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex justify-between py-1 border-t first:border-t-0 border-glass-border/40">
-                    <span className="text-muted">{k}:</span>
-                    <span className="text-white font-semibold">{v}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="p-3 bg-blue-500/10 border border-blue-500/25 rounded-lg flex gap-2.5 text-[11px] leading-relaxed text-blue-300">
-                <div className="shrink-0 pt-0.5">ℹ️</div>
-                <div><strong>Test transaction:</strong> Please do not transfer real money. Click <strong>Confirm</strong> to complete simulation.</div>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-glass-border flex items-center justify-end gap-3 bg-white/[0.01]">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 border border-glass-border hover:bg-white/[0.04] text-muted hover:text-white rounded-lg text-xs font-bold transition-all cursor-pointer">Cancel</button>
-              <button onClick={handleDeposit} className="px-4 py-2 bg-gold hover:bg-gold-hover text-black rounded-lg text-xs font-extrabold shadow-lg shadow-gold/20 hover:shadow-gold/30 transition-all cursor-pointer">Confirm payment sent</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

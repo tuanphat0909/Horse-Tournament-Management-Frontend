@@ -4,6 +4,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { VerifyEmailPage } from '../pages/VerifyEmailPage';
+import { PaymentReturnPage } from '../pages/PaymentReturnPage';
 
 // Admin
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
@@ -72,6 +73,7 @@ export function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/payment/vnpay/return" element={<PrivateRoute><PaymentReturnPage /></PrivateRoute>} />
 
         {/* Horse Owner (legacy route kept for backward compat) */}
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
