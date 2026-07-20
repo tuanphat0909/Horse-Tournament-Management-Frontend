@@ -10,6 +10,7 @@ import { formatDateTime } from '../../utils/format';
 import { useLanguage } from '../../context/LanguageContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { getCurrentUser } from '../../api/authService';
 const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   live: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   ongoing: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
@@ -139,14 +140,18 @@ export function SpectatorTournamentDetailPage() {
                           >
                             {t("View Details")}
                           </button>
-                          {canBet && (
-                            <button 
-                              onClick={() => navigate(`/spectator/races/${r.raceId}`)}
-                              className="flex-1 text-center text-xs font-bold bg-gold hover:bg-gold-light text-navy px-4 py-2 rounded-lg transition-colors"
-                            >
-                              {t("Bet Now")}
-                            </button>
-                          )}
+                          {(() => {
+                            const user = getCurrentUser();
+                            const isSpectator = user?.role?.toLowerCase() === 'spectator';
+                            return isSpectator && canBet ? (
+                              <button 
+                                onClick={() => navigate(`/spectator/races/${r.raceId}`)}
+                                className="flex-1 text-center text-xs font-bold bg-gold hover:bg-gold-light text-navy px-4 py-2 rounded-lg transition-colors"
+                              >
+                                {t("Bet Now")}
+                              </button>
+                            ) : null;
+                          })()}
                         </div>
                       </motion.div>
                     );

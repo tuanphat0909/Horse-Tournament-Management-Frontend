@@ -63,8 +63,17 @@ export function RefereeViolationsPage() {
       .then(([vRes, dRes]: any[]) => {
         const vList = Array.isArray(vRes?.result) ? vRes.result : [];
         const rList = dRes?.result?.assignedRaces || [];
+
+        const now = new Date();
+        const availableRaces = rList.filter((r: any) => {
+          const st = (r.status || '').toLowerCase();
+          const isOngoingOrDone = st === 'inprogress' || st === 'running' || st === 'finished' || st === 'completed';
+          const isStarted = r.raceDate && new Date(r.raceDate) <= now;
+          return isOngoingOrDone || isStarted;
+        });
+
         setViolations(vList);
-        setRaces(rList);
+        setRaces(availableRaces);
       })
       .catch(() => {
         setViolations([]);

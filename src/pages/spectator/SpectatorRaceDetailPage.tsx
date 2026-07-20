@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Clock, MapPin, CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, CheckCircle, AlertTriangle, ShieldCheck, Trophy, Award, Medal } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getRaceDetail } from '../../api/publicService';
+import { getRaceDetail, getRaceEntries, getPublicRaceResults } from '../../api/publicService';
 import { getBalance, placeBet, getRaceBettingInfo } from '../../api/spectatorService';
 import { formatDateTime, formatWinProbability } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { getCurrentUser } from '../../api/authService';
+
 const RACE_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   live: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   ongoing: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
@@ -28,6 +29,7 @@ export function SpectatorRaceDetailPage() {
 
   const [race, setRace] = useState<any>(null);
   const [entries, setEntries] = useState<any[]>([]);
+  const [results, setResults] = useState<any[] | null>(null);
   const [balance, setBalance] = useState(0);
   const [canBet, setCanBet] = useState(false);
 
@@ -56,14 +58,40 @@ export function SpectatorRaceDetailPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [raceRes, bettingRes, balanceRes] = await Promise.all([
+      const [raceRes, bettingRes, balanceRes, publicEntriesRes, resultsRes] = await Promise.all([
         getRaceDetail(raceId),
-        getRaceBettingInfo(raceId),
-        getBalance().catch(() => ({ result: 0 }))
+        getRaceBettingInfo(raceId).catch(() => null),
+        getBalance().catch(() => ({ result: 0 })),
+        getRaceEntries(raceId).catch(() => null),
+        getPublicRaceResults(raceId).catch(() => null)
       ]);
 
-      setRace(raceRes?.result ?? null);
-      setEntries(bettingRes?.result?.entries ?? []);
+      const fetchedRace = raceRes?.result ?? null;
+      setRace(fetchedRace);
+
+      let fetchedResults: any[] = [];
+      if (resultsRes?.result) {
+        fetchedResults = Array.isArray(resultsRes.result) ? resultsRes.result : [resultsRes.result];
+      }
+      setResults(fetchedResults.length > 0 ? fetchedResults : null);
+
+      let fetchedEntries = bettingRes?.result?.entries ?? [];
+      if ((!fetchedEntries || fetchedEntries.length === 0) && publicEntriesRes?.result) {
+        const rawEntries = Array.isArray(publicEntriesRes.result) ? publicEntriesRes.result : (publicEntriesRes.result.raceEntries || []);
+        fetchedEntries = rawEntries.map((pe: any) => ({
+          raceEntryId: pe.raceEntryId || pe.id,
+          laneNo: pe.laneNo || pe.laneNumber || 1,
+          horseName: pe.horseName || pe.horse?.name || 'Horse',
+          jockeyName: pe.jockeyName || pe.jockeyProfile?.user?.fullName || pe.jockey?.fullName || 'Jockey',
+          currentOdds: pe.odds || pe.currentOdds || 1.0,
+          averageTime: pe.averageTime,
+          recentAverageTime: pe.recentAverageTime,
+          winRate: pe.winRate,
+          winningProbability: pe.winningProbability
+        }));
+      }
+
+      setEntries(fetchedEntries);
       setCanBet(bettingRes?.result?.canBet ?? false);
       setBalance(balanceRes?.result?.balance ?? 0);
     } catch (err) {
@@ -123,9 +151,7 @@ export function SpectatorRaceDetailPage() {
   const tournamentStatusKey = race.round?.tournament?.status?.toLowerCase() ?? 'upcoming';
   const config = RACE_STATUS_CONFIG[statusKey] ?? RACE_STATUS_CONFIG.scheduled;
 
-
   const invalidTournamentStatuses = ['finished', 'completed', 'cancelled', 'ended'];
-
   const isBettingAllowed = canBet && !isLocked;
 
   return (
@@ -176,6 +202,44 @@ export function SpectatorRaceDetailPage() {
               </div>
             </div>
 
+            {/* Official Race Results / Leaderboard */}
+            {(results && results.length > 0) && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-panel rounded-2xl p-6 border border-gold/30 relative overflow-hidden bg-gradient-to-br from-gold/10 via-amber-950/20 to-navy">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gold/20">
+                  <div className="flex items-center gap-2">
+                    <Trophy size={20} className="text-gold" />
+                    <h2 className="text-xl font-serif font-bold text-white">Official Race Results</h2>
+                  </div>
+                  <span className="px-3 py-1 bg-gold/20 text-gold border border-gold/30 text-xs font-bold rounded-full uppercase tracking-wider">
+                    Published
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {results.map((res: any, idx: number) => {
+                    const winnerName = res.winner || res.horseName || 'Winner';
+                    return (
+                      <div key={res.id || idx} className="flex items-center justify-between p-4 bg-navy/60 border border-gold/20 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-gold font-bold">
+                            {idx === 0 ? <Trophy size={18} /> : idx === 1 ? <Medal size={18} /> : <Award size={18} />}
+                          </div>
+                          <div>
+                            <div className="text-xs text-gold uppercase tracking-wider font-bold">Winner / Champion</div>
+                            <div className="text-lg font-bold text-white">{winnerName}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted">Race ID</div>
+                          <div className="text-sm font-mono text-white font-bold">#{res.raceId}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
             {/* Horses List */}
             <h2 className="text-xl font-serif font-bold text-white mt-8 mb-4">Horse List ({entries.length})</h2>
 
@@ -213,11 +277,11 @@ export function SpectatorRaceDetailPage() {
                       <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-glass-border/20 text-center mb-3">
                         <div>
                           <div className="text-[10px] text-muted">Avg Speed</div>
-                          <div className="text-xs text-white font-medium">{e.averageTime ? `${e.averageTime.toFixed(2)} m/s` : '—'}</div>
+                          <div className="text-xs text-white font-medium">{e.averageTime ? `${Number(e.averageTime).toFixed(2)} m/s` : '—'}</div>
                         </div>
                         <div>
                           <div className="text-[10px] text-muted">Recent Avg Speed</div>
-                          <div className="text-xs text-white font-medium">{e.recentAverageTime ? `${e.recentAverageTime.toFixed(2)} m/s` : '—'}</div>
+                          <div className="text-xs text-white font-medium">{e.recentAverageTime ? `${Number(e.recentAverageTime).toFixed(2)} m/s` : '—'}</div>
                         </div>
                         <div>
                           <div className="text-[10px] text-muted">Win Rate</div>

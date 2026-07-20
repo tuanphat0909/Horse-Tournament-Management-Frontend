@@ -52,9 +52,16 @@ export function RefereeReportsPage() {
       if (res && res.result) {
         setStats(res.result);
         const assigned = res.result.assignedRaces || [];
-        setRaces(assigned);
-        if (assigned.length > 0 && !selectedRaceId) {
-          setSelectedRaceId(assigned[0].raceId);
+        const now = new Date();
+        const activeOrFinishedRaces = assigned.filter((r: any) => {
+          const st = (r.status || '').toLowerCase();
+          const isStartedOrDone = st === 'inprogress' || st === 'running' || st === 'finished' || st === 'completed' || (r.raceDate && new Date(r.raceDate) <= now);
+          return isStartedOrDone;
+        });
+
+        setRaces(activeOrFinishedRaces);
+        if (activeOrFinishedRaces.length > 0 && !selectedRaceId) {
+          setSelectedRaceId(activeOrFinishedRaces[0].raceId);
         }
       }
     } catch (err) {
@@ -285,26 +292,35 @@ export function RefereeReportsPage() {
                 <div className="space-y-4 relative z-10">
                   
                   <div>
-                    <label className={LABEL}>Current Race</label>
-                    <input 
-                      disabled 
-                      value={races.find(r => r.raceId === selectedRaceId)?.raceName || ''} 
-                      className="w-full bg-white/[0.02] border border-glass-border rounded-lg px-4 py-2.5 text-sm text-muted cursor-not-allowed outline-none" 
-                    />
+                    <label className={LABEL}>Select Race *</label>
+                    <select 
+                      value={selectedRaceId} 
+                      onChange={e => setSelectedRaceId(Number(e.target.value))} 
+                      className={INPUT} 
+                      style={{colorScheme: 'dark'}}
+                    >
+                      <option value="">-- Select Assigned Race --</option>
+                      {races.map(r => (
+                        <option key={r.raceId} value={r.raceId}>
+                          ID {r.raceId}: {r.raceName} ({r.status || 'Active'})
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
-                    <label className={LABEL}>Report horse violation (Optional)</label>
+                    <label className={LABEL}>Select Horse / Jockey (Con ngựa / Kỵ sĩ báo cáo)</label>
                     <select 
                       value={form.reportedHorseId} 
                       onChange={e => setF('reportedHorseId', e.target.value)} 
-                      className={INPUT}
+                      disabled={!selectedRaceId}
+                      className={INPUT + " disabled:opacity-50"}
                       style={{colorScheme: 'dark'}}
                     >
-                      <option value="">-- Select Horse (Optional) --</option>
+                      <option value="">-- General Race Report (Báo cáo chung toàn trận) --</option>
                       {horses.map((h: any) => (
                         <option key={h.horseId} value={h.horseId}>
-                          Lane {h.laneNo}: {h.horseName} ({h.jockeyName})
+                          Lane {h.laneNo}: {h.horseName} ({h.jockeyName || 'Jockey'})
                         </option>
                       ))}
                     </select>

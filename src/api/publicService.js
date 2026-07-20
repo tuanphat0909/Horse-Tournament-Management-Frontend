@@ -23,3 +23,4 @@ export const getLiveRaces = () => api.get('/public/races/live');
 
 export const getRaceDetail = (id) => api.get(`/public/races/${id}`);
 export const getRaceEntries = (raceId) => api.get(`/public/races/${raceId}/entries`);
+export const getPublicRaceResults = (raceId) => api.get(`/public/races/${raceId}/results`);
