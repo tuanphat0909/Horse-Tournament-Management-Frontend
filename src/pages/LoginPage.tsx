@@ -420,7 +420,7 @@ export function LoginPage() {
                       style={{ color: '#d4af37' }}
                       onClick={(e) => { e.preventDefault(); navigate('/register'); }}
                     >
-                      Register here
+                      Sign up here
                     </a>
                   </motion.div>
                 </div>
