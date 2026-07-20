@@ -213,20 +213,10 @@ export function NotificationsPage() {
             subtitle={hero.subtitle}
             imageUrl={hero.image}
             imagePosition={hero.position}
-            actions={
-              <button
-                onClick={handleMarkAllRead}
-                disabled={unreadOnPage === 0}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-white/5 border border-glass-border hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 text-champagne"
-              >
-                <CheckSquare size={14} />
-                Mark all as read
-              </button>
-            }
           />
 
-          {/* Filter tabs */}
-          <div className="flex flex-wrap gap-2 p-1 bg-white/[0.02] border border-glass-border rounded-xl">
+          {/* Filter tabs — nút Mark all as read nằm cuối hàng, canh phải */}
+          <div className="flex flex-wrap items-center gap-2 p-1 bg-white/[0.02] border border-glass-border rounded-xl">
             {filters.map(filter => (
               <button
                 key={filter}
@@ -240,6 +230,14 @@ export function NotificationsPage() {
                 {filter}
               </button>
             ))}
+            <button
+              onClick={handleMarkAllRead}
+              disabled={unreadOnPage === 0}
+              className="ml-auto px-4 py-2 rounded-lg text-xs font-semibold text-champagne border border-glass-border hover:bg-white/[0.06] hover:border-gold/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+            >
+              <CheckSquare size={14} />
+              Mark all as read
+            </button>
           </div>
 
           {error && (
