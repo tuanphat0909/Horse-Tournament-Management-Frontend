@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { Activity, Target, Users, ClipboardList, Flag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const FeaturesSection = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   return (
     <section id="features" className="py-32 relative overflow-hidden">
       {/* Background Section with Image */}
@@ -33,6 +35,7 @@ export const FeaturesSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: 0.1, duration: 0.6 }}
+            onClick={() => navigate('/login')}
             className="feature-card p-0 rounded-2xl group cursor-pointer overflow-hidden relative md:col-span-2 flex flex-col md:flex-row"
           >
             <div className="p-10 flex-1 z-10 flex flex-col justify-center">
@@ -55,6 +58,7 @@ export const FeaturesSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: 0.2, duration: 0.6 }}
+            onClick={() => navigate('/login')}
             className="feature-card p-0 rounded-2xl group cursor-pointer overflow-hidden relative flex flex-col"
           >
             <div className="p-8 pb-4 z-10 relative">
@@ -76,6 +80,7 @@ export const FeaturesSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: 0.3, duration: 0.6 }}
+            onClick={() => navigate('/login')}
             className="feature-card p-0 rounded-2xl group cursor-pointer overflow-hidden relative flex flex-col"
           >
             <div className="p-8 pb-4 z-10 relative">
@@ -97,6 +102,7 @@ export const FeaturesSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: 0.4, duration: 0.6 }}
+            onClick={() => navigate('/login')}
             className="feature-card p-0 rounded-2xl group cursor-pointer overflow-hidden relative md:col-span-2 flex flex-col md:flex-row-reverse"
           >
             <div className="p-10 flex-1 z-10 flex flex-col justify-center">
@@ -119,6 +125,7 @@ export const FeaturesSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: 0.5, duration: 0.6 }}
+            onClick={() => navigate('/login')}
             className="feature-card p-10 rounded-2xl group cursor-pointer overflow-hidden relative flex flex-col justify-center md:col-span-3 items-center text-center"
           >
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
