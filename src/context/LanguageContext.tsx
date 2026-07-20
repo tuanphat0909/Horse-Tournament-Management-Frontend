@@ -343,6 +343,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     "Publish Results": "Công bố kết quả",
     "Violations": "Vi phạm",
     "Predictions": "Dự đoán",
+    "Bet Management": "Quản lý đặt cược",
     "My Horses": "Ngựa của tôi",
     "Race Entry": "Đăng ký đua",
     "Jockey": "Kỵ sĩ",
