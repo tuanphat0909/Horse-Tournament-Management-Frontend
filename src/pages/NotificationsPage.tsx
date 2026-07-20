@@ -11,6 +11,7 @@ import { PageHero } from '../components/layout/PageHero';
 import { PageAmbience } from '../components/layout/PageAmbience';
 import { HighlightQuoted } from '../components/ui/HighlightQuoted';
 import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
+import { paginate } from '../components/ui/Pager';
 import {
   getNotifications,
   markNotificationRead,
@@ -83,8 +84,10 @@ export function NotificationsPage() {
   const filters = FILTERS_BY_ROLE[roleKey] ?? FILTERS_BY_ROLE.spectator;
 
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  // Giữ toàn bộ thông báo đã lọc theo role rồi phân trang phía client — server
+  // không biết role nên nếu phân trang ở server thì mỗi trang bị hụt item và
+  // tổng số đếm được sẽ sai lệch theo từng trang.
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -93,7 +96,7 @@ export function NotificationsPage() {
     setLoading(true);
     setError('');
     try {
-      const params: any = { page: currentPage, pageSize: PAGE_SIZE };
+      const params: any = { page: 1, pageSize: 200 };
       if (activeFilter === 'unread') {
         params.isRead = false;
       } else if (activeFilter !== 'all') {
@@ -101,13 +104,10 @@ export function NotificationsPage() {
       }
 
       const res = await getNotifications(params);
-      const items = res?.result?.items ?? res?.result?.Items ?? [];
-      const total = res?.result?.totalCount ?? res?.result?.TotalCount ?? 0;
+      const items = res?.result?.items ?? res?.result?.Items ?? (Array.isArray(res?.result) ? res.result : []);
 
-      // Bỏ thông báo không thuộc vai trò đang đăng nhập
-      const visible = filterNotisForRole(Array.isArray(items) ? items : [], roleKey);
-      setNotifications(visible);
-      setTotalCount(Math.max(0, total - (items.length - visible.length)));
+      setNotifications(filterNotisForRole(Array.isArray(items) ? items : [], roleKey));
+      setCurrentPage(1);
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
@@ -118,7 +118,7 @@ export function NotificationsPage() {
   useEffect(() => {
     loadNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, activeFilter]);
+  }, [activeFilter]);
 
   const handleFilterChange = (filter: FilterType) => {
     setActiveFilter(filter);
@@ -149,7 +149,6 @@ export function NotificationsPage() {
     try {
       await deleteNotification(id);
       setNotifications(prev => prev.filter(n => n.id !== id));
-      setTotalCount(prev => Math.max(0, prev - 1));
       fetchRecent();
     } catch (err) {
       console.error('Failed to delete notification:', err);
@@ -194,7 +193,13 @@ export function NotificationsPage() {
     }
   };
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  // Phân trang trên danh sách đã lọc theo role — tổng số luôn khớp số thẻ hiển thị
+  const {
+    paged: pagedNotifications,
+    totalPages,
+    total: totalCount,
+    page: safePage,
+  } = paginate(notifications, currentPage, PAGE_SIZE);
   const unreadOnPage = notifications.filter(n => !n.isRead).length;
 
   const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
@@ -251,7 +256,7 @@ export function NotificationsPage() {
           ) : notifications.length > 0 ? (
             <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
               <AnimatePresence mode="popLayout">
-                {notifications.map(noti => (
+                {pagedNotifications.map(noti => (
                   <motion.div
                     key={noti.id}
                     variants={itemVar}
@@ -325,19 +330,19 @@ export function NotificationsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-glass-border/40 pt-4">
               <p className="text-xs text-muted">
-                Page {currentPage} of {totalPages} ({totalCount} total)
+                Page {safePage} of {totalPages} ({totalCount} total)
               </p>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                  disabled={safePage === 1}
                   className="p-2 rounded-lg border border-glass-border hover:bg-white/5 disabled:opacity-40 transition-colors text-champagne"
                 >
                   <ChevronLeft size={16} />
                 </button>
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+                  disabled={safePage === totalPages}
                   className="p-2 rounded-lg border border-glass-border hover:bg-white/5 disabled:opacity-40 transition-colors text-champagne"
                 >
                   <ChevronRight size={16} />
