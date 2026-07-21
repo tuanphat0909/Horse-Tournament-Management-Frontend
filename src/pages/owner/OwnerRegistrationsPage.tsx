@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, XCircle, Calendar, Trophy, Search, Clock, User, ExternalLink, X } from 'lucide-react';
+import { Plus, XCircle, Calendar, Trophy, Search, Clock, User, ExternalLink, X, RefreshCw } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -76,17 +76,11 @@ export function OwnerRegistrationsPage() {
     const s = String(h?.healthStatus ?? 'Healthy').toLowerCase();
     return s === 'healthy' || s === 'good';
   };
-  const unhealthyHorses = horses.filter(h => !isHealthy(h));
 
   async function handleSubmit() {
     setSubmitError('');
     if (!form.horseId || !form.tournamentId) {
       setSubmitError('Please select a horse and a tournament.');
-      return;
-    }
-    const selectedHorse = horses.find(h => String(h.id) === String(form.horseId));
-    if (selectedHorse && !isHealthy(selectedHorse)) {
-      setSubmitError(`Horse "${selectedHorse.name}" is currently "${selectedHorse.healthStatus}" — only Healthy horses can register to race. Update the status on the My Horses page once the horse has recovered.`);
       return;
     }
     setSubmitLoading(true);
@@ -98,6 +92,20 @@ export function OwnerRegistrationsPage() {
       load();
     } catch (err: unknown) {
       setSubmitError(parseApiError(err as Error));
+    } finally {
+      setSubmitLoading(false);
+    }
+  }
+
+  async function handleRecheckRequest(horseId: number, tournamentId: number) {
+    setSubmitLoading(true);
+    setError('');
+    try {
+      await createRegistration({ horseId, tournamentId });
+      showToast('Success', 'Request recheck submitted successfully!');
+      load();
+    } catch (err: unknown) {
+      showToast('Error', parseApiError(err as Error), 'error');
     } finally {
       setSubmitLoading(false);
     }
@@ -388,6 +396,16 @@ export function OwnerRegistrationsPage() {
                         <XCircle size={15} />
                       </button>
                     )}
+                    {statusKey === 'rejected' && (
+                      <button
+                        onClick={() => handleRecheckRequest(r.horseId, r.tournamentId)}
+                        disabled={submitLoading}
+                        className="relative z-10 px-3 py-1.5 rounded-lg bg-gold/10 hover:bg-gold/20 text-gold border border-gold/30 transition-colors shrink-0 text-xs font-bold flex items-center gap-1.5"
+                        title="Request re-check from Veterinarian"
+                      >
+                        <RefreshCw size={12} className={submitLoading ? 'animate-spin' : ''} /> Recheck
+                      </button>
+                    )}
                   </motion.div>
                 );
               })}
@@ -526,17 +544,15 @@ export function OwnerRegistrationsPage() {
                   className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40"
                 >
                   <option value="">-- Select Horse --</option>
-                  {/* Horse unhealthy bị khóa chọn — gate quy trình trước khi ghép lanes */}
                   {horses.map(h => (
-                    <option key={h.id} value={h.id} disabled={!isHealthy(h)}>
+                    <option key={h.id} value={h.id}>
                       {h.name}{!isHealthy(h) ? ` — unhealthy (${h.healthStatus})` : ''}
                     </option>
                   ))}
                 </select>
-                {unhealthyHorses.length > 0 && (
-                  <div className="text-[11px] text-yellow-400/90 mt-1.5 leading-relaxed">
-                    ⚠ {unhealthyHorses.length} horses locked due to health issues: {unhealthyHorses.map(h => h.name).join(', ')}.
-                    Only <b>Healthy</b> horses can register — update the status on the My Horses page once recovered.
+                {form.horseId && !isHealthy(horses.find(h => String(h.id) === String(form.horseId))) && (
+                  <div className="text-[11px] text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-2.5 mt-2 leading-relaxed">
+                    ⚠ Ngựa này đang có trạng thái <b>{horses.find(h => String(h.id) === String(form.horseId))?.healthStatus}</b>. Bạn vẫn có thể đăng ký, nhưng ngựa bắt buộc phải vượt qua kỳ khám của bác sĩ thú y (Vet Check) trước khi tham gia thi đấu.
                   </div>
                 )}
               </div>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, ShieldCheck, Edit2, Trash2, Eye, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, ShieldCheck, Edit2, Trash2, Eye, Search, ArrowUpDown, RefreshCw } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getMyHorses, createHorse, getHorse, updateHorse, deleteHorse, getOwnerResults } from '../../api/ownerService';
+import { getMyHorses, createHorse, getHorse, updateHorse, deleteHorse, getOwnerResults, requestHorseRecovery } from '../../api/ownerService';
 import { parseApiError } from '../../api/authService';
 import { calculateAge, formatDateOnly } from '../../utils/format';
 import { useNotifications } from '../../context/NotificationContext';
@@ -97,6 +97,17 @@ export function OwnerHorsesPage() {
       setEditError(parseApiError(err as Error));
     } finally {
       setEditLoading(false);
+    }
+  }
+
+  async function handleRequestRecovery(horseId: number) {
+    setError('');
+    try {
+      await requestHorseRecovery(horseId);
+      showToast('Success', 'Recovery check request sent to Veterinarians successfully!');
+      loadHorses();
+    } catch (err: unknown) {
+      showToast('Error', parseApiError(err as Error), 'error');
     }
   }
 
@@ -228,7 +239,22 @@ export function OwnerHorsesPage() {
                     {h.healthStatus && (
                       <div className="flex justify-between items-center text-[11px] text-muted font-medium mt-auto pt-3 border-t border-glass-border/60">
                         <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400"><ShieldCheck size={10} /></span> Health</span>
-                        <span className="text-champagne font-semibold px-2 py-0.5 rounded-full bg-gold/[0.06] border border-gold/20">{h.healthStatus}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-semibold px-2 py-0.5 rounded-full text-[10px] border ${
+                            (h.healthStatus === 'Healthy' || h.healthStatus === 'Good')
+                              ? 'bg-gold/[0.06] border-gold/20 text-champagne'
+                              : 'bg-red-500/10 border-red-500/20 text-red-400'
+                          }`}>{h.healthStatus}</span>
+                          {(h.healthStatus !== 'Healthy' && h.healthStatus !== 'Good') && (
+                            <button
+                              onClick={() => handleRequestRecovery(h.id)}
+                              className="px-2 py-0.5 rounded bg-gold/10 hover:bg-gold/20 text-gold border border-gold/20 text-[10px] font-bold transition-all flex items-center gap-1"
+                              title="Request recovery check from Veterinarians"
+                            >
+                              <RefreshCw size={10} /> Request Check
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

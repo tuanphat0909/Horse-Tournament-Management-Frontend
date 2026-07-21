@@ -12,10 +12,24 @@ import {
   getPendingRegistrations,
   getAssignedEntries,
   performRecheck,
+  getUnhealthyHorses,
+  recoverHorse,
 } from '../../api/vetService';
 import { parseApiError } from '../../api/authService';
+import { calculateAge } from '../../utils/format';
 
-type Tab = 'pending' | 'assigned' | 'history';
+type Tab = 'pending' | 'assigned' | 'history' | 'recovery';
+
+interface UnhealthyHorse {
+  horseId: number;
+  name: string;
+  breed: string;
+  age: string;
+  gender: string;
+  healthStatus: string;
+  ownerId: number;
+  ownerName: string;
+}
 
 interface PendingCheck {
   registrationId: number;
@@ -66,6 +80,7 @@ export function MedicalCheckPage() {
   const [pendingList, setPendingList] = useState<PendingCheck[]>([]);
   const [assignedList, setAssignedList] = useState<AssignedEntry[]>([]);
   const [historyList, setHistoryList] = useState<MedicalRecord[]>([]);
+  const [unhealthyList, setUnhealthyList] = useState<UnhealthyHorse[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -115,15 +130,32 @@ export function MedicalCheckPage() {
       getPendingRegistrations(),
       getAssignedEntries(),
       getMedicalChecks(),
-    ]).then(([pendingRes, assignedRes, historyRes]) => {
+      getUnhealthyHorses(),
+    ]).then(([pendingRes, assignedRes, historyRes, unhealthyRes]) => {
       if (pendingRes.status === 'fulfilled') setPendingList(pendingRes.value?.result ?? []);
       if (assignedRes.status === 'fulfilled') setAssignedList(assignedRes.value?.result ?? []);
       if (historyRes.status === 'fulfilled') setHistoryList(historyRes.value?.result ?? []);
-      if (pendingRes.status === 'rejected' && assignedRes.status === 'rejected' && historyRes.status === 'rejected') {
+      if (unhealthyRes.status === 'fulfilled') setUnhealthyList(unhealthyRes.value?.result ?? []);
+      if (pendingRes.status === 'rejected' && assignedRes.status === 'rejected' && historyRes.status === 'rejected' && unhealthyRes.status === 'rejected') {
         setError('Failed to load health inspection data.');
       }
       setLoading(false);
     });
+  }
+
+  async function handleConfirmRecovery(horseId: number) {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      await recoverHorse(horseId);
+      setSuccess('Horse health status updated to Healthy successfully!');
+      loadData();
+    } catch (err: unknown) {
+      setError(parseApiError(err as Error));
+    } finally {
+      setLoading(false);
+    }
   }
 
   function resetForm() {
@@ -221,6 +253,9 @@ export function MedicalCheckPage() {
   const filteredHistory = historyList.filter(mr =>
     [mr.horseName, mr.tournamentName, mr.checkedByName].some(s => s?.toLowerCase().includes(search.toLowerCase()))
   );
+  const filteredRecovery = unhealthyList.filter(uh =>
+    [uh.name, uh.breed, uh.ownerName].some(s => s?.toLowerCase().includes(search.toLowerCase()))
+  );
 
   const TAB_BTN = (t: Tab, label: string, count: number) => (
     <button
@@ -255,6 +290,7 @@ export function MedicalCheckPage() {
               {TAB_BTN('pending', 'Awaiting Inspection', pendingList.length)}
               {TAB_BTN('assigned', 'Race Scheduled', assignedList.length)}
               {TAB_BTN('history', 'Inspection History', historyList.length)}
+              {TAB_BTN('recovery', 'Recovery Checks', unhealthyList.length)}
             </div>
             <div className="flex items-center gap-2 bg-white/[0.04] border border-glass-border rounded-lg px-3 py-2 w-full md:w-64 mb-3">
               <Search size={14} className="text-muted shrink-0" />
@@ -432,6 +468,62 @@ export function MedicalCheckPage() {
                   </div>
                 </div>
               )
+          )}
+
+          {activeTab === 'recovery' && (
+            loading ? (
+              <div className="text-center text-muted py-12">Loading unhealthy horses...</div>
+            ) : filteredRecovery.length === 0 ? (
+              <div className="glass-panel rounded-xl p-12 text-center text-muted text-sm relative overflow-hidden">
+                <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+                <div className="relative z-10">
+                  <div className="text-4xl opacity-40 mb-3">🐴</div>
+                  No sick or injured horses currently registered in the system.
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white/[0.02] border border-glass-border rounded-xl overflow-hidden animate-fadeIn">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-glass-border bg-white/[0.01] text-xs font-bold text-muted uppercase tracking-wider">
+                        <th className="px-6 py-4">Horse ID</th>
+                        <th className="px-6 py-4">Horse Name</th>
+                        <th className="px-6 py-4">Age / Gender</th>
+                        <th className="px-6 py-4">Breed</th>
+                        <th className="px-6 py-4">Owner</th>
+                        <th className="px-6 py-4">Health Status</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-glass-border/40 text-sm text-white">
+                      {filteredRecovery.map(uh => (
+                        <tr key={uh.horseId} className="hover:bg-white/[0.01] transition-colors">
+                          <td className="px-6 py-4 font-mono text-xs text-muted">#{uh.horseId}</td>
+                          <td className="px-6 py-4 font-semibold text-champagne">{uh.name}</td>
+                          <td className="px-6 py-4 text-xs text-muted">{calculateAge(uh.age)} yrs / {uh.gender}</td>
+                          <td className="px-6 py-4 text-muted">{uh.breed}</td>
+                          <td className="px-6 py-4 text-muted">{uh.ownerName}</td>
+                          <td className="px-6 py-4">
+                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/10 border border-red-500/20 text-red-400">
+                              {uh.healthStatus}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right shrink-0">
+                            <button
+                              onClick={() => handleConfirmRecovery(uh.horseId)}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors text-xs font-bold flex items-center gap-1.5 ml-auto"
+                            >
+                              <RefreshCw size={12} /> Confirm Recovered
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
           )}
 
           {/* Modal: tạo / sửa / tái khám */}

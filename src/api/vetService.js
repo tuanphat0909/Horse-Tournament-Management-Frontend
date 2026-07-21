@@ -9,3 +9,5 @@ export const deleteMedicalCheck = (id) => api.delete(`/MedicalCheck/${id}`);
 export const getPendingRegistrations = () => api.get('/MedicalCheck/pending-registrations');
 export const getAssignedEntries = () => api.get('/MedicalCheck/assigned-entries');
 export const performRecheck = (data) => api.post('/MedicalCheck/recheck', data);
+export const getUnhealthyHorses = () => api.get('/MedicalCheck/unhealthy-horses');
+export const recoverHorse = (id) => api.put(`/MedicalCheck/horses/${id}/recover`);
