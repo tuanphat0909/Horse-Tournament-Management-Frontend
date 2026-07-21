@@ -10,42 +10,16 @@ import { getMyRegistrations } from '../../api/ownerService';
 import { formatDateTime } from '../../utils/format';
 import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { useLanguage } from '../../context/LanguageContext';
+import { getTournamentStatusStyle, getStatusOrder } from '../../constants/tournamentStatus';
+import type { Tournament } from '../../types/domain';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { Pager, paginate } from '../../components/ui/Pager';
-const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  active: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  upcoming: { label: 'Upcoming', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
-  completed: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
-  'registration open': { label: 'Registration Open', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
-  'registration closed': { label: 'Registration Closed', color: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20', dot: 'bg-zinc-400' },
-  'medical checking': { label: 'Medical Checking', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
-  'ready to arrange': { label: 'Ready To Arrange', color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20', dot: 'bg-indigo-400' },
-  'pre round': { label: 'Pre Round', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20', dot: 'bg-purple-400' },
-  'final round': { label: 'Final Round', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20', dot: 'bg-pink-400' },
-  'prize distribution': { label: 'Prize Distribution', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400' },
-  'cancelled': { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
-  pendingregistration: { label: 'Awaiting Registrations', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-400' },
-  pendingscheduling: { label: 'Awaiting Scheduling', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400' },
-};
 
 type StatusFilter = 'all' | 'active' | 'upcoming' | 'completed';
 type SortKey = 'newest' | 'oldest' | 'name' | 'status';
 const FILTER_LABELS: Record<StatusFilter, string> = {
   all: 'All', active: 'Active', upcoming: 'Upcoming', completed: 'Completed',
-};
-const STATUS_ORDER: Record<string, number> = {
-  'active': 0,
-  'registration open': 1,
-  'registration closed': 2,
-  'medical checking': 3,
-  'ready to arrange': 4,
-  'pre round': 5,
-  'final round': 6,
-  'prize distribution': 7,
-  'upcoming': 8,
-  'completed': 9,
-  'cancelled': 10
 };
 
 // Giải đang mở đăng ký được xếp lên đầu — đó là việc chủ ngựa cần xử lý ngay.
@@ -66,7 +40,7 @@ export function OwnerTournamentsPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [sortBy, setSortBy] = useState<SortKey>('newest');
-  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [myRegistrations, setMyRegistrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -124,7 +98,7 @@ export function OwnerTournamentsPage() {
       switch (sortBy) {
         case 'oldest': return new Date(a.startDate ?? 0).getTime() - new Date(b.startDate ?? 0).getTime();
         case 'name': return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'vi');
-        case 'status': return (STATUS_ORDER[(a.status ?? '').toLowerCase()] ?? 11) - (STATUS_ORDER[(b.status ?? '').toLowerCase()] ?? 11);
+        case 'status': return getStatusOrder(a.status) - getStatusOrder(b.status);
         case 'newest':
         default: return new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime();
       }
@@ -186,7 +160,7 @@ export function OwnerTournamentsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                 {pagedMyTournaments.map((tour, i) => {
                   const s = tour.status?.toLowerCase() ?? 'upcoming';
-                  const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
+                  const config = getTournamentStatusStyle(s);
                   return (
                     <motion.div
                       key={`my-tour-${tour.tournamentId}`}
@@ -290,7 +264,7 @@ export function OwnerTournamentsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {pagedTournaments.map((tour, i) => {
                 const s = tour.status?.toLowerCase() ?? 'upcoming';
-                const config = STATUS_CONFIG[s] ?? STATUS_CONFIG.upcoming;
+                const config = getTournamentStatusStyle(s);
                 const regNotStarted = tour.registrationStartDate && new Date() < new Date(tour.registrationStartDate);
                 return (
                   <motion.div
