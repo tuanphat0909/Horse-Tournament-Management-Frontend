@@ -6,7 +6,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getRaceSchedule, getJockeyRankings, getHorseRankings, getLiveRaces, getTournaments } from '../../api/publicService';
+import { getRaceSchedule, getJockeyRankings, getHorseRankings, getTournaments } from '../../api/publicService';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const POS_STYLE: Record<number, string> = {
@@ -25,18 +25,14 @@ export function SpectatorLiveResultsPage() {
   const [tourLoading, setTourLoading] = useState(true);
   const [rankingsLoading, setRankingsLoading] = useState(true);
 
-  const [liveRaces, setLiveRaces] = useState<any[]>([]);
-  const [liveLoading, setLiveLoading] = useState(true);
+
 
   // expandedRankingId tracks which ranking row is expanded (jockeyId or horseId)
   const [expandedJockey, setExpandedJockey] = useState<number | null>(null);
   const [expandedHorse, setExpandedHorse] = useState<number | null>(null);
 
   useEffect(() => {
-    getLiveRaces()
-      .then(d => setLiveRaces(d?.result ?? []))
-      .catch(() => setLiveRaces([]))
-      .finally(() => setLiveLoading(false));
+
     getRaceSchedule()
       .then(d => setSchedule(d?.result ?? (Array.isArray(d) ? d : [])))
       .catch(() => setSchedule([]))
