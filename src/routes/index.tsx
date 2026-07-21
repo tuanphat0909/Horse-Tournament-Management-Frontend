@@ -17,6 +17,7 @@ import { AdminRefereesPage } from '../pages/admin/AdminRefereesPage';
 import { AdminResultsPage } from '../pages/admin/AdminResultsPage';
 import { AdminPredictionsPage } from '../pages/admin/AdminPredictionsPage';
 import { AdminViolationsPage } from '../pages/admin/AdminViolationsPage';
+import { AdminReportsPage } from '../pages/admin/AdminReportsPage';
 import { AdminWalletPage } from '../pages/admin/AdminWalletPage';
 import { NotificationsPage } from '../pages/NotificationsPage';
 
@@ -113,6 +114,7 @@ export function AppRoutes() {
         <Route path="/admin/results" element={<PrivateRoute allowedRoles={['Admin']}><AdminResultsPage /></PrivateRoute>} />
         <Route path="/admin/predictions" element={<PrivateRoute allowedRoles={['Admin']}><AdminPredictionsPage /></PrivateRoute>} />
         <Route path="/admin/violations" element={<PrivateRoute allowedRoles={['Admin']}><AdminViolationsPage /></PrivateRoute>} />
+        <Route path="/admin/reports" element={<PrivateRoute allowedRoles={['Admin']}><AdminReportsPage /></PrivateRoute>} />
         <Route path="/admin/wallet" element={<PrivateRoute allowedRoles={['Admin']}><AdminWalletPage /></PrivateRoute>} />
         <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><NotificationsPage /></PrivateRoute>} />
 
@@ -139,13 +141,13 @@ export function AppRoutes() {
         <Route path="/jockey/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
 
         {/* Referee */}
-        <Route path="/referee/dashboard" element={<PrivateRoute><RefereeDashboardPage /></PrivateRoute>} />
-        <Route path="/referee/horse-check" element={<PrivateRoute><RefereeHorseCheckPage /></PrivateRoute>} />
-        <Route path="/referee/violations" element={<PrivateRoute><RefereeViolationsPage /></PrivateRoute>} />
-        <Route path="/referee/confirm-results" element={<PrivateRoute><RefereeConfirmResultsPage /></PrivateRoute>} />
-        <Route path="/referee/reports" element={<PrivateRoute><RefereeReportsPage /></PrivateRoute>} />
-        <Route path="/referee/schedule" element={<PrivateRoute><RefereeSchedulePage /></PrivateRoute>} />
-        <Route path="/referee/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
+        <Route path="/referee/dashboard" element={<PrivateRoute allowedRoles={['Referee']}><RefereeDashboardPage /></PrivateRoute>} />
+        <Route path="/referee/horse-check" element={<PrivateRoute allowedRoles={['Referee']}><RefereeHorseCheckPage /></PrivateRoute>} />
+        <Route path="/referee/violations" element={<PrivateRoute allowedRoles={['Referee']}><RefereeViolationsPage /></PrivateRoute>} />
+        <Route path="/referee/confirm-results" element={<PrivateRoute allowedRoles={['Referee']}><RefereeConfirmResultsPage /></PrivateRoute>} />
+        <Route path="/referee/reports" element={<PrivateRoute allowedRoles={['Referee']}><RefereeReportsPage /></PrivateRoute>} />
+        <Route path="/referee/schedule" element={<PrivateRoute allowedRoles={['Referee']}><RefereeSchedulePage /></PrivateRoute>} />
+        <Route path="/referee/notifications" element={<PrivateRoute allowedRoles={['Referee']}><NotificationsPage /></PrivateRoute>} />
 
         {/* Spectator — wallet sub-routes (/spectator/wallet → redirect to /withdraw) */}
         <Route path="/spectator/dashboard" element={<PrivateRoute><SpectatorDashboardPage /></PrivateRoute>} />

@@ -29,6 +29,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { icon: UserCheck, label: 'Referee Management', path: '/admin/referees' },
     { icon: Megaphone, label: 'Publish Results', path: '/admin/results' },
     { icon: AlertTriangle, label: 'Violations', path: '/admin/violations' },
+    { icon: FileText, label: 'Referee Reports', path: '/admin/reports' },
     { icon: Target, label: 'Bet Management', path: '/admin/predictions' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
     { icon: Wallet, label: 'Wallet', path: '/admin/wallet' },
