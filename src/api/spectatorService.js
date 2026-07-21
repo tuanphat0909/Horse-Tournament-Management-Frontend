@@ -1,6 +1,6 @@
 import { api } from '../services/api';
 
-export const deposit = (amount) => api.post('/spectator/wallet/deposit', { amount });
+export const deposit = (amount) => { throw new Error("Direct deposit is disabled. Please use VNPay payment."); };
 export const withdraw = (amount) => api.post('/spectator/wallet/withdraw', { amount });
 export const getBalance = () => api.get('/spectator/wallet/balance');
 export const getWalletHistory = () => api.get('/spectator/wallet/history');
