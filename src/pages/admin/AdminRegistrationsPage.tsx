@@ -5,7 +5,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getRegistrations, updateRegistrationStatus } from '../../api/adminService';
+import { approveRegistration, getRegistrations, rejectRegistration } from '../../api/adminService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 import { Pager, paginate } from '../../components/ui/Pager';
@@ -69,7 +69,9 @@ export function AdminRegistrationsPage() {
   async function handleReview(registrationId: number, status: 'Approved' | 'Rejected') {
     try {
       setProcessingId(registrationId);
-      await updateRegistrationStatus(registrationId, status);
+      await (status === 'Approved'
+        ? approveRegistration(registrationId)
+        : rejectRegistration(registrationId));
       showToast(
         status === 'Approved' ? 'Approved successfully' : 'Rejected successfully',
         `Registration request #${registrationId} has been processed.`,

@@ -18,17 +18,6 @@ interface TournamentReadinessAlert {
   startDate: string;
 }
 
-const READINESS_CACHE_KEY = 'admin-tournament-readiness-alerts';
-
-function readCachedReadinessAlerts(): TournamentReadinessAlert[] {
-  try {
-    const cached = sessionStorage.getItem(READINESS_CACHE_KEY);
-    return cached ? JSON.parse(cached) : [];
-  } catch {
-    return [];
-  }
-}
-
 // Mỗi role có trang thông báo riêng — chuông và nút "View all" trỏ đúng trang đó.
 const NOTIFICATIONS_PATH: Record<string, string> = {
   admin: '/admin/notifications',
@@ -44,7 +33,7 @@ export function Topbar() {
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, fetchRecent } = useNotifications();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [readinessAlerts, setReadinessAlerts] = useState<TournamentReadinessAlert[]>(readCachedReadinessAlerts);
+  const [readinessAlerts, setReadinessAlerts] = useState<TournamentReadinessAlert[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const user = getCurrentUser();
   const roleKey = toRoleKey(user?.role);
@@ -83,10 +72,9 @@ export function Topbar() {
           }));
         if (active) {
           setReadinessAlerts(alerts);
-          sessionStorage.setItem(READINESS_CACHE_KEY, JSON.stringify(alerts));
         }
       } catch {
-        // Keep the current page usable if the readiness endpoint is temporarily unavailable.
+        if (active) setReadinessAlerts([]);
       }
     };
 

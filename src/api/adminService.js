@@ -11,7 +11,7 @@ export const createTournament = (data) => api.post('/admin/tournaments', data);
 export const generateTournamentRaces = (tournamentId) => api.post(`/admin/tournaments/${tournamentId}/generate-races`);
 export const generateFinalRace = (tournamentId) => api.post(`/admin/tournaments/${tournamentId}/generate-final`);
 export const closeTournamentRegistration = (tournamentId) => api.post(`/admin/tournaments/${tournamentId}/close-registration`);
-export const extendTournamentRegistration = (tournamentId, additionalDays) => api.put(`/admin/tournaments/${tournamentId}/extend`, { additionalDays });
+export const extendTournamentRegistration = (tournamentId) => api.put(`/admin/tournaments/${tournamentId}/extend`);
 export const cancelTournament = (tournamentId, reason) => api.put(`/admin/tournaments/${tournamentId}/cancel`, { reason });
 
 export const createRace = (data) => api.post('/admin/races', data);
@@ -31,7 +31,8 @@ export const createPrizes = (data) => api.post('/admin/payouts/prizes', data);
 export const triggerPayout = (raceId) => api.post(`/admin/payouts/trigger/${raceId}`);
 
 export const getRegistrations = () => api.get('/admin/registrations');
-export const updateRegistrationStatus = (id, status) => api.put(`/admin/registrations/${id}/status`, { status });
+export const approveRegistration = (id) => api.put(`/admin/registrations/${id}/approve`);
+export const rejectRegistration = (id) => api.put(`/admin/registrations/${id}/reject`);
 
 export const getReferees = () => api.get('/admin/referees');
 

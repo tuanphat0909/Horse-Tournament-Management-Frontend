@@ -132,8 +132,6 @@ export function AdminDashboardPage() {
         <PageAmbience accent="gold" />
         <Topbar />
         <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
-          {/* TODO: BE chưa có API thống kê cho dashboard */}
-
           <PageHero
             title={<>{t("Welcome,")} <span className="italic text-champagne">{user?.fullName ?? 'Admin'}</span></>}
             subtitle={`${t("System Overview")} • ${t("Season 2026")}`}
