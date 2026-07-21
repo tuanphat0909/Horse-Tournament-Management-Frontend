@@ -47,8 +47,21 @@ export function OwnerDashboardPage() {
   }, []);
 
   useEffect(() => {
-    getRaceSchedule()
-      .then((d: any) => setSchedule(d?.result ?? (Array.isArray(d) ? d : [])))
+    getOwnerResults()
+      .then((d: any) => {
+        const list = d?.result ?? (Array.isArray(d) ? d : []);
+        // Filter out completed or finished races to show only upcoming/active ones
+        const upcoming = list.filter((r: any) => 
+          r.status !== 'Finished' && r.status !== 'Completed'
+        );
+        // Sort by raceDate ascending (closest first)
+        upcoming.sort((a: any, b: any) => {
+          const da = a.raceDate ? new Date(a.raceDate).getTime() : 0;
+          const db = b.raceDate ? new Date(b.raceDate).getTime() : 0;
+          return da - db;
+        });
+        setSchedule(upcoming);
+      })
       .catch((err: Error) => { console.error(parseApiError(err)); setSchedule([]); })
       .finally(() => setScheduleLoading(false));
   }, []);
@@ -242,23 +255,35 @@ export function OwnerDashboardPage() {
                   <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                     <div className="text-4xl opacity-40 mb-3">📅</div>
-                    <div className="text-muted text-sm">{t('No data available')}</div>
+                    <div className="text-muted text-sm">{t('No upcoming races for your horses')}</div>
                   </div>
                 ) : schedule.map((r, i) => (
-                  <div key={r.id ?? i} onClick={() => navigate('/owner/tournaments')} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
+                  <div key={r.raceId ?? i} onClick={() => navigate('/owner/tournaments')} className="relative overflow-hidden p-4 rounded-xl bg-white/[0.02] border border-glass-border hover:border-gold/30 hover:bg-gold/[0.04] transition-all group cursor-pointer">
                     <div className="absolute left-0 top-3 bottom-3 w-[2px] rounded-full bg-gradient-to-b from-gold/60 to-transparent" />
-                    {/* Badge xuống dòng riêng: tên giải dài không còn bị bóp làm thẻ cao thấp lệch nhau */}
                     <div className="mb-2 space-y-1.5">
-                      <h3 className="text-sm font-semibold text-white group-hover:text-champagne transition-colors">{r.name}</h3>
-                      {r.tournamentName && (
-                        <span className="block w-fit max-w-full text-[10px] bg-gold/15 text-gold font-bold px-2 py-0.5 rounded-full border border-gold/25 uppercase tracking-wider truncate" title={r.tournamentName}>
-                          {r.tournamentName}
-                        </span>
-                      )}
+                      <h3 className="text-sm font-semibold text-white group-hover:text-champagne transition-colors">{r.raceName || r.name}</h3>
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        {r.tournamentName && (
+                          <span className="block max-w-full text-[9px] bg-gold/15 text-gold font-bold px-2 py-0.5 rounded-full border border-gold/25 uppercase tracking-wider truncate" title={r.tournamentName}>
+                            {r.tournamentName}
+                          </span>
+                        )}
+                        {r.status && (
+                          <span className="text-[9px] bg-blue-500/10 text-blue-400 font-bold px-2 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-wider">
+                            {r.status}
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    
+                    {/* Display Horse & Lane Info */}
+                    <div className="mb-2 p-2 rounded bg-white/[0.02] border border-white/[0.05] flex items-center justify-between text-xs">
+                      <span className="text-white flex items-center gap-1">🐴 {r.horseName}</span>
+                      <span className="text-champagne font-bold">Lane {r.laneNo ?? '—'}</span>
+                    </div>
+
                     <div className="flex items-center gap-3 text-[11px] text-muted">
                       {r.raceDate && <span className="flex items-center gap-1"><Clock size={11} className="text-gold/60" /> {formatDateTime(r.raceDate)}</span>}
-                      {r.distanceMeter != null && <span className="flex items-center gap-1"><Flag size={11} className="text-gold/60" /> {r.distanceMeter}m</span>}
                     </div>
                   </div>
                 ))}
