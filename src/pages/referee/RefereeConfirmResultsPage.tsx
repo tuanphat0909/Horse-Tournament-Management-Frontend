@@ -18,7 +18,7 @@ export function RefereeConfirmResultsPage() {
   const [races, setRaces] = useState<any[]>([]);
   const [loadingRaces, setLoadingRaces] = useState(true);
 
-  const [form, setForm] = useState({ raceId: '', winner: '', winningTime: '', remarks: '' });
+  const [form, setForm] = useState({ raceId: '', winner: '', winningTime: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -71,7 +71,6 @@ export function RefereeConfirmResultsPage() {
     setF('raceId', raceId);
     setF('winner', '');
     setF('winningTime', '');
-    setF('remarks', '');
     setError('');
     setSuccess('');
     setRaceEntries([]);
@@ -117,7 +116,6 @@ export function RefereeConfirmResultsPage() {
       if (top1) {
         setF('winner', top1.horseName || String(top1.horseId));
         setF('winningTime', String(top1.finishTime));
-        setF('remarks', 'Results auto-sorted by finish times.');
       }
     } catch (err) {
       console.error(err);
@@ -159,15 +157,6 @@ export function RefereeConfirmResultsPage() {
     }
   }
 
-  // Check if any horse finish time was changed from original time
-  const getModifiedHorses = () => {
-    return raceEntries.filter(e => {
-      const orig = originalTimes[e.raceEntryId];
-      if (orig == null || e.finishTime == null) return false;
-      return Math.abs(Number(e.finishTime) - orig) > 0.001;
-    });
-  };
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(''); setSuccess('');
@@ -182,41 +171,25 @@ export function RefereeConfirmResultsPage() {
       return;
     }
 
-    const invalidEntry = raceEntries.find(e => e.finishTime == null || isNaN(e.finishTime));
+    const invalidEntry = raceEntries.find(e => e.finishTime == null || !Number.isFinite(Number(e.finishTime)) || Number(e.finishTime) <= 0);
     if (invalidEntry) {
       setError('Please fill in valid finish times for all horses in the leaderboard.');
-      return;
-    }
-
-    // REQUIREMENT 4: Check if referee modified any horse finish time -> Require reason
-    const modified = getModifiedHorses();
-    const missingReason = modified.find(m => !timeReasons[m.raceEntryId]?.trim());
-    
-    if (modified.length > 0 && missingReason) {
-      setShowReasonModal(true);
       return;
     }
 
     executeSubmit();
   }
 
+  const getModifiedHorses = () => raceEntries.filter(entry => {
+    const original = originalTimes[entry.raceEntryId];
+    return original != null && entry.finishTime != null && Math.abs(Number(entry.finishTime) - original) > 0.001;
+  });
+
   async function executeSubmit() {
-    setShowReasonModal(false);
     setLoading(true);
     setError(''); setSuccess('');
 
     try {
-      // Build detailed remarks string including reasons for time modifications
-      const modified = getModifiedHorses();
-      let fullRemarks = form.remarks || 'Official results submitted.';
-      
-      if (modified.length > 0) {
-        const reasonNotes = modified.map(m => 
-          `[Time Adjustment for ${m.horseName} (Lane ${m.laneNo}): Original=${originalTimes[m.raceEntryId]}s, New=${m.finishTime}s. Reason: ${timeReasons[m.raceEntryId] || 'Referee adjustment'}]`
-        ).join(' ');
-        fullRemarks = `${fullRemarks} | ${reasonNotes}`;
-      }
-
       // Ensure leaderboard is sorted before submit
       const sorted = [...raceEntries].sort((a: any, b: any) => (a.finishTime ?? 999999) - (b.finishTime ?? 999999));
       sorted.forEach((e: any, idx: number) => { e.finishPosition = idx + 1; });
@@ -226,8 +199,6 @@ export function RefereeConfirmResultsPage() {
       await submitResult({
         raceId: Number(form.raceId),
         winner: top1.horseName || String(top1.horseId),
-        winningTime: String(top1.finishTime),
-        remarks: fullRemarks,
         entries: sorted.map(e => ({
           raceEntryId: e.raceEntryId,
           finishPosition: Number(e.finishPosition),
@@ -235,11 +206,10 @@ export function RefereeConfirmResultsPage() {
         }))
       });
 
-      setSuccess('Race results and leaderboard published successfully!');
-      setForm({ raceId: '', winner: '', winningTime: '', remarks: '' });
+      setSuccess('Race results submitted successfully and are pending Admin review.');
+      setForm({ raceId: '', winner: '', winningTime: '' });
       setRaceEntries([]);
       setOriginalTimes({});
-      setTimeReasons({});
     } catch (err: unknown) {
       setError(parseApiError(err as Error));
     } finally {
@@ -313,18 +283,6 @@ export function RefereeConfirmResultsPage() {
                   />
                 </div>
                 
-                <div>
-                  <label className={LABEL}>Referee Notes / Remarks</label>
-                  <textarea
-                    disabled={!!isCompleted}
-                    rows={3}
-                    value={form.remarks}
-                    onChange={e => setF('remarks', e.target.value)}
-                    placeholder="E.g., Close finish, clear track conditions..."
-                    className={INPUT + " resize-none"}
-                  />
-                </div>
-
                 {error && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{error}</div>}
                 {success && <div className="text-sm px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-2"><CheckCircle2 size={16} />{success}</div>}
 
@@ -334,7 +292,7 @@ export function RefereeConfirmResultsPage() {
                     disabled={loading || !form.raceId || !!isCompleted}
                     className="btn-red w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    {loading ? 'Submitting...' : isCompleted ? 'Results Published' : 'Confirm & Publish Official Results'}
+                    {loading ? 'Submitting...' : isCompleted ? 'Results Submitted' : 'Submit Results for Admin Review'}
                   </button>
                 </div>
               </form>
