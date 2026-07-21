@@ -393,12 +393,16 @@ export function AdminRacesPage() {
       showToast('Success', `Successfully assigned ${okCount} lanes cho races "${laneRace?.name ?? ''}"!`);
       closeModal();
       await loadAllData();
+      window.dispatchEvent(new Event('tournament-readiness-changed'));
     } else {
       // Có lỗi: giữ modal để admin xử lý tiếp, hiện chi tiết lỗi
       if (okCount > 0) showToast('Success', `Assigned ${okCount} lanes.`);
       setLaneSel({});
       await selectLaneRace(laneRaceId);
       setLaneMsg({ ok: false, text: `Error: ${errors.join(' | ')}` });
+      if (okCount > 0) {
+        window.dispatchEvent(new Event('tournament-readiness-changed'));
+      }
     }
   }
 

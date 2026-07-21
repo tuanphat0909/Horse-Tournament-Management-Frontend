@@ -130,7 +130,7 @@ export function AdminTournamentsPage() {
 
     setExtendLoading(true);
     try {
-      await extendTournamentRegistration(extendingTournament.tournamentId, 1);
+      await extendTournamentRegistration(extendingTournament.tournamentId);
       showToast(t('Success'), 'Registration extended successfully!');
       setExtendingTournament(null);
       await loadTournaments();

@@ -104,17 +104,17 @@ export function AppRoutes() {
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
 
         {/* Admin */}
-        <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboardPage /></PrivateRoute>} />
-        <Route path="/admin/users" element={<PrivateRoute><AdminUsersPage /></PrivateRoute>} />
-        <Route path="/admin/tournaments" element={<PrivateRoute><AdminTournamentsPage /></PrivateRoute>} />
-        <Route path="/admin/races" element={<PrivateRoute><AdminRacesPage /></PrivateRoute>} />
-        <Route path="/admin/registrations" element={<PrivateRoute><AdminRegistrationsPage /></PrivateRoute>} />
-        <Route path="/admin/referees" element={<PrivateRoute><AdminRefereesPage /></PrivateRoute>} />
-        <Route path="/admin/results" element={<PrivateRoute><AdminResultsPage /></PrivateRoute>} />
-        <Route path="/admin/predictions" element={<PrivateRoute><AdminPredictionsPage /></PrivateRoute>} />
-        <Route path="/admin/violations" element={<PrivateRoute><AdminViolationsPage /></PrivateRoute>} />
-        <Route path="/admin/wallet" element={<PrivateRoute><AdminWalletPage /></PrivateRoute>} />
-        <Route path="/admin/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
+        <Route path="/admin/dashboard" element={<PrivateRoute allowedRoles={['Admin']}><AdminDashboardPage /></PrivateRoute>} />
+        <Route path="/admin/users" element={<PrivateRoute allowedRoles={['Admin']}><AdminUsersPage /></PrivateRoute>} />
+        <Route path="/admin/tournaments" element={<PrivateRoute allowedRoles={['Admin']}><AdminTournamentsPage /></PrivateRoute>} />
+        <Route path="/admin/races" element={<PrivateRoute allowedRoles={['Admin']}><AdminRacesPage /></PrivateRoute>} />
+        <Route path="/admin/registrations" element={<PrivateRoute allowedRoles={['Admin']}><AdminRegistrationsPage /></PrivateRoute>} />
+        <Route path="/admin/referees" element={<PrivateRoute allowedRoles={['Admin']}><AdminRefereesPage /></PrivateRoute>} />
+        <Route path="/admin/results" element={<PrivateRoute allowedRoles={['Admin']}><AdminResultsPage /></PrivateRoute>} />
+        <Route path="/admin/predictions" element={<PrivateRoute allowedRoles={['Admin']}><AdminPredictionsPage /></PrivateRoute>} />
+        <Route path="/admin/violations" element={<PrivateRoute allowedRoles={['Admin']}><AdminViolationsPage /></PrivateRoute>} />
+        <Route path="/admin/wallet" element={<PrivateRoute allowedRoles={['Admin']}><AdminWalletPage /></PrivateRoute>} />
+        <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><NotificationsPage /></PrivateRoute>} />
 
         {/* Owner — wallet sub-routes (/owner/wallet → redirect to /withdraw) */}
         <Route path="/owner/dashboard" element={<PrivateRoute><OwnerDashboardPage /></PrivateRoute>} />
