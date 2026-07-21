@@ -1809,8 +1809,13 @@ export function AdminRacesPage() {
                     <div className="text-xs text-muted/60 italic px-1">No referee assigned — use <UserCheck size={11} className="inline" /> button in list to assign.</div>
                   ) : (
                     <div className="flex flex-wrap gap-2">
+                      {/* Màu cyan đậm cố định: cyan-300 quá nhạt nên chìm trên nền sáng */}
                       {detailRefs.map((r: any, i: number) => (
-                        <span key={i} className="text-xs px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+                        <span
+                          key={i}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                          style={{ background: 'rgba(6,182,212,0.14)', border: '1px solid rgba(6,182,212,0.45)', color: '#0E7490' }}
+                        >
                           {r.refereeName ?? r.fullName ?? r.name ?? `Referee #${r.refereeId ?? r.id}`}
                         </span>
                       ))}
@@ -1821,10 +1826,13 @@ export function AdminRacesPage() {
             )}
 
             <div className="flex gap-3 mt-6">
-              <button onClick={() => { const r = detailRace; closeModal(); openLanes(r.raceId ?? r.id); }}
-                className="flex-1 py-2.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/25 hover:bg-blue-500/25 text-sm font-bold transition-colors">
-                Assign lanes for this race
-              </button>
+              {/* Đua xong rồi thì không còn gì để xếp làn nữa — chỉ hiện nút khi race chưa kết thúc */}
+              {!['finished', 'completed', 'published', 'cancelled'].includes(String(detailRace.status ?? '').toLowerCase()) && (
+                <button onClick={() => { const r = detailRace; closeModal(); openLanes(r.raceId ?? r.id); }}
+                  className="flex-1 py-2.5 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/25 hover:bg-blue-500/25 text-sm font-bold transition-colors">
+                  Assign lanes for this race
+                </button>
+              )}
               <button onClick={closeModal} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Close</button>
             </div>
           </motion.div>

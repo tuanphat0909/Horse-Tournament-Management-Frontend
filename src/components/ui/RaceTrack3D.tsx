@@ -77,7 +77,7 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
               className={`relative flex items-center h-11 border-b border-dashed ${e ? 'border-white/25' : 'border-white/10'}`}
               style={{ background: laneNo % 2 ? 'rgba(50, 90, 55, 0.45)' : 'rgba(38, 72, 44, 0.45)' }}>
               {/* số lanes */}
-              <span className="w-8 shrink-0 text-center text-[10px] font-bold text-white/60 border-r border-white/15">{laneNo}</span>
+              <span className="w-8 shrink-0 text-center text-[10px] font-bold border-r border-white/15" style={{ color: 'rgba(226,232,240,0.7)' }}>{laneNo}</span>
               {e ? (
                 <div className="flex items-center gap-2 pl-2 min-w-0">
                   {/* chú horse */}
@@ -93,12 +93,12 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
                     🏇
                   </motion.span>
                   <div className="min-w-0 leading-tight" style={{ transform: 'rotateX(-20deg)' }}>
-                    <div className="text-[11px] font-bold text-white truncate max-w-40">{horseLabel(e)}</div>
-                    <div className="text-[9px] text-white/60 truncate max-w-40">{e.jockeyName ? `🏻 ${e.jockeyName}` : 'No jockey'}</div>
+                    <div className="text-[11px] font-bold truncate max-w-40" style={{ color: '#F1F5F9', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{horseLabel(e)}</div>
+                    <div className="text-[9px] truncate max-w-40" style={{ color: 'rgba(226,232,240,0.7)' }}>{e.jockeyName ? `🏻 ${e.jockeyName}` : 'No jockey'}</div>
                   </div>
                 </div>
               ) : (
-                <span className="pl-3 text-[10px] italic text-white/30">Empty lane</span>
+                <span className="pl-3 text-[10px] italic" style={{ color: 'rgba(226,232,240,0.35)' }}>Empty lane</span>
               )}
             </div>
           );
@@ -106,7 +106,7 @@ function Track3D({ maxLanes, entries, live }: { maxLanes: number; entries: Entry
         {/* Cổng xuất phát */}
         <div className="h-1.5 bg-gradient-to-r from-transparent via-white/40 to-transparent rounded-full mt-0.5" />
       </div>
-      <div className="text-center text-[10px] text-white/40 mt-2">
+      <div className="text-center text-[10px] mt-2" style={{ color: 'rgba(226,232,240,0.5)' }}>
         {live ? 'Race is live' : 'Horses are at the starting gates'} • finish line ahead
       </div>
     </div>
@@ -122,11 +122,27 @@ function Podium3D({ entries }: { entries: Entry[] }) {
   const rest = ranked.filter(e => !top3.includes(e));
 
   const spot = (pos: number) => top3.find(e => e.finishPosition === pos);
-  // Thứ tự hiển thị trên bục: 2 - 1 - 3
-  const podiumOrder: { pos: number; h: number; cls: string; medal: string }[] = [
-    { pos: 2, h: 64, cls: 'from-slate-300/80 to-slate-500/80 border-slate-300/60', medal: '🥈' },
-    { pos: 1, h: 96, cls: 'from-yellow-300/90 to-amber-600/90 border-yellow-300/70', medal: '🥇' },
-    { pos: 3, h: 44, cls: 'from-orange-300/80 to-orange-700/80 border-orange-400/60', medal: '🥉' },
+  /**
+   * Mỗi bục có màu chữ riêng khớp màu bục (vàng / bạc / đồng).
+   * Dùng mã màu cố định thay vì class `text-white`: ở light theme class đó bị
+   * đổi thành chữ đen nên tên ngựa chìm hẳn vào nền tối của khu trao giải.
+   */
+  const podiumOrder: {
+    pos: number; h: number; cls: string; medal: string;
+    text: string; sub: string; glow: string; stars: number;
+  }[] = [
+    {
+      pos: 2, h: 64, cls: 'from-slate-300/80 to-slate-500/80 border-slate-300/60', medal: '🥈',
+      text: '#E8EDF5', sub: 'rgba(226,232,240,0.75)', glow: 'rgba(203,213,225,0.85)', stars: 3,
+    },
+    {
+      pos: 1, h: 96, cls: 'from-yellow-300/90 to-amber-600/90 border-yellow-300/70', medal: '🥇',
+      text: '#FFD75E', sub: 'rgba(255,215,94,0.8)', glow: 'rgba(255,197,61,0.95)', stars: 5,
+    },
+    {
+      pos: 3, h: 44, cls: 'from-orange-300/80 to-orange-700/80 border-orange-400/60', medal: '🥉',
+      text: '#FDBA74', sub: 'rgba(253,186,116,0.75)', glow: 'rgba(251,146,60,0.85)', stars: 3,
+    },
   ];
 
   return (
@@ -138,25 +154,52 @@ function Podium3D({ entries }: { entries: Entry[] }) {
       </div>
 
       <div className="relative flex items-end justify-center gap-3" style={{ perspective: '600px' }}>
-        {podiumOrder.map(({ pos, h, cls, medal }) => {
+        {podiumOrder.map(({ pos, h, cls, medal, text, sub, glow, stars }) => {
           const e = spot(pos);
           return (
             <div key={pos} className="flex flex-col items-center w-28">
               {e ? (
                 <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: pos === 1 ? 0.15 : pos === 2 ? 0.3 : 0.45 }}
-                  className="flex flex-col items-center mb-1.5">
-                  <span className="text-lg leading-none mb-0.5">{medal}</span>
-                  <motion.span className="text-3xl drop-shadow-[0_4px_6px_rgba(0,0,0,0.7)]"
+                  className="flex flex-col items-center mb-1.5 relative">
+                  {/* Sao lấp lánh quanh người thắng — hạng càng cao càng nhiều sao */}
+                  {Array.from({ length: stars }).map((_, i) => (
+                    <motion.span
+                      key={i}
+                      className="absolute pointer-events-none select-none"
+                      style={{
+                        left: `${8 + (i * 78) / stars}%`,
+                        top: `${(i % 2 === 0 ? 2 : 30) + (i * 5)}%`,
+                        fontSize: pos === 1 ? 11 : 9,
+                        color: glow,
+                        textShadow: `0 0 6px ${glow}`,
+                      }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.6, 1.15, 0.6] }}
+                      transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.35 + pos * 0.2 }}
+                    >
+                      ✦
+                    </motion.span>
+                  ))}
+                  <span className="text-lg leading-none mb-0.5 relative z-10">{medal}</span>
+                  <motion.span
+                    className="text-3xl relative z-10"
+                    style={{ filter: `drop-shadow(0 0 8px ${glow})` }}
                     animate={{ y: [0, -3, 0] }} transition={{ duration: 2, repeat: Infinity, delay: pos * 0.3 }}>
                     🏇
                   </motion.span>
-                  <div className="text-center leading-tight mt-1">
-                    <div className="text-[11px] font-bold text-white truncate max-w-27">{horseLabel(e)}</div>
-                    <div className="text-[9px] text-white/60 truncate max-w-27">{e.jockeyName ? `Jockey: ${e.jockeyName}` : 'Jockey: —'}</div>
+                  <div className="text-center leading-tight mt-1 relative z-10">
+                    <div
+                      className="text-[11px] font-extrabold truncate max-w-27"
+                      style={{ color: text, textShadow: `0 0 10px ${glow}, 0 1px 2px rgba(0,0,0,0.9)` }}
+                    >
+                      {horseLabel(e)}
+                    </div>
+                    <div className="text-[9px] truncate max-w-27" style={{ color: sub }}>
+                      {e.jockeyName ? `Jockey: ${e.jockeyName}` : 'Jockey: —'}
+                    </div>
                   </div>
                 </motion.div>
               ) : (
-                <div className="text-[10px] text-white/30 italic mb-1.5">—</div>
+                <div className="text-[10px] italic mb-1.5" style={{ color: 'rgba(226,232,240,0.35)' }}>—</div>
               )}
               {/* Khối bục 3D: mặt trên + mặt trước */}
               <div className="w-full" style={{ transformStyle: 'preserve-3d' }}>
@@ -164,7 +207,13 @@ function Podium3D({ entries }: { entries: Entry[] }) {
                   style={{ transform: 'rotateX(55deg)', transformOrigin: 'center bottom' }} />
                 <div className={`w-full bg-gradient-to-b ${cls} border border-t-0 rounded-b-sm flex items-start justify-center pt-1`}
                   style={{ height: h }}>
-                  <span className="font-serif font-bold text-xl text-black/60">{pos}</span>
+                  {/* Số bục: chữ tối đậm trên nền sáng của bục, thêm viền sáng cho rõ */}
+                  <span
+                    className="font-serif font-bold text-xl"
+                    style={{ color: 'rgba(23,18,38,0.85)', textShadow: '0 1px 1px rgba(255,255,255,0.45)' }}
+                  >
+                    {pos}
+                  </span>
                 </div>
               </div>
             </div>

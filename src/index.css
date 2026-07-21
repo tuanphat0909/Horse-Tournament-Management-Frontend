@@ -601,3 +601,22 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   display: none;
   -webkit-appearance: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   13. Chữ màu nhạt (thang 300) trên nền sáng
+   Các sắc 300 vốn dành cho nền tối; ở light theme chúng chói và gần như
+   không đọc được. Đổi sang sắc đậm cùng tông để giữ đúng ý nghĩa màu
+   (xanh = thông tin, đỏ = cảnh báo...) mà vẫn đủ tương phản.
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="light"] .text-cyan-300    { color: #0E7490 !important; }
+[data-theme="light"] .text-blue-300    { color: #1D4ED8 !important; }
+[data-theme="light"] .text-emerald-300 { color: #047857 !important; }
+[data-theme="light"] .text-green-300   { color: #15803D !important; }
+[data-theme="light"] .text-yellow-300  { color: #A16207 !important; }
+[data-theme="light"] .text-amber-300   { color: #B45309 !important; }
+[data-theme="light"] .text-orange-300  { color: #C2410C !important; }
+[data-theme="light"] .text-red-300     { color: #B91C1C !important; }
+[data-theme="light"] .text-pink-300    { color: #BE185D !important; }
+[data-theme="light"] .text-purple-300  { color: #6D28D9 !important; }
+[data-theme="light"] .text-indigo-300  { color: #4338CA !important; }
+[data-theme="light"] .text-slate-300   { color: #475569 !important; }
