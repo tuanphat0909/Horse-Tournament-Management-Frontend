@@ -13,6 +13,7 @@ import { formatDateTime } from '../../utils/format';
 import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type StatusFilter = 'all' | 'upcoming_registration' | 'registration_open' | 'registration_closed' | 'scheduled' | 'racing' | 'completed' | 'cancelled';
@@ -107,6 +108,7 @@ const INIT_FORM = {
 };
 
 export function AdminTournamentsPage() {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { showToast } = useNotifications();
@@ -247,7 +249,7 @@ export function AdminTournamentsPage() {
       ? "Are you sure you want to cancel this tournament because there are not enough registered horses after 2 registration cycles?"
       : "Are you sure you want to cancel this tournament?";
 
-    if (!window.confirm(confirmMessage)) {
+    if (!(await confirm({ title: 'Confirmation', message: confirmMessage, danger: true }))) {
       return;
     }
 

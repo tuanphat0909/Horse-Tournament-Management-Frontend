@@ -9,6 +9,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getReferees, getRacesRefereeAssignments, removeReferee } from '../../api/adminService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const fixMojibake = (str: string): string => {
@@ -21,6 +22,7 @@ const fixMojibake = (str: string): string => {
 };
 
 export function AdminRefereesPage() {
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { showToast } = useNotifications();
   const [referees, setReferees] = useState<any[]>([]);
@@ -58,7 +60,14 @@ export function AdminRefereesPage() {
   }, []);
 
   const handleRemove = async (raceId: number, refereeId: number) => {
-    if (!window.confirm('Are you sure you want to cancel this referee assignment for the race?')) return;
+    const ok = await confirm({
+      title: 'Cancel assignment',
+      message: 'Are you sure you want to cancel this referee assignment for the race?',
+      confirmText: 'Cancel assignment',
+      cancelText: 'Keep',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       await removeReferee(raceId, refereeId);
       showToast('Success', 'Referee assignment cancelled.');

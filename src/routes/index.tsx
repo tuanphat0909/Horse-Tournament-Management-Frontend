@@ -70,6 +70,7 @@ import { LegalPage } from '../pages/LegalPage';
 
 import { PrivateRoute } from './PrivateRoute';
 import { NotificationProvider } from '../context/NotificationContext';
+import { ConfirmProvider } from '../context/ConfirmContext';
 
 /**
  * Chuyển trang thì luôn về đầu trang — nếu không, bấm link ở footer sẽ mở trang
@@ -90,6 +91,7 @@ function ScrollToTop() {
 export function AppRoutes() {
   return (
     <NotificationProvider>
+      <ConfirmProvider>
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -170,6 +172,7 @@ export function AppRoutes() {
         {/* Core notifications route accessible by all roles */}
         <Route path="/notifications" element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
       </Routes>
+      </ConfirmProvider>
     </NotificationProvider>
   );
 }

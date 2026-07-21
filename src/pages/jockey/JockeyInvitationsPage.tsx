@@ -28,7 +28,10 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString('vi-VN');
 };
 
+import { useNotifications } from '../../context/NotificationContext';
+
 export function JockeyInvitationsPage() {
+  const { showToast } = useNotifications();
   const [tab, setTab] = useState<Tab>('pending');
   const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +58,7 @@ export function JockeyInvitationsPage() {
       const data = await getContracts();
       setInvitations(data?.result ?? (Array.isArray(data) ? data : []));
     } catch (err: unknown) {
-      alert(parseApiError(err as Error));
+      showToast('Error', parseApiError(err as Error), 'error');
     } finally {
       setRespondingId(null);
     }

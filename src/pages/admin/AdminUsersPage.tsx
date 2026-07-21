@@ -9,6 +9,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRoles, createAccount, getAccounts, updateUserStatus } from '../../api/adminService';
 import { parseApiError, parseFieldErrors } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { formatUtcDateTime } from '../../utils/format';
 import { Pager, paginate } from '../../components/ui/Pager';
 
@@ -82,6 +83,7 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function AdminUsersPage() {
+  const confirm = useConfirm();
   const { showToast } = useNotifications();
   const [filter, setFilter] = useState<RoleFilter>('all');
   const [search, setSearch] = useState('');
@@ -102,13 +104,19 @@ export function AdminUsersPage() {
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   async function handleToggleStatus(id: number, currentStatus: string) {
-    if (!confirm(`Are you sure you want to ${currentStatus === 'Active' ? 'lock' : 'unlock'} this account?`)) return;
+    const ok = await confirm({
+      title: currentStatus === 'Active' ? 'Lock account' : 'Unlock account',
+      message: `Are you sure you want to ${currentStatus === 'Active' ? 'lock' : 'unlock'} this account?`,
+      confirmText: currentStatus === 'Active' ? 'Lock' : 'Unlock',
+      danger: currentStatus === 'Active',
+    });
+    if (!ok) return;
     setTogglingId(id);
     try {
       await updateUserStatus(id);
       fetchAccounts();
     } catch (err: unknown) {
-      alert(parseApiError(err as Error));
+      showToast('Error', parseApiError(err as Error), 'error');
     } finally {
       setTogglingId(null);
     }

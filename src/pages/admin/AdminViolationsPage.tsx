@@ -128,7 +128,10 @@ function ViolationRow({ v, processingId, handleReview }: { v: any; processingId:
   );
 }
 
+import { useNotifications } from '../../context/NotificationContext';
+
 export function AdminViolationsPage() {
+  const { showToast } = useNotifications();
   const [tab, setTab] = useState<Tab>('pending');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -165,7 +168,7 @@ export function AdminViolationsPage() {
       await fetchViolations();
     } catch (err: any) {
       console.error('Error reviewing violation:', err);
-      alert(err.response?.data?.message || 'An error occurred while updating the violation status');
+      showToast('Error', err.response?.data?.message || 'An error occurred while updating the violation status', 'error');
     } finally {
       setProcessingId(null);
     }

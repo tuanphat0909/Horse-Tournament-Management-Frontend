@@ -13,6 +13,7 @@ import { getFirstYupMessage } from '../../utils/formValidation';
 import { formatUtcDateTime } from '../../utils/format';
 import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { useNotifications } from '../../context/NotificationContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const STATUS_CFG: Record<string, { label: string; color: string; Icon: typeof Clock }> = {
@@ -66,6 +67,7 @@ function contractBucket(status: string): ContractFilter {
 }
 
 export function OwnerJockeysPage() {
+  const confirm = useConfirm();
   const { notifications, showToast } = useNotifications();
   const searchParams = new URLSearchParams(window.location.search);
   const prefillApplied = useRef(false);
@@ -227,13 +229,20 @@ export function OwnerJockeysPage() {
   }
 
   async function handleCancelInvite(contractId: number) {
-    if (!window.confirm('Cancel this Jockey invitation?')) return;
+    const ok = await confirm({
+      title: 'Cancel invitation',
+      message: 'Cancel this Jockey invitation?',
+      confirmText: 'Cancel invitation',
+      cancelText: 'Keep',
+      danger: true,
+    });
+    if (!ok) return;
 
     try {
       await cancelJockeyContract(contractId);
       await load();
     } catch (err: unknown) {
-      alert(parseApiError(err as Error));
+      showToast('Error', parseApiError(err as Error), 'error');
     }
   }
 
