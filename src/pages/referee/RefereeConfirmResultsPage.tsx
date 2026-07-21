@@ -14,6 +14,12 @@ const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2
 const READONLY_INPUT = 'w-full bg-navy/80 border border-glass-border/40 rounded-lg px-4 py-2.5 text-sm text-gold font-bold cursor-not-allowed outline-none';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
+const cleanDisplayString = (str: string) => {
+  if (!str) return '';
+  return str.replace(/\s*\(?ID:\s*\d+\)?/gi, '').trim();
+};
+
+
 export function RefereeConfirmResultsPage() {
   const [races, setRaces] = useState<any[]>([]);
   const [loadingRaces, setLoadingRaces] = useState(true);
@@ -255,7 +261,7 @@ export function RefereeConfirmResultsPage() {
                       <option value="">-- Select Ongoing / Finished Race --</option>
                       {races.map(r => (
                         <option key={r.raceId} value={r.raceId}>
-                          ID {r.raceId}: {r.raceName} ({r.status || 'Active'})
+                          {cleanDisplayString(r.raceName)} ({r.status || 'Active'})
                         </option>
                       ))}
                     </select>

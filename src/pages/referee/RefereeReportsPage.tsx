@@ -14,6 +14,12 @@ import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const INPUT = 'w-full bg-[#0B1628] border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
 const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.5';
 
+const cleanDisplayString = (str: string) => {
+  if (!str) return '';
+  return str.replace(/\s*\(?ID:\s*\d+\)?/gi, '').trim();
+};
+
+
 interface AssignedRace {
   raceId: number;
   raceName: string;
@@ -191,7 +197,7 @@ export function RefereeReportsPage() {
                 >
                   {races.map(r => (
                     <option key={r.raceId} value={r.raceId} className="bg-[#0b101e]">
-                      {r.raceName} (ID: {r.raceId})
+                      {cleanDisplayString(r.raceName)}
                     </option>
                   ))}
                 </select>
@@ -305,7 +311,7 @@ export function RefereeReportsPage() {
                       <option value="">-- Select Assigned Race --</option>
                       {races.map(r => (
                         <option key={r.raceId} value={r.raceId}>
-                          ID {r.raceId}: {r.raceName} ({r.status || 'Active'})
+                          {cleanDisplayString(r.raceName)} ({r.status || 'Active'})
                         </option>
                       ))}
                     </select>

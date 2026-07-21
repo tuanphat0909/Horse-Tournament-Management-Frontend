@@ -18,6 +18,11 @@ const INIT_PRIZES = { tournamentId: '', firstPlacePrize: '', secondPlacePrize: '
 import { useNotifications } from '../../context/NotificationContext';
 import { useConfirm } from '../../context/ConfirmContext';
 
+const cleanDisplayString = (str: string) => {
+  if (!str) return '';
+  return str.replace(/\s*\(?ID:\s*\d+\)?/gi, '').trim();
+};
+
 export function AdminResultsPage() {
   const { showToast } = useNotifications();
   const confirm = useConfirm();
@@ -265,7 +270,7 @@ export function AdminResultsPage() {
                     .filter((r: any) => r.status === 'Published' || r.status === 'Finished')
                     .map((r: any) => (
                       <option key={r.raceId} value={r.raceId} className="bg-navy text-white">
-                        {r.raceName || r.name} (ID: {r.raceId})
+                        {cleanDisplayString(r.raceName || r.name)}
                       </option>
                     ))}
                 </select>
@@ -315,8 +320,8 @@ export function AdminResultsPage() {
                       <div key={race.raceId} className="glass-panel rounded-xl border border-glass-border overflow-hidden flex flex-col justify-between">
                         <div className="p-5 flex items-center justify-between gap-4">
                           <div>
-                            <div className="font-bold text-white mb-1">{race.name ?? race.raceName} (ID: {race.raceId})</div>
-                            <div className="text-xs text-muted">Tournament: {race.tournamentName || 'N/A'} • {new Date(race.raceDate || race.startTime).toLocaleString('vi-VN')}</div>
+                            <div className="font-bold text-white mb-1">Tournament: {cleanDisplayString(race.tournamentName || 'N/A')}</div>
+                            <div className="text-xs text-muted">{cleanDisplayString(race.name ?? race.raceName)} • {new Date(race.raceDate || race.startTime).toLocaleString('vi-VN')}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <button
@@ -412,8 +417,8 @@ export function AdminResultsPage() {
                       <div key={race.raceId} className="glass-panel rounded-xl border border-glass-border overflow-hidden flex flex-col justify-between">
                         <div className="p-5 flex items-center justify-between gap-4">
                           <div>
-                            <div className="font-bold text-white mb-1">{race.name ?? race.raceName} (ID: {race.raceId})</div>
-                            <div className="text-xs text-muted">Tournament: {race.tournamentName || 'N/A'}</div>
+                            <div className="font-bold text-white mb-1">Tournament: {cleanDisplayString(race.tournamentName || 'N/A')}</div>
+                            <div className="text-xs text-muted">{cleanDisplayString(race.name ?? race.raceName)}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <button
@@ -513,7 +518,7 @@ export function AdminResultsPage() {
                   <option value="" className="text-muted/60">-- Select Tournament --</option>
                   {tournaments.map((t: any) => (
                     <option key={t.tournamentId} value={t.tournamentId} className="bg-navy text-white">
-                      {t.name} (ID: {t.tournamentId})
+                      {cleanDisplayString(t.name)}
                     </option>
                   ))}
                 </select>

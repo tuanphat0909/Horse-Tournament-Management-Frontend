@@ -9,6 +9,12 @@ import { getRefereeDashboard, getHorseChecks } from '../../api/refereeService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type Tab = 'all' | 'pending' | 'approved' | 'rejected';
 
+const cleanDisplayString = (str: string) => {
+  if (!str) return '';
+  return str.replace(/\s*\(?ID:\s*\d+\)?/gi, '').trim();
+};
+
+
 interface AssignedRace {
   raceId: number;
   raceName: string;
@@ -167,7 +173,7 @@ export function RefereeHorseCheckPage() {
                 >
                   {races.map(r => (
                     <option key={r.raceId} value={r.raceId} className="bg-[#0b101e]">
-                      {r.raceName} (ID: {r.raceId})
+                      {cleanDisplayString(r.raceName)}
                     </option>
                   ))}
                 </select>

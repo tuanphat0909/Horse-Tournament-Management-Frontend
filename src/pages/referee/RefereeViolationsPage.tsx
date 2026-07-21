@@ -22,6 +22,12 @@ const cleanNote = (note: string) => {
   return note.replace(/\[timestamp=\d+\]/, '').trim();
 };
 
+const cleanDisplayString = (str: string) => {
+  if (!str) return '';
+  return str.replace(/\s*\(?ID:\s*\d+\)?/gi, '').trim();
+};
+
+
 export function RefereeViolationsPage() {
   const [tab, setTab] = useState<Tab>('active');
   const [search, setSearch] = useState('');
@@ -266,7 +272,7 @@ export function RefereeViolationsPage() {
                     <select value={form.raceId} onChange={e => handleRaceChange(e.target.value)} className="w-full bg-[#0B1628] border border-glass-border rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-gold/40" style={{colorScheme: 'dark'}}>
                       <option value="">-- Select Race --</option>
                       {races.map(r => (
-                        <option key={r.raceId} value={r.raceId}>ID {r.raceId}: {r.raceName}</option>
+                        <option key={r.raceId} value={r.raceId}>{cleanDisplayString(r.raceName)}</option>
                       ))}
                     </select>
                   </div>

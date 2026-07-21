@@ -17,6 +17,12 @@ import { calculateAge } from '../../utils/format';
 
 type Tab = 'pending' | 'assigned' | 'history' | 'recovery';
 
+const cleanDisplayString = (str: string) => {
+  if (!str) return '';
+  return str.replace(/\s*\(?ID:\s*\d+\)?/gi, '').trim();
+};
+
+
 interface UnhealthyHorse {
   horseId: number;
   name: string;
@@ -307,7 +313,7 @@ export function MedicalCheckPage() {
                                   </span>
                                 ) : (
                                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                                    🏆 Tournament: {pc.tournamentName}
+                                    🏆 Tournament: {cleanDisplayString(pc.tournamentName)}
                                   </span>
                                 )}
                               </td>
@@ -356,8 +362,8 @@ export function MedicalCheckPage() {
                               {ae.ownerName && <div className="text-xs text-muted">{ae.ownerName}</div>}
                             </td>
                             <td className="px-6 py-4 text-muted">
-                              <div>{ae.raceName ?? '—'}</div>
-                              {ae.tournamentName && <div className="text-xs text-muted/60">{ae.tournamentName}</div>}
+                              <div className="font-bold text-white mb-0.5">Tournament: {cleanDisplayString(ae.tournamentName || '—')}</div>
+                              <div className="text-xs text-muted">{cleanDisplayString(ae.raceName ?? '—')}</div>
                             </td>
                             <td className="px-6 py-4 text-muted whitespace-nowrap">
                               {ae.raceDate ? new Date(ae.raceDate).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'}
@@ -428,7 +434,7 @@ export function MedicalCheckPage() {
                         {filteredHistory.map(mr => (
                           <tr key={mr.id} className="hover:bg-white/[0.01] transition-colors">
                             <td className="px-6 py-4 font-medium text-gold">{mr.horseName}</td>
-                            <td className="px-6 py-4 text-muted text-xs max-w-[150px] truncate">{mr.tournamentName}</td>
+                            <td className="px-6 py-4 text-muted text-xs max-w-[150px] truncate">{cleanDisplayString(mr.tournamentName)}</td>
                             <td className="px-6 py-4 font-mono">{mr.weight} kg</td>
                             <td className="px-6 py-4 font-mono">{mr.temperature ? `${mr.temperature}°C` : '—'}</td>
                             <td className="px-6 py-4 font-mono">{mr.heartRate ? `${mr.heartRate} bpm` : '—'}</td>
