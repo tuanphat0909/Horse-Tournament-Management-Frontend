@@ -535,6 +535,10 @@ export function AdminRacesPage() {
   });
 
   const groupedTournaments = closedTournamentsList.map(t => {
+    const normalizedTournamentStatus = String(t.status ?? '').trim().toLowerCase();
+    const isTerminalTournament = normalizedTournamentStatus === 'completed'
+      || normalizedTournamentStatus === 'finished'
+      || normalizedTournamentStatus === 'cancelled';
     const tRaces = racesList.filter(r => r.tournamentId === t.tournamentId);
 
     const rounds = (t.rounds ?? []).map((r: any) => {
@@ -562,8 +566,8 @@ export function AdminRacesPage() {
     // (BE đã tự sinh Final khi race Pre cuối nộp kết quả — nút này là dự phòng)
     const qualifiedHorseCount = Number(t.qualifiedRegistration ?? 0);
     const hasValidHorseCount = qualifiedHorseCount >= 12 && qualifiedHorseCount <= 48;
-    const canGenerateFinal = prefinalFinished && hasPrefinalRaces && finalRaces.length === 0;
-    const canGeneratePre = !prefinalFinished && hasValidHorseCount;
+    const canGenerateFinal = !isTerminalTournament && prefinalFinished && hasPrefinalRaces && finalRaces.length === 0;
+    const canGeneratePre = !isTerminalTournament && !prefinalFinished && hasValidHorseCount;
     const waitingLabel = hasPrefinalRaces && !prefinalFinished
       ? 'Pending completed Pre'
       : '';
@@ -607,7 +611,15 @@ export function AdminRacesPage() {
     );
 
     let genHint: { tone: string; label: string; detail: string };
-    if (regNotStarted) {
+    if (isTerminalTournament) {
+      genHint = {
+        tone: 'info',
+        label: normalizedTournamentStatus === 'cancelled' ? 'Tournament cancelled' : 'Tournament completed',
+        detail: normalizedTournamentStatus === 'cancelled'
+          ? 'This tournament is cancelled. Scheduling checks no longer apply.'
+          : 'This tournament is completed. Historical horse counts and lane readiness no longer require action.',
+      };
+    } else if (regNotStarted) {
       genHint = {
         tone: 'wait',
         label: 'Registration not open',
@@ -704,6 +716,7 @@ export function AdminRacesPage() {
       hasPastScheduledPreRace,
       nextScheduledRaceDate,
       hasPastScheduledRace,
+      isTerminalTournament,
       genHint,
     };
   });
@@ -943,7 +956,7 @@ export function AdminRacesPage() {
                             </div>
                           )}
 
-                          {!t.hasAnyRaces && !t.regOpen && !t.regNotStarted && !t.hasValidHorseCount && (
+                          {!t.isTerminalTournament && !t.hasAnyRaces && !t.regOpen && !t.regNotStarted && !t.hasValidHorseCount && (
                             <button
                               disabled
                               title="A tournament requires between 12 and 48 qualified horses before races can be scheduled."
@@ -954,7 +967,7 @@ export function AdminRacesPage() {
                           )}
 
                           {/* Register chưa mở / còn mở → chưa thể xếp lanes */}
-                          {(t.regOpen || t.regNotStarted) && !t.hasAnyRaces && (
+                          {!t.isTerminalTournament && (t.regOpen || t.regNotStarted) && !t.hasAnyRaces && (
                             <button
                               disabled
                               title={t.regNotStarted
@@ -998,7 +1011,7 @@ export function AdminRacesPage() {
                             <div className="min-w-0">
                               <div className="text-sm font-bold">{t.genHint.label}</div>
                               {t.genHint.detail && <div className="text-xs opacity-90 mt-0.5">{t.genHint.detail}</div>}
-                              {(t.genHint.tone === 'wait' || (t.hasAnyRaces && t.nextScheduledRaceDate)) && (
+                              {!t.isTerminalTournament && (t.genHint.tone === 'wait' || (t.hasAnyRaces && t.nextScheduledRaceDate)) && (
                                 <div className="mt-2">
                                   {t.regNotStarted && t.registrationStartDate ? (
                                     <CountdownTimer target={t.registrationStartDate} utc={false} label="Registration opens in:" />
