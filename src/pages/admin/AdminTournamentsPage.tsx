@@ -6,7 +6,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { createTournament, generateFinalRace, closeTournamentRegistration, extendTournamentRegistration, cancelTournament, getAdminWalletBalance } from '../../api/adminService';
+import { createTournament, generateFinalRace, closeTournamentRegistration, extendTournamentRegistration, cancelTournament, getAdminWalletBalance, updateTournament } from '../../api/adminService';
 import { getRaceSchedule, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { formatDateTime } from '../../utils/format';
@@ -16,6 +16,15 @@ import { useNotifications } from '../../context/NotificationContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 type StatusFilter = 'all' | 'upcoming_registration' | 'registration_open' | 'registration_closed' | 'scheduled' | 'racing' | 'completed' | 'cancelled';
+
+// "2026-07-04T18:30:00" -> "2026-07-04T18:30" (giá trị cho input datetime-local)
+function formatToDatetimeLocal(v: any): string {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return '';
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 const CUSTOM_STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   'Upcoming Registration': { label: 'Upcoming Registration', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
@@ -124,6 +133,89 @@ export function AdminTournamentsPage() {
 
   const [cancelWarningTournament, setCancelWarningTournament] = useState<any>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+
+  const [editingTournament, setEditingTournament] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    registrationStartDate: '',
+    registrationEndDate: '',
+    startDate: '',
+    endDate: '',
+    status: ''
+  });
+  const [editError, setEditError] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+
+  function handleEditClick(tour: any) {
+    setEditingTournament(tour);
+    setEditForm({
+      name: tour.name || '',
+      description: tour.description || '',
+      registrationStartDate: formatToDatetimeLocal(tour.registrationStartDate),
+      registrationEndDate: formatToDatetimeLocal(tour.registrationEndDate),
+      startDate: formatToDatetimeLocal(tour.startDate),
+      endDate: formatToDatetimeLocal(tour.endDate),
+      status: tour.status || ''
+    });
+    setEditError('');
+  }
+
+  async function handleUpdate() {
+    if (!editForm.name.trim() || !editForm.registrationStartDate || !editForm.registrationEndDate || !editForm.startDate || !editForm.endDate) {
+      setEditError(t('Please fill in all required fields.'));
+      return;
+    }
+
+    if (editForm.name.trim().length > 150) {
+      setEditError('Tournament name cannot exceed 150 characters.');
+      return;
+    }
+    if (editForm.description.trim().length > 2000) {
+      setEditError('Tournament description cannot exceed 2000 characters.');
+      return;
+    }
+
+    const regStartVal = new Date(editForm.registrationStartDate);
+    const regEndVal = new Date(editForm.registrationEndDate);
+    const startVal = new Date(editForm.startDate);
+    const endVal = new Date(editForm.endDate);
+
+    if (regEndVal <= regStartVal) {
+      setEditError(t('Registration end date must be after registration start date.'));
+      return;
+    }
+    if (startVal.getTime() < regEndVal.getTime() + 120 * 60 * 60 * 1000) {
+      const earliestStartDate = new Date(regEndVal.getTime() + 5 * 24 * 60 * 60 * 1000);
+      setEditError(`The tournament must start at least 5 days after registration closes. Earliest allowed start: ${formatDateTime(earliestStartDate.toISOString())}.`);
+      return;
+    }
+    if (endVal <= startVal) {
+      setEditError(t('Tournament end date must be after tournament start date.'));
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      await updateTournament(editingTournament.tournamentId, {
+        name: editForm.name.trim(),
+        description: editForm.description.trim(),
+        registrationStartDate: editForm.registrationStartDate,
+        registrationEndDate: editForm.registrationEndDate,
+        startDate: editForm.startDate,
+        endDate: editForm.endDate,
+        numberOfRounds: 2,
+        status: editForm.status
+      });
+      showToast(t('Success'), t('Tournament updated successfully!'));
+      setEditingTournament(null);
+      await loadTournaments();
+    } catch (err: unknown) {
+      setEditError(t(parseApiError(err as Error)));
+    } finally {
+      setEditLoading(false);
+    }
+  }
 
   async function handleExtendRegistration() {
     if (!extendingTournament) return;
@@ -666,7 +758,7 @@ export function AdminTournamentsPage() {
                                   .map((p: any) => (
                                     <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
                                       <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
-                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('vi-VN')} đ</div>
+                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('en-US')} VND</div>
                                     </div>
                                   ))}
                               </div>
@@ -843,6 +935,15 @@ export function AdminTournamentsPage() {
                             className="w-full px-3 py-2 rounded-lg text-xs font-bold text-muted border border-glass-border bg-white/[0.04] cursor-not-allowed text-center"
                           >
                             {t(customStatus)}
+                          </button>
+                        )}
+
+                        {customStatus !== 'Completed' && customStatus !== 'Cancelled' && (
+                          <button
+                            onClick={() => handleEditClick(tour)}
+                            className="w-full mt-2 px-3 py-2 rounded-lg text-xs font-bold text-champagne border border-gold/30 bg-gold/5 hover:bg-gold/15 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            {t('Edit Tournament')}
                           </button>
                         )}
                       </div>
@@ -1171,6 +1272,169 @@ export function AdminTournamentsPage() {
           </div>
         );
       })()}
+
+      {/* Edit Tournament Modal */}
+      {editingTournament && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20 relative overflow-hidden text-left"
+          >
+            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
+            <div className="relative flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                <Trophy size={15} className="text-gold" />
+              </div>
+              <h2 className="text-xl font-serif text-white">{t("Edit Tournament")}</h2>
+              <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={LABEL}>{t("Tournament Name *")}</label>
+                <input
+                  value={editForm.name}
+                  onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  className={INPUT}
+                />
+              </div>
+
+              <div>
+                <label className={LABEL}>{t("Tournament Description")}</label>
+                <textarea
+                  value={editForm.description}
+                  onChange={e => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                  className={`${INPUT} h-20 resize-none`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LABEL}>{t("Open Registration *")}</label>
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={editForm.registrationStartDate}
+                      onChange={e => setEditForm(prev => ({ ...prev, registrationStartDate: e.target.value }))}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className={LABEL}>{t("Close Registration *")}</label>
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={editForm.registrationEndDate}
+                      onChange={e => setEditForm(prev => ({ ...prev, registrationEndDate: e.target.value }))}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LABEL}>{t("Tournament Start *")}</label>
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={editForm.startDate}
+                      onChange={e => setEditForm(prev => ({ ...prev, startDate: e.target.value }))}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className={LABEL}>{t("Tournament End *")}</label>
+                  <div className="relative">
+                    <input
+                      type="datetime-local"
+                      value={editForm.endDate}
+                      onChange={e => setEditForm(prev => ({ ...prev, endDate: e.target.value }))}
+                      className={`${INPUT} pr-10`}
+                      style={{ colorScheme: 'dark' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                        input?.showPicker?.();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                    >
+                      <Calendar size={15} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {editForm.registrationEndDate && (() => {
+                const registrationClose = new Date(editForm.registrationEndDate);
+                const earliestStart = new Date(registrationClose.getTime() + 5 * 24 * 60 * 60 * 1000);
+                return !Number.isNaN(earliestStart.getTime()) ? (
+                  <div className="text-xs px-3 py-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                    The tournament must start at least <b>5 days</b> after registration closes. Earliest allowed start: <b>{formatDateTime(earliestStart.toISOString())}</b>.
+                  </div>
+                ) : null;
+              })()}
+
+              {editError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{editError}</div>}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingTournament(null)}
+                className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors"
+              >
+                {t("Cancel")}
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={editLoading}
+                className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {editLoading ? t('Saving...') : t('Save Changes')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

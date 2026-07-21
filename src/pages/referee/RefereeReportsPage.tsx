@@ -309,7 +309,7 @@ export function RefereeReportsPage() {
                   </div>
 
                   <div>
-                    <label className={LABEL}>Select Horse / Jockey (Con ngựa / Kỵ sĩ báo cáo)</label>
+                    <label className={LABEL}>Select Horse / Jockey to Report</label>
                     <select 
                       value={form.reportedHorseId} 
                       onChange={e => setF('reportedHorseId', e.target.value)} 
@@ -317,7 +317,7 @@ export function RefereeReportsPage() {
                       className={INPUT + " disabled:opacity-50"}
                       style={{colorScheme: 'dark'}}
                     >
-                      <option value="">-- General Race Report (Báo cáo chung toàn trận) --</option>
+                      <option value="">-- General Race Report --</option>
                       {horses.map((h: any) => (
                         <option key={h.horseId} value={h.horseId}>
                           Lane {h.laneNo}: {h.horseName} ({h.jockeyName || 'Jockey'})

@@ -151,7 +151,7 @@ export function AdminPredictionsPage() {
   const statsDisplay = [
     { 
       label: 'Total Bet Volume', 
-      value: loading ? '...' : `${(stats?.totalAmount ?? 0).toLocaleString('vi-VN')} đ`, 
+      value: loading ? '...' : `${(stats?.totalAmount ?? 0).toLocaleString('en-US')} VND`, 
       icon: DollarSign, 
       color: 'text-blue-400', 
       bg: 'from-blue-500/15 to-blue-900/20' 
@@ -165,14 +165,14 @@ export function AdminPredictionsPage() {
     },
     { 
       label: 'Total Payouts Paid', 
-      value: loading ? '...' : `${(stats?.totalPayoutsPaid ?? 0).toLocaleString('vi-VN')} đ`, 
+      value: loading ? '...' : `${(stats?.totalPayoutsPaid ?? 0).toLocaleString('en-US')} VND`, 
       icon: Coins, 
       color: 'text-gold', 
       bg: 'from-gold/15 to-amber-900/20' 
     },
     { 
       label: 'House Profit', 
-      value: loading ? '...' : `${(stats?.houseProfit ?? 0).toLocaleString('vi-VN')} đ`, 
+      value: loading ? '...' : `${(stats?.houseProfit ?? 0).toLocaleString('en-US')} VND`, 
       icon: TrendingUp, 
       color: (stats?.houseProfit ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400', 
       bg: 'from-purple-500/15 to-purple-900/20' 
@@ -289,9 +289,9 @@ export function AdminPredictionsPage() {
                           <td className="px-6 py-4 font-medium">{b.spectatorName}</td>
                           <td className="px-6 py-4 text-muted">{b.raceName}</td>
                           <td className="px-6 py-4 text-gold font-semibold">{b.horseName}</td>
-                          <td className="px-6 py-4 font-mono text-xs">{b.amount.toLocaleString('vi-VN')} đ</td>
+                          <td className="px-6 py-4 font-mono text-xs">{b.amount.toLocaleString('en-US')} VND</td>
                           <td className="px-6 py-4 font-mono text-xs text-amber-400 font-bold">x{b.odds?.toFixed(2) || '1.00'}</td>
-                          <td className="px-6 py-4 font-mono text-xs text-emerald-400 font-semibold">{b.potentialPayout.toLocaleString('vi-VN')} đ</td>
+                          <td className="px-6 py-4 font-mono text-xs text-emerald-400 font-semibold">{b.potentialPayout.toLocaleString('en-US')} VND</td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-1 rounded text-xs font-semibold ${
                               st === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :

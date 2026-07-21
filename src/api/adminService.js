@@ -13,10 +13,12 @@ export const generateFinalRace = (tournamentId) => api.post(`/admin/tournaments/
 export const closeTournamentRegistration = (tournamentId) => api.post(`/admin/tournaments/${tournamentId}/close-registration`);
 export const extendTournamentRegistration = (tournamentId) => api.put(`/admin/tournaments/${tournamentId}/extend`);
 export const cancelTournament = (tournamentId, reason) => api.put(`/admin/tournaments/${tournamentId}/cancel`, { reason });
+export const updateTournament = (tournamentId, data) => api.put(`/admin/tournaments/${tournamentId}`, data);
 
 export const createRace = (data) => api.post('/admin/races', data);
 
 export const deleteRace = (raceId) => api.delete(`/admin/races/${raceId}`);
+export const updateRace = (raceId, data) => api.put(`/admin/races/${raceId}`, data);
 
 export const createRaceEntry = (raceId, data) => api.post(`/admin/races/${raceId}/entries`, data);
 

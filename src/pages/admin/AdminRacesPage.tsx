@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Flag, UserCheck, ListOrdered, Trash2, Calendar, ChevronDown, ChevronUp, Trophy, Loader, Eye, X, CheckCircle2, AlertCircle, ArrowUpDown, Search } from 'lucide-react';
+import { Plus, Flag, UserCheck, ListOrdered, Trash2, Calendar, ChevronDown, ChevronUp, Trophy, Loader, Eye, X, CheckCircle2, AlertCircle, ArrowUpDown, Search, Edit } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { RaceTrack3D } from '../../components/ui/RaceTrack3D';
 import { Pager, paginate } from '../../components/ui/Pager';
-import { createRace, deleteRace, createRaceEntry, assignReferee, getRaceReferees, removeReferee, generateTournamentRaces, generateFinalRace, getRegistrations, getReferees, withdrawRaceEntry } from '../../api/adminService';
+import { createRace, deleteRace, createRaceEntry, assignReferee, getRaceReferees, removeReferee, generateTournamentRaces, generateFinalRace, getRegistrations, getReferees, withdrawRaceEntry, updateRace } from '../../api/adminService';
 import { getRaceSchedule, getTournaments, getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
@@ -31,7 +31,7 @@ const HINT_TONE: Record<string, string> = {
   info: 'text-muted bg-white/5 border-glass-border',
 };
 
-type Modal = 'none' | 'race' | 'lanes' | 'referee' | 'detail';
+type Modal = 'none' | 'race' | 'lanes' | 'referee' | 'detail' | 'editRace';
 
 const fixMojibake = (str: string): string => {
   if (!str) return '';
@@ -124,6 +124,92 @@ export function AdminRacesPage() {
   const [raceLoading, setRaceLoading] = useState(false);
   const [raceError, setRaceError] = useState('');
   const [selectedTournamentId, setSelectedTournamentId] = useState<string>('');
+
+  // Edit Race
+  const [editingRace, setEditingRace] = useState<any>(null);
+  const [editRaceForm, setEditRaceForm] = useState({
+    name: '',
+    raceDate: '',
+    distanceMeter: '1200',
+    maxLanes: '12'
+  });
+  const [editRaceLoading, setEditRaceLoading] = useState(false);
+  const [editRaceError, setEditRaceError] = useState('');
+
+  function handleEditRaceClick(race: any) {
+    setEditingRace(race);
+    setEditRaceForm({
+      name: race.name || '',
+      raceDate: formatToDatetimeLocal(race.raceDate),
+      distanceMeter: String(race.distanceMeter || '1200'),
+      maxLanes: String(race.maxLanes || '12')
+    });
+    setEditRaceError('');
+    setModal('editRace');
+  }
+
+  async function handleUpdateRace() {
+    if (!editRaceForm.name.trim() || !editRaceForm.raceDate || !editRaceForm.distanceMeter || !editRaceForm.maxLanes) {
+      setEditRaceError(t('Please fill in all required fields.'));
+      return;
+    }
+
+    if (editRaceForm.name.trim().length > 150) {
+      setEditRaceError('Race name cannot exceed 150 characters.');
+      return;
+    }
+
+    const distance = Number(editRaceForm.distanceMeter);
+    if (isNaN(distance) || distance <= 0) {
+      setEditRaceError('Distance must be greater than zero.');
+      return;
+    }
+
+    const maxLanes = Number(editRaceForm.maxLanes);
+    if (isNaN(maxLanes) || maxLanes <= 0 || maxLanes > 12) {
+      setEditRaceError('Max lanes must be between 1 and 12.');
+      return;
+    }
+
+    const raceDateVal = new Date(editRaceForm.raceDate);
+    const now = new Date();
+    if (raceDateVal < new Date(now.getTime() - 5 * 60 * 1000)) {
+      setEditRaceError(t('Race date cannot be in the past.'));
+      return;
+    }
+
+    // Validate race date is within round limits if round has start/end date
+    const round = tournamentsList
+      .flatMap((t: any) => t.rounds ?? [])
+      .find((r: any) => r.roundId === editingRace.roundId);
+    if (round && round.startDate && round.endDate) {
+      const startVal = new Date(round.startDate);
+      const endVal = new Date(round.endDate);
+      if (raceDateVal < startVal || raceDateVal > endVal) {
+        setEditRaceError(`Race date must be between ${fmtDate(round.startDate)} and ${fmtDate(round.endDate)}.`);
+        return;
+      }
+    }
+
+    setEditRaceLoading(true);
+    try {
+      await updateRace(editingRace.raceId, {
+        name: editRaceForm.name.trim(),
+        raceDate: editRaceForm.raceDate,
+        distanceMeter: distance,
+        maxLanes: maxLanes
+      });
+      showToast(t('Success'), t('Race updated successfully!'));
+      setModal('none');
+      setEditingRace(null);
+      // Reload schedule data
+      await loadAllData();
+    } catch (err: unknown) {
+      setEditRaceError(t(parseApiError(err as Error)));
+    } finally {
+      setEditRaceLoading(false);
+    }
+  }
 
   const selectedTournamentApprovedHorsesCount = useMemo(() => {
     if (!selectedTournamentId) return 0;
@@ -945,7 +1031,7 @@ export function AdminRacesPage() {
                               <button
                                 onClick={() => { if (!isAutoAssignLanesDisabled) handleGenerateRaces(t.tournamentId); }}
                                 disabled={isAutoAssignLanesDisabled || generatingForTournament === t.tournamentId}
-                                title={isAutoAssignLanesDisabled ? "Làn đua đã được sắp xếp cố định" : undefined}
+                                title={isAutoAssignLanesDisabled ? "Race lanes have already been assigned" : undefined}
                                 className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 border ${isAutoAssignLanesDisabled
                                   ? 'bg-white/5 border-glass-border text-muted/40 cursor-not-allowed'
                                   : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30'
@@ -964,7 +1050,7 @@ export function AdminRacesPage() {
                               </button>
                               {t.hasAnyRaces && (
                                 <span className="text-[10px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
-                                  <CheckCircle2 size={10} /> Đã xếp 1 lần
+                                  <CheckCircle2 size={10} /> Assigned once
                                 </span>
                               )}
                             </div>
@@ -1136,6 +1222,15 @@ export function AdminRacesPage() {
                                               >
                                                 <UserCheck size={13} />
                                               </button>
+                                              {race.status !== 'Finished' && race.status !== 'Completed' && race.status !== 'Live' && race.status !== 'InProgress' && race.status !== 'Cancelled' && (
+                                                <button
+                                                  onClick={() => handleEditRaceClick(race)}
+                                                  title="Edit race"
+                                                  className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 transition-colors"
+                                                >
+                                                  <Edit size={13} />
+                                                </button>
+                                              )}
                                               <button
                                                 onClick={() => handleDeleteRace(race.raceId, race.name)}
                                                 title="Delete race"
@@ -1314,6 +1409,87 @@ export function AdminRacesPage() {
                 className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {raceLoading ? 'Creating...' : 'Save Race'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ── Modal: Edit Race ── */}
+      {modal === 'editRace' && editingRace && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel rounded-2xl p-8 w-full max-w-lg border border-gold/20 relative overflow-hidden max-h-[90vh] overflow-y-auto text-left">
+            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none" />
+            <div className="relative flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                <Flag size={15} className="text-gold" />
+              </div>
+              <h2 className="text-xl font-serif text-white">Edit Race</h2>
+              <div className="flex-1 h-px bg-gradient-to-r from-gold/30 via-glass-border to-transparent" />
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={LABEL}>Race Name *</label>
+                <input value={editRaceForm.name} onChange={e => setEditRaceForm(prev => ({ ...prev, name: e.target.value }))} placeholder="E.g.: Race 1 (Prefinal)" className={INPUT} />
+              </div>
+              <div>
+                <label className={LABEL}>Race Date & Time *</label>
+                <div className="relative">
+                  <input
+                    type="datetime-local"
+                    value={editRaceForm.raceDate}
+                    onChange={e => setEditRaceForm(prev => ({ ...prev, raceDate: e.target.value }))}
+                    className={`${INPUT} pr-10`}
+                    style={{ colorScheme: 'dark' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const input = e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement;
+                      input?.showPicker?.();
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-white transition-colors cursor-pointer"
+                  >
+                    <Calendar size={15} />
+                  </button>
+                </div>
+                {(() => {
+                  const round = tournamentsList
+                    .flatMap((t: any) => t.rounds ?? [])
+                    .find((r: any) => r.roundId === editingRace.roundId);
+                  return round && (round.startDate || round.endDate) ? (
+                    <div className="text-xs text-gold/80 mt-1.5 flex items-center gap-1.5">
+                      <span>⏰</span>
+                      <span>
+                        Valid time range: <strong>{fmtDate(round.startDate)}</strong> to <strong>{fmtDate(round.endDate)}</strong>
+                      </span>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LABEL}>Distance (m) *</label>
+                  <input value={editRaceForm.distanceMeter} onChange={e => setEditRaceForm(prev => ({ ...prev, distanceMeter: e.target.value }))} type="number" min="100" placeholder="E.g.: 1200" className={INPUT} />
+                </div>
+                <div>
+                  <label className={LABEL}>Number of Lanes *</label>
+                  <input value={editRaceForm.maxLanes} onChange={e => setEditRaceForm(prev => ({ ...prev, maxLanes: e.target.value }))} type="number" min="1" placeholder="E.g.: 12" className={INPUT} />
+                </div>
+              </div>
+              {editRaceError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{editRaceError}</div>}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setModal('none')} className="flex-1 py-2.5 rounded-lg border border-glass-border text-muted hover:text-white hover:bg-white/5 text-sm font-medium transition-colors">Cancel</button>
+              <button
+                onClick={handleUpdateRace}
+                disabled={editRaceLoading}
+                className="flex-1 btn-gold py-2.5 rounded-lg text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {editRaceLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </motion.div>

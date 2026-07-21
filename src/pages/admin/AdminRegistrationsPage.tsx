@@ -265,7 +265,7 @@ export function AdminRegistrationsPage() {
                             </span>
                           ) : (
                             <span className="text-amber-400/90 text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
-                              Thiếu Kỵ sĩ (Chưa có)
+                              Missing Jockey (Not Assigned)
                             </span>
                           )}
                         </td>
