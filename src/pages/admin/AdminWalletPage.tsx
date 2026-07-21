@@ -17,6 +17,7 @@ import {
 } from '../../api/adminService';
 import { parseApiError } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+import { Pager, paginate } from '../../components/ui/Pager';
 
 type TxType = 'deposit' | 'withdraw' | 'reward' | 'other';
 
@@ -45,6 +46,7 @@ export function AdminWalletPage() {
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState('');
   const [txFilter, setTxFilter] = useState<TxType | 'all'>('all');
+  const [txPage, setTxPage] = useState(1);
 
   // Modal States for Deposit / Withdraw
   const [modalType, setModalType] = useState<'deposit' | 'withdraw' | null>(null);
@@ -112,6 +114,9 @@ export function AdminWalletPage() {
     if (txFilter === 'all') return true;
     return normalizeType(tx.type) === txFilter;
   });
+
+  // Sổ giao dịch có thể rất dài — cắt 10 dòng mỗi trang
+  const { paged: pagedTx, page: txSafePage, totalPages: txTotalPages, total: txTotal } = paginate(filteredTx, txPage, 10);
 
   return (
     <div className="flex min-h-screen bg-[#070b13] text-white">
@@ -240,7 +245,7 @@ export function AdminWalletPage() {
                   {(['all', 'deposit', 'withdraw', 'reward', 'other'] as const).map((filter) => (
                     <button
                       key={filter}
-                      onClick={() => setTxFilter(filter)}
+                      onClick={() => { setTxFilter(filter); setTxPage(1); }}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all cursor-pointer ${
                         txFilter === filter
                           ? 'bg-gold text-rich-black'
@@ -273,7 +278,7 @@ export function AdminWalletPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-glass-border/40 text-xs text-white/90">
-                        {filteredTx.map((tx) => {
+                        {pagedTx.map((tx) => {
                           const config = TX_CONFIG[normalizeType(tx.type)] || TX_CONFIG.other;
                           const Icon = config.icon;
                           const isNegative = tx.amount < 0 || tx.type?.toLowerCase()?.includes('withdraw');
@@ -299,6 +304,7 @@ export function AdminWalletPage() {
                       </tbody>
                     </table>
                   </div>
+                  <Pager page={txSafePage} totalPages={txTotalPages} total={txTotal} onChange={setTxPage} />
                 </div>
               ) : (
                 <div className="glass-panel border border-glass-border rounded-2xl py-12 text-center text-muted">
