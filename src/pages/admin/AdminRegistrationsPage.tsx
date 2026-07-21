@@ -29,6 +29,7 @@ interface Registration {
   status: string;
   registeredAt: string;
   jockeyContractStatus?: string;
+  jockeyName?: string;
 }
 
 export function AdminRegistrationsPage() {
@@ -242,6 +243,7 @@ export function AdminRegistrationsPage() {
                     <tr className="border-b border-glass-border bg-white/[0.02] text-xs font-semibold text-muted uppercase tracking-wider">
                       <th className="px-6 py-4">Reg. ID</th>
                       <th className="px-6 py-4">Horse</th>
+                      <th className="px-6 py-4">Jockey</th>
                       <th className="px-6 py-4">Horse Owner</th>
                       <th className="px-6 py-4">Tournaments</th>
                       <th className="px-6 py-4">Registration Date</th>
@@ -254,6 +256,17 @@ export function AdminRegistrationsPage() {
                       <tr key={reg.registrationId} className="hover:bg-white/[0.01] transition-colors">
                         <td className="px-6 py-4 font-mono text-xs text-muted">#{reg.registrationId}</td>
                         <td className="px-6 py-4 font-medium">🐴 {reg.horseName}</td>
+                        <td className="px-6 py-4">
+                          {reg.jockeyName ? (
+                            <span className="text-white font-medium flex items-center gap-1.5">
+                              🏇 {reg.jockeyName}
+                            </span>
+                          ) : (
+                            <span className="text-amber-400/90 text-xs font-semibold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                              Thiếu Kỵ sĩ (Chưa có)
+                            </span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 text-muted">{reg.ownerName}</td>
                         <td className="px-6 py-4 text-muted">{reg.tournamentName}</td>
                         <td className="px-6 py-4 text-muted">

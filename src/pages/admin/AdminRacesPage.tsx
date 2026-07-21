@@ -566,6 +566,12 @@ export function AdminRacesPage() {
     const regOpen = !regNotStarted && (regEnd ? now < regEnd : false);
     const hasAnyRaces = rounds.some((r: any) => r.races.length > 0);
 
+    const isPreStarted = Boolean(
+      prefinalRound?.races?.some((r: any) =>
+        r.status === 'Live' || r.status === 'InProgress' || r.status === 'Finished' || r.status === 'Completed'
+      ) || (t.startDate && now >= new Date(t.startDate))
+    );
+
     let genHint: { tone: string; label: string; detail: string };
     if (regNotStarted) {
       genHint = {
@@ -593,9 +599,11 @@ export function AdminRacesPage() {
       };
     } else if (waitingLabel === 'Pending completed Pre') {
       genHint = {
-        tone: 'progress',
-        label: 'Competing in Pre-round',
-        detail: 'Pending all Pre-round races completion to assign Finals.',
+        tone: isPreStarted ? 'progress' : 'wait',
+        label: isPreStarted ? 'Competing in Pre-round' : 'Pending Pre-round',
+        detail: isPreStarted
+          ? 'Pending all Pre-round races completion to assign Finals.'
+          : 'Pre-round races scheduled. Pending race start date and completion to assign Finals.',
       };
     } else if (finalDone) {
       genHint = {
@@ -785,7 +793,6 @@ export function AdminRacesPage() {
                 {pagedTournaments.map(t => {
                   const isOpen = openTournaments.has(t.tournamentId);
                   const isAutoAssignLanesDisabled =
-                    t.hasAnyRaces ||
                     t.status === 'Ongoing' ||
                     t.status === 'Finished' ||
                     t.status === 'Completed' ||
@@ -806,11 +813,12 @@ export function AdminRacesPage() {
                             {isOpen ? <ChevronUp size={16} className="text-gold shrink-0" /> : <ChevronDown size={16} className="text-muted group-hover:text-gold shrink-0 transition-colors" />}
                             <Trophy size={18} className="text-gold" />
                             <h2 className="text-lg font-serif text-white font-bold truncate group-hover:text-champagne transition-colors">{t.name}</h2>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full border shrink-0 ${t.status === 'Active' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' :
-                                t.status === 'Upcoming' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
-                                  'text-muted bg-white/5 border-glass-border'
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border shrink-0 ${t.status === 'Active' || t.status === 'Ongoing' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' :
+                                t.status === 'Upcoming' || t.status === 'PendingScheduling' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
+                                  t.status === 'Completed' || t.status === 'Finished' ? 'text-muted bg-white/5 border-glass-border' :
+                                    'text-yellow-400 bg-yellow-500/10 border-yellow-500/20'
                               }`}>
-                              {t.status === 'Active' ? 'Active' : t.status === 'Upcoming' ? 'Upcoming' : 'Completed'}
+                              {t.status ?? 'Pending'}
                             </span>
                             {!isOpen && (
                               <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/4 border border-glass-border text-champagne shrink-0">
@@ -832,26 +840,33 @@ export function AdminRacesPage() {
                         <div className="flex items-center gap-3">
                           {/* Prefinal generation — chỉ cho bấm khi đã đóng đăng ký */}
                           {t.canGeneratePre && !t.regOpen && !t.regNotStarted && (
-                            <button
-                              onClick={() => { if (!isAutoAssignLanesDisabled) handleGenerateRaces(t.tournamentId); }}
-                              disabled={isAutoAssignLanesDisabled || generatingForTournament === t.tournamentId}
-                              title={isAutoAssignLanesDisabled ? "Làn đua đã được sắp xếp cố định" : undefined}
-                              className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 border ${isAutoAssignLanesDisabled
+                            <div className="flex flex-col items-end">
+                              <button
+                                onClick={() => { if (!isAutoAssignLanesDisabled) handleGenerateRaces(t.tournamentId); }}
+                                disabled={isAutoAssignLanesDisabled || generatingForTournament === t.tournamentId}
+                                title={isAutoAssignLanesDisabled ? "Làn đua đã được sắp xếp cố định" : undefined}
+                                className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 border ${isAutoAssignLanesDisabled
                                   ? 'bg-white/5 border-glass-border text-muted/40 cursor-not-allowed'
                                   : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30'
-                                }`}
-                            >
-                              {generatingForTournament === t.tournamentId ? (
-                                <>
-                                  <Loader size={12} className="animate-spin" />
-                                  Creating...
-                                </>
-                              ) : (
-                                <>
-                                  Auto Assign Lanes {isAutoAssignLanesDisabled && '🔒'}
-                                </>
+                                  }`}
+                              >
+                                {generatingForTournament === t.tournamentId ? (
+                                  <>
+                                    <Loader size={12} className="animate-spin" />
+                                    Creating...
+                                  </>
+                                ) : (
+                                  <>
+                                    Auto Assign Lanes {isAutoAssignLanesDisabled && '🔒'}
+                                  </>
+                                )}
+                              </button>
+                              {t.hasAnyRaces && (
+                                <span className="text-[10px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                                  <CheckCircle2 size={10} /> Đã xếp 1 lần
+                                </span>
                               )}
-                            </button>
+                            </div>
                           )}
 
                           {/* Register chưa mở / còn mở → chưa thể xếp lanes */}
@@ -882,14 +897,6 @@ export function AdminRacesPage() {
                               ) : (
                                 'Auto Assign Final (Top 12)'
                               )}
-                            </button>
-                          )}
-                          {t.rounds?.[0]?.races?.length > 0 && !t.canGenerateFinal && t.waitingLabel && (
-                            <button
-                              disabled
-                              className="px-4 py-2 bg-white/[0.04] text-muted border border-glass-border text-xs font-bold rounded-lg cursor-not-allowed"
-                            >
-                              {t.waitingLabel}
                             </button>
                           )}
                         </div>
@@ -966,8 +973,8 @@ export function AdminRacesPage() {
                                                 )}
                                               </h4>
                                               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${(race.status === 'Finished' || race.status === 'Completed') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                                  race.status === 'Live' ? 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse' :
-                                                    'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                                race.status === 'Live' ? 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse' :
+                                                  'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                                 }`}>
                                                 {(race.status === 'Finished' || race.status === 'Completed') ? 'Completed' : race.status === 'Live' ? 'Active' : 'Scheduled'}
                                               </span>

@@ -418,7 +418,12 @@ export function AdminTournamentsPage() {
     } else if (rounds.length === 0) {
       statusLabel = 'Pending Auto Arrange';
     } else if (hasPre && !preFinished) {
-      statusLabel = 'Competing in Pre-round';
+      const isPreStarted = Boolean(
+        preRound?.races?.some((r: any) =>
+          r.status === 'Live' || r.status === 'InProgress' || r.status === 'Finished' || r.status === 'Completed'
+        ) || (tour.startDate && now >= new Date(tour.startDate))
+      );
+      statusLabel = isPreStarted ? 'Competing in Pre-round' : 'Pending Pre-round';
     } else if (canGenerateFinal) {
       statusLabel = 'Pending Final assignment';
     } else if (hasFinal) {
