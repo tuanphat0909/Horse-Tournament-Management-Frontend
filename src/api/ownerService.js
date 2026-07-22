@@ -8,6 +8,7 @@ export const deleteHorse = (id) => api.delete(`/horses/${id}`);
 
 export const createRegistration = (data) => api.post('/registrations', data);
 export const getMyRegistrations = () => api.get('/registrations/my-registrations');
+export const cancelRegistration = (id) => api.delete(`/registrations/${id}`);
 
 export const createJockeyContract = (data) => api.post('/jockey-contracts', data);
 export const getMyProposals = () => api.get('/jockey-contracts/my-proposals');

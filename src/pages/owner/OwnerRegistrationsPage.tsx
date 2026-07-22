@@ -6,7 +6,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { createRegistration, getMyRegistrations, getMyHorses, getMyProposals, cancelJockeyContract } from '../../api/ownerService';
+import { createRegistration, getMyRegistrations, getMyHorses, getMyProposals, cancelJockeyContract, cancelRegistration } from '../../api/ownerService';
 import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { registerHorseSchema } from '../../constants/validationSchemas';
@@ -117,6 +117,26 @@ export function OwnerRegistrationsPage() {
     setSubmitError('');
     setForm({ horseId: '', tournamentId: '' });
   }
+
+  async function handleCancelRegistration(id: number, horseName?: string, tournamentName?: string) {
+    const isConfirmed = await confirm({
+      title: 'Cancel Registration',
+      message: `Are you sure you want to cancel registration for horse "${horseName ?? 'Horse'}" in tournament "${tournamentName ?? 'Tournament'}"?`,
+      confirmText: 'Cancel Registration',
+      cancelText: 'Keep Registration',
+      danger: true,
+    });
+    if (!isConfirmed) return;
+
+    try {
+      await cancelRegistration(id);
+      showToast('Success', 'Registration cancelled successfully', 'success');
+      await load();
+    } catch (err: unknown) {
+      showToast('Failed', parseApiError(err as Error), 'error');
+    }
+  }
+
 
   const filtered = registrations.filter(r => {
     const statusKey = normalizeStatus(r.status);
@@ -406,10 +426,15 @@ export function OwnerRegistrationsPage() {
                       {customStatus.label}
                     </span>
                     {statusKey === 'pending' && (
-                      <button className="relative z-10 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors shrink-0" title="Cancel registration">
+                      <button 
+                        onClick={() => handleCancelRegistration(r.registrationId, r.horseName, r.tournamentName)}
+                        className="relative z-10 p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors shrink-0" 
+                        title="Cancel registration"
+                      >
                         <XCircle size={15} />
                       </button>
                     )}
+
                     {/* Recheck button removed since recheck is handled in My Horses */}
                   </motion.div>
                 );
