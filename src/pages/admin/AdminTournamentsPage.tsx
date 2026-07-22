@@ -328,7 +328,7 @@ export function AdminTournamentsPage() {
     }
     const totalPrizePool = firstPrize + secondPrize + thirdPrize;
     if (totalPrizePool > adminWalletBalance) {
-      setError(`Insufficient Admin wallet balance. Available: ${adminWalletBalance.toLocaleString('vi-VN')} VND; required: ${totalPrizePool.toLocaleString('vi-VN')} VND. Please enter lower prizes or deposit more funds.`);
+      setError(`Insufficient Admin wallet balance. Available: $${adminWalletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD; required: $${totalPrizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD. Please enter lower prizes or deposit more funds.`);
       return;
     }
 
@@ -760,7 +760,7 @@ export function AdminTournamentsPage() {
                                   .map((p: any) => (
                                     <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
                                       <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
-                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap">{Number(p.amount).toLocaleString('en-US')} VND</div>
+                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap">${Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</div>
                                     </div>
                                   ))}
                               </div>
@@ -1094,23 +1094,23 @@ export function AdminTournamentsPage() {
               })()}
 
               <div className="border-t border-glass-border/30 pt-3">
-                <span className="font-bold text-white text-[11px] uppercase tracking-wider mb-2 block">{t("Prize Structure (VND)")}</span>
+                <span className="font-bold text-white text-[11px] uppercase tracking-wider mb-2 block">{t("Prize Structure (USD)")}</span>
                 <div className="mb-2 text-[11px] text-muted flex flex-wrap justify-between gap-2">
-                  <span>Admin wallet: <b className="text-emerald-400">{adminWalletBalance.toLocaleString('vi-VN')} VND</b></span>
-                  <span>Total prizes: <b className="text-gold">{([form.firstPrize, form.secondPrize, form.thirdPrize].reduce((sum, value) => sum + (Number(value) || 0), 0)).toLocaleString('vi-VN')} VND</b></span>
+                  <span>Admin wallet: <b className="text-emerald-400">${adminWalletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</b></span>
+                  <span>Total prizes: <b className="text-gold">${([form.firstPrize, form.secondPrize, form.thirdPrize].reduce((sum, value) => sum + (Number(value) || 0), 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</b></span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="block text-[10px] text-muted mb-1">Champion *</label>
-                    <input type="number" min="1" value={form.firstPrize} onChange={e => set('firstPrize', e.target.value)} className={INPUT} />
+                    <input type="number" min="0.01" step="0.01" placeholder="E.g.: 1000.00" value={form.firstPrize} onChange={e => set('firstPrize', e.target.value)} className={INPUT} />
                   </div>
                   <div>
                     <label className="block text-[10px] text-muted mb-1">2nd Place *</label>
-                    <input type="number" min="1" value={form.secondPrize} onChange={e => set('secondPrize', e.target.value)} className={INPUT} />
+                    <input type="number" min="0.01" step="0.01" placeholder="E.g.: 500.00" value={form.secondPrize} onChange={e => set('secondPrize', e.target.value)} className={INPUT} />
                   </div>
                   <div>
                     <label className="block text-[10px] text-muted mb-1">3rd Place *</label>
-                    <input type="number" min="1" value={form.thirdPrize} onChange={e => set('thirdPrize', e.target.value)} className={INPUT} />
+                    <input type="number" min="0.01" step="0.01" placeholder="E.g.: 250.00" value={form.thirdPrize} onChange={e => set('thirdPrize', e.target.value)} className={INPUT} />
                   </div>
                 </div>
               </div>

@@ -476,16 +476,16 @@ export function AdminResultsPage() {
                 );
               })()}
               <div>
-                <label className={LABEL}>First Prize (VND) *</label>
-                <input value={prizes.firstPlacePrize} onChange={e => setP('firstPlacePrize', e.target.value)} type="number" min="0" placeholder="E.g.: 85000000" className={INPUT} />
+                <label className={LABEL}>First Prize (USD) *</label>
+                <input value={prizes.firstPlacePrize} onChange={e => setP('firstPlacePrize', e.target.value)} type="number" min="0" step="0.01" placeholder="E.g.: 1000.00" className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Second Prize (VND) *</label>
-                <input value={prizes.secondPlacePrize} onChange={e => setP('secondPlacePrize', e.target.value)} type="number" min="0" placeholder="E.g.: 42000000" className={INPUT} />
+                <label className={LABEL}>Second Prize (USD) *</label>
+                <input value={prizes.secondPlacePrize} onChange={e => setP('secondPlacePrize', e.target.value)} type="number" min="0" step="0.01" placeholder="E.g.: 500.00" className={INPUT} />
               </div>
               <div>
-                <label className={LABEL}>Third Prize (VND) *</label>
-                <input value={prizes.thirdPlacePrize} onChange={e => setP('thirdPlacePrize', e.target.value)} type="number" min="0" placeholder="E.g.: 21000000" className={INPUT} />
+                <label className={LABEL}>Third Prize (USD) *</label>
+                <input value={prizes.thirdPlacePrize} onChange={e => setP('thirdPlacePrize', e.target.value)} type="number" min="0" step="0.01" placeholder="E.g.: 250.00" className={INPUT} />
               </div>
 
               {prizesError && <div className="text-sm px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">{prizesError}</div>}
