@@ -362,17 +362,34 @@ export function OwnerJockeysPage() {
   const selectedInviteTournament = tournaments.find((t: any) => String(t.tournamentId) === String(form.tournamentId));
 
   const filteredHorsesForSelect = form.tournamentId
-    ? horses.filter((h: any) => 
-        registrations.some((r: any) => 
+    ? horses.filter((h: any) => {
+        const reg = registrations.find((r: any) => 
           String(r.horseId) === String(h.id) && 
-          String(r.tournamentId) === String(form.tournamentId) &&
-          r.status?.toLowerCase() !== 'pendingvet' &&
-          r.status?.toLowerCase() !== 'pending_vet' &&
-          r.status?.toLowerCase() !== 'rejected' &&
-          r.status?.toLowerCase() !== 'cancelled'
-        )
-      )
+          String(r.tournamentId) === String(form.tournamentId)
+        );
+
+        if (!reg) return false;
+
+        const regStatus = (reg.status ?? '').toLowerCase();
+        // Must be strictly 'pending' (passed vet check, awaiting jockey/admin)
+        if (regStatus !== 'pending') return false;
+
+        // Must not already have a jockey assigned in registration
+        if (reg.jockeyId || reg.jockeyName) return false;
+
+        // Must not have an active, accepted, or pending contract in proposals
+        const hasContract = proposals.some((p: any) => 
+          String(p.horseId) === String(h.id) && 
+          String(p.tournamentId) === String(form.tournamentId) &&
+          ['pending', 'accepted', 'active'].includes((p.status ?? '').toLowerCase())
+        );
+
+        if (hasContract) return false;
+
+        return true;
+      })
     : [];
+
 
   const filteredJockeysForSelect = form.tournamentId
     ? jockeys.filter((j: any) => {
