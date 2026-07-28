@@ -1,0 +1,185 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { CheckCircle, XCircle, Calendar, User, Clock } from 'lucide-react';
+import { Sidebar } from '../../components/layout/Sidebar';
+import { Topbar } from '../../components/layout/Topbar';
+import { PageHero } from '../../components/layout/PageHero';
+import { PageAmbience } from '../../components/layout/PageAmbience';
+import { getContracts, respondContract } from '../../api/jockeyService';
+import { parseApiError } from '../../api/authService';
+import { formatUtcDateTime, parseUtcDate } from '../../utils/format';
+import { CountdownTimer } from '../../components/ui/CountdownTimer';
+
+import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+
+// Map a contract status string to one of the three tab buckets.
+function bucketOf(status) {
+  const s = (status ?? '').toLowerCase();
+  if (s === 'active' || s === 'accepted') return 'accepted';
+  if (s === 'rejected' || s === 'declined' || s === 'cancelled') return 'rejected';
+  return 'pending';
+}
+
+const formatDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('vi-VN');
+};
+
+import { useNotifications } from '../../context/NotificationContext';
+
+export function JockeyInvitationsPage() {
+  const { showToast } = useNotifications();
+  const [tab, setTab] = useState('pending');
+  const [invitations, setInvitations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [respondingId, setRespondingId] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getContracts();
+        setInvitations(data?.result ?? (Array.isArray(data) ? data : []));
+      } catch (err) {
+        setError(parseApiError(err));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  async function handleRespond(id, status) {
+    setRespondingId(id);
+    try {
+      await respondContract(id, status);
+      const data = await getContracts();
+      setInvitations(data?.result ?? (Array.isArray(data) ? data : []));
+    } catch (err) {
+      showToast('Error', parseApiError(err), 'error');
+    } finally {
+      setRespondingId(null);
+    }
+  }
+
+  const filtered = invitations.filter((i) => bucketOf(i.status) === tab);
+
+  const TAB_COUNTS = {
+    pending: invitations.filter((i) => bucketOf(i.status) === 'pending').length,
+    accepted: invitations.filter((i) => bucketOf(i.status) === 'accepted').length,
+    rejected: invitations.filter((i) => bucketOf(i.status) === 'rejected').length,
+  };
+
+  return (
+    <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
+      <Sidebar />
+      <div className="flex-1 min-w-0 overflow-y-auto relative">
+        <PageAmbience accent="blue" />
+        <Topbar />
+        <main className="relative z-10 max-w-[1600px] mx-auto px-8 py-6 space-y-6">
+          <PageHero title="Race Invitations" subtitle="Manage invitations from horse owners" imageUrl="/images/hero-jockey.jpg" imagePosition="center 12%" />
+
+          <div className="flex items-center gap-1 border-b border-glass-border pb-0">
+            {[
+              ['pending', 'Awaiting Response', 'text-yellow-400 border-yellow-400'],
+              ['accepted', 'Accepted', 'text-emerald-400 border-emerald-400'],
+              ['rejected', 'Declined', 'text-red-400 border-red-400'],
+            ].map(([t, label, activeClass]) => (
+              <button key={t} onClick={() => setTab(t)} className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-all ${tab === t ? activeClass : 'text-muted border-transparent hover:text-white'}`}>
+                {label} <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[11px] font-bold ${tab === t ? 'bg-current/10 text-current' : 'bg-white/5 text-muted'}`}>{TAB_COUNTS[t]}</span>
+              </button>
+            ))}
+          </div>
+
+          {loading ? (
+            <LoadingSkeleton />
+          ) : error ? (
+            <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+              <div className="text-4xl opacity-40 mb-3">⚠️</div>
+              <div className="text-red-400 text-sm">{error}</div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map((inv, i) => {
+                const bucket = bucketOf(inv.status);
+                const expiryDate = parseUtcDate(inv.invitationExpiredAt);
+                const isExpired = (inv.status ?? '').toLowerCase() === 'expired' || (expiryDate != null && new Date() > expiryDate);
+                return (
+                  <motion.div key={inv.id ?? i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="glass-panel rounded-2xl p-6 border border-glass-border hover:border-gold/30 hover:bg-gold/[0.02] transition-all relative overflow-hidden group">
+                    <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/10 to-transparent blur-[40px] pointer-events-none" />
+                    <div className="relative z-10 flex items-start gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 ring-1 ring-gold/20 flex items-center justify-center text-3xl shrink-0">🐴</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 flex-wrap mb-1">
+                          <h3 className="text-lg font-serif text-white group-hover:text-champagne transition-colors">{inv.horseName ?? `Horse #${inv.horseId}`}</h3>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
+                          <User size={11} className="text-gold/60" /> Owner horse: <span className="text-white font-medium">{inv.ownerName ?? `Owner #${inv.ownerId ?? '—'}`}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2.5 text-xs text-muted mb-4">
+                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-emerald-400 font-semibold">🏆 {inv.tournamentName ?? `Tournament #${inv.tournamentId}`}</span>
+                          {(inv.startDate || inv.endDate) && (
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border">
+                              <Calendar size={11} className="text-gold/60" />{' '}
+                              <span className="text-champagne font-semibold">
+                                Time: {formatDate(inv.startDate)} → {formatDate(inv.endDate)}
+                              </span>
+                            </span>
+                          )}
+                          {inv.invitationExpiredAt && (
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-glass-border text-red-400">
+                              <Clock size={11} className="text-red-400" />
+                              <span className="font-semibold">Respond by: {formatUtcDateTime(inv.invitationExpiredAt)}</span>
+                            </span>
+                          )}
+                        </div>
+                        {bucket === 'pending' && (
+                          <div className="flex flex-col gap-2">
+                            {!isExpired && inv.invitationExpiredAt && <CountdownTimer target={inv.invitationExpiredAt} className="self-start" />}
+                            {isExpired && (
+                              <span className="inline-flex items-center gap-1.5 text-xs text-red-400 font-semibold mb-1">
+                                <Clock size={12} /> Expired (invitation has expired)
+                              </span>
+                            )}
+                            <div className="flex items-center gap-3">
+                              <button disabled={respondingId === inv.id || isExpired} onClick={() => handleRespond(inv.id, 'Accepted')} className="px-5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <CheckCircle size={15} /> Accept invitation
+                              </button>
+                              <button disabled={respondingId === inv.id || isExpired} onClick={() => handleRespond(inv.id, 'Rejected')} className="px-5 py-2 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm font-bold transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <XCircle size={15} /> Reject
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {bucket === 'accepted' && (
+                          <span className="inline-flex items-center gap-1.5 text-sm text-emerald-400 font-medium">
+                            <CheckCircle size={15} /> Invitation accepted
+                          </span>
+                        )}
+                        {bucket === 'rejected' && (
+                          <span className="inline-flex items-center gap-1.5 text-sm text-red-400 font-medium">
+                            <XCircle size={15} /> Declined
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+              {filtered.length === 0 && (
+                <div className="glass-panel rounded-xl p-12 text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
+                  <div className="text-4xl opacity-40 mb-3">✉️</div>
+                  <div className="text-muted text-sm">No data available</div>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
