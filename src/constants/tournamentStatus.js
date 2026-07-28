@@ -4,7 +4,7 @@
  * thêm một trạng thái mới là phải sửa từng file. Gom về một chỗ để sửa một lần.
  */
 
-export const TOURNAMENT_STATUS_CONFIG = {
+const TOURNAMENT_STATUS_CONFIG = {
   active: { label: 'Active', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', dot: 'bg-emerald-400' },
   upcoming: { label: 'Upcoming', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20', dot: 'bg-blue-400' },
   completed: { label: 'Completed', color: 'text-muted bg-white/5 border-glass-border', dot: 'bg-muted' },
@@ -21,7 +21,7 @@ export const TOURNAMENT_STATUS_CONFIG = {
 };
 
 /** Thứ tự ưu tiên khi sắp xếp theo trạng thái (số nhỏ = lên trước) */
-export const TOURNAMENT_STATUS_ORDER = {
+const TOURNAMENT_STATUS_ORDER = {
   active: 0,
   'registration open': 1,
   'registration closed': 2,
@@ -35,20 +35,10 @@ export const TOURNAMENT_STATUS_ORDER = {
   cancelled: 10,
 };
 
-/** Nhóm trạng thái cho các tab lọc — dùng chung để các trang lọc giống nhau */
-export const ACTIVE_STATUSES = ['active', 'registration open', 'registration closed', 'medical checking', 'ready to arrange', 'pre round', 'final round', 'prize distribution', 'pendingscheduling'];
-export const UPCOMING_STATUSES = ['upcoming', 'pendingregistration'];
-export const CLOSED_STATUSES = ['completed', 'cancelled'];
-
 export function getTournamentStatusStyle(status) {
   return TOURNAMENT_STATUS_CONFIG[(status ?? '').toLowerCase()] ?? TOURNAMENT_STATUS_CONFIG.upcoming;
 }
 
 export function getStatusOrder(status) {
   return TOURNAMENT_STATUS_ORDER[(status ?? '').toLowerCase()] ?? 11;
-}
-
-/** Giải đang trong giai đoạn thi đấu/chuẩn bị (dùng cho tab "Active") */
-export function isActiveTournament(t) {
-  return ACTIVE_STATUSES.includes((t.status ?? '').toLowerCase());
 }

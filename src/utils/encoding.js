@@ -18,7 +18,7 @@ const CP1252_TO_BYTE = {
   'ž': 0x9e, 'Ÿ': 0x9f,
 };
 
-export function fixMojibake(value) {
+function fixMojibake(value) {
   if (typeof value !== 'string' || !decoder || !MOJIBAKE_HINT.test(value)) return value;
 
   const bytes = new Uint8Array(value.length);

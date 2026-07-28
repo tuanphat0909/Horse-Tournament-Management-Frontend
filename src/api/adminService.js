@@ -30,8 +30,6 @@ export const removeReferee = (raceId, refereeId) => api.delete(`/admin/races/${r
 
 export const createPrizes = (data) => api.post('/admin/payouts/prizes', data);
 
-export const triggerPayout = (raceId) => api.post(`/admin/payouts/trigger/${raceId}`);
-
 export const getRegistrations = () => api.get('/admin/registrations');
 export const approveRegistration = (id) => api.put(`/admin/registrations/${id}/approve`);
 export const rejectRegistration = (id) => api.put(`/admin/registrations/${id}/reject`);
@@ -51,8 +49,6 @@ export const getBets = () => api.get('/admin/bets');
 export const updateUserStatus = (id) => api.put(`/admin/users/${id}/status`);
 
 export const publishRaceResult = (raceId) => api.post(`/admin/races/${raceId}/publish`);
-
-export const getRaceResults = (raceId) => api.get(`/admin/races/${raceId}/results`);
 
 export const getDashboardStats = () => api.get('/admin/dashboard');
 

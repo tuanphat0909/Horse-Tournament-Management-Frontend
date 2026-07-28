@@ -22,8 +22,6 @@ export const getBusyJockeysForTournament = (tournamentId) => api.get(`/tournamen
 // Wallet endpoints for Owner
 export const getOwnerWalletBalance = () => api.get('/owner/wallet/balance');
 export const getOwnerWalletHistory = () => api.get('/owner/wallet/history');
-export const ownerDeposit = () => { throw new Error("Direct deposit is disabled. Please use VNPay payment."); };
-export const ownerWithdraw = (amount) => api.post('/owner/wallet/withdraw', { amount });
 
 // Withdraw — maps to POST /owner/wallet/withdraw (payload: { amount })
 // The 'on-chain' variant did not exist on backend; use the standard endpoint.

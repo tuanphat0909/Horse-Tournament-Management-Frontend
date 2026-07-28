@@ -1,13 +1,8 @@
 import { api } from '../services/api';
 
 export const getMedicalChecks = () => api.get('/MedicalCheck');
-export const getMedicalCheckById = (id) => api.get(`/MedicalCheck/${id}`);
-export const getMedicalCheckByRegistration = (registrationId) => api.get(`/MedicalCheck/by-registration/${registrationId}`);
 export const createMedicalCheck = (data) => api.post('/MedicalCheck', data);
-export const updateMedicalCheck = (id, data) => api.put(`/MedicalCheck/${id}`, data);
-export const deleteMedicalCheck = (id) => api.delete(`/MedicalCheck/${id}`);
 export const getPendingRegistrations = () => api.get('/MedicalCheck/pending-registrations');
 export const getAssignedEntries = () => api.get('/MedicalCheck/assigned-entries');
 export const performRecheck = (data) => api.post('/MedicalCheck/recheck', data);
 export const getUnhealthyHorses = () => api.get('/MedicalCheck/unhealthy-horses');
-export const recoverHorse = (id) => api.put(`/MedicalCheck/horses/${id}/recover`);
