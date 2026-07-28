@@ -12,10 +12,13 @@ import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser } from '../../api/authService';
 import { getRaceSchedule } from '../../api/publicService';
 import { getDashboardStats, getRegistrations, getActivityLog } from '../../api/adminService';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
+// Link co animation cua framer-motion: van la the <a href> that (mo tab moi duoc)
+const MotionLink = motion.create(Link);
+
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
 
@@ -29,7 +32,6 @@ const fixMojibake = (str: string): string => {
 };
 
 export function AdminDashboardPage() {
-  const navigate = useNavigate();
   const user = getCurrentUser();
   const { t, language } = useLanguage();
   const [schedule, setSchedule] = useState<any[]>([]);
@@ -144,12 +146,12 @@ export function AdminDashboardPage() {
             }
             actions={
               <>
-                <button onClick={() => navigate('/admin/registrations')} className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold font-sans">
+                <Link to="/admin/registrations" className="btn-gold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 font-bold font-sans">
                   {t("View registrations")} <ChevronRight size={13} />
-                </button>
-                <button onClick={() => navigate('/admin/races')} className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
+                </Link>
+                <Link to="/admin/races" className="px-5 py-2 rounded-lg text-xs text-champagne border border-gold/25 bg-gold/5 hover:bg-gold/10 transition-colors font-medium">
                   {t("Manage races")}
-                </button>
+                </Link>
               </>
             }
           />
@@ -162,11 +164,11 @@ export function AdminDashboardPage() {
               { title: t('Profit (VND)'), value: stats ? new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US').format(stats.profit) : '—', trend: t('Betting Revenue'), icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/wallet' },
               { title: t('Races'), value: stats ? stats.activeRaces : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} ${t('total')}` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
             ].map((m, i) => (
-              <motion.div
+              <MotionLink
                 key={i}
+                to={m.path}
                 variants={child}
-                onClick={() => navigate(m.path)}
-                className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer"
+                className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer block"
                 style={{ height: '130px' }}
               >
                 <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
@@ -182,7 +184,7 @@ export function AdminDashboardPage() {
                   <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
                   <div className="text-[11px] text-muted/70 font-medium">{m.title}</div>
                 </div>
-              </motion.div>
+              </MotionLink>
             ))}
           </motion.div>
 
@@ -202,9 +204,9 @@ export function AdminDashboardPage() {
                     <p className="text-xs text-muted mt-0.5">{t("Needs processing within 24h")}</p>
                   </div>
                 </div>
-                <button onClick={() => navigate('/admin/registrations')} className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium">
+                <Link to="/admin/registrations" className="text-xs text-gold hover:text-champagne flex items-center gap-1 transition-colors font-medium">
                   {t("View all")} <ChevronRight size={14} />
-                </button>
+                </Link>
               </div>
               
               {regLoading ? (
@@ -239,12 +241,12 @@ export function AdminDashboardPage() {
                             {reg.tournamentName}
                           </td>
                           <td className="px-4 py-3.5 text-right">
-                            <button 
-                              onClick={() => navigate('/admin/registrations')}
-                              className="px-2.5 py-1 rounded bg-gold/10 border border-gold/30 text-[10px] text-gold hover:bg-gold/20 transition-all font-semibold uppercase tracking-wider"
+                            <Link
+                              to="/admin/registrations"
+                              className="inline-block px-2.5 py-1 rounded bg-gold/10 border border-gold/30 text-[10px] text-gold hover:bg-gold/20 transition-all font-semibold uppercase tracking-wider"
                             >
                               {t("Approve")}
-                            </button>
+                            </Link>
                           </td>
                         </tr>
                       ))}
@@ -344,11 +346,11 @@ export function AdminDashboardPage() {
               { label: t('Schedule races'), desc: t('Create and schedule races'), icon: Calendar, path: '/admin/races', color: 'text-purple-400' },
               { label: t('Publish results'), desc: t('Publish confirmed results'), icon: Megaphone, path: '/admin/results', color: 'text-emerald-400' },
             ].map((q, i) => (
-              <motion.button
+              <MotionLink
                 key={i}
-                onClick={() => navigate(q.path)}
+                to={q.path}
                 whileHover={{ scale: 1.02 }}
-                className="glass-panel rounded-xl p-5 text-left group hover:border-gold/30 hover:bg-gold/[0.03] border border-glass-border transition-all relative overflow-hidden"
+                className="glass-panel rounded-xl p-5 text-left group hover:border-gold/30 hover:bg-gold/[0.03] border border-glass-border transition-all relative overflow-hidden block"
               >
                 <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
                 <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-gold/10 to-transparent blur-[40px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -357,7 +359,7 @@ export function AdminDashboardPage() {
                 </div>
                 <div className="relative z-10 text-sm font-semibold text-white group-hover:text-champagne transition-colors">{q.label}</div>
                 <div className="relative z-10 text-xs text-muted mt-1 leading-relaxed">{q.desc}</div>
-              </motion.button>
+              </MotionLink>
             ))}
           </motion.div>
 

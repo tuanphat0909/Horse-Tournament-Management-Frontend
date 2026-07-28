@@ -45,12 +45,15 @@ export function OwnerDashboardPage() {
       .finally(() => setHorsesLoading(false));
   }, []);
 
+  // Lịch đua sắp tới và tổng tiền thưởng đều lấy từ cùng một nguồn getOwnerResults()
+  // → gọi một lần rồi tính cả hai, thay vì hai effect gọi trùng cùng một API.
   useEffect(() => {
     getOwnerResults()
       .then((d: any) => {
         const list = d?.result ?? (Array.isArray(d) ? d : []);
+
         // Filter out completed or finished races to show only upcoming/active ones
-        const upcoming = list.filter((r: any) => 
+        const upcoming = list.filter((r: any) =>
           r.status !== 'Finished' && r.status !== 'Completed'
         );
         // Sort by raceDate ascending (closest first)
@@ -60,21 +63,18 @@ export function OwnerDashboardPage() {
           return da - db;
         });
         setSchedule(upcoming);
-      })
-      .catch((err: Error) => { console.error(parseApiError(err)); setSchedule([]); })
-      .finally(() => setScheduleLoading(false));
-  }, []);
 
-  // Tổng tiền thưởng đã nhận — cộng dồn prizeAmount của các kết quả đã hoàn tất
-  useEffect(() => {
-    getOwnerResults()
-      .then((d: any) => {
-        const list = d?.result ?? (Array.isArray(d) ? d : []);
+        // Tổng tiền thưởng đã nhận — cộng dồn prizeAmount của các kết quả đã hoàn tất
         const sum = (Array.isArray(list) ? list : [])
           .reduce((acc: number, r: any) => acc + (Number(r?.prizeAmount) || 0), 0);
         setPrizeTotal(sum);
       })
-      .catch(() => setPrizeTotal(0));
+      .catch((err: Error) => {
+        console.error(parseApiError(err));
+        setSchedule([]);
+        setPrizeTotal(0);
+      })
+      .finally(() => setScheduleLoading(false));
   }, []);
 
   useEffect(() => {

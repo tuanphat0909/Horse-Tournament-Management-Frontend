@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, CheckCircle, XCircle, Clock, Users, Calendar, Search } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -69,7 +70,8 @@ function contractBucket(status: string): ContractFilter {
 export function OwnerJockeysPage() {
   const confirm = useConfirm();
   const { notifications, showToast } = useNotifications();
-  const searchParams = new URLSearchParams(window.location.search);
+  // Đọc query param bằng hook của react-router thay vì window.location
+  const [searchParams, setSearchParams] = useSearchParams();
   const prefillApplied = useRef(false);
   const [proposals, setProposals] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
@@ -186,9 +188,10 @@ export function OwnerJockeysPage() {
           .finally(() => setLoadingBusyJockeys(false));
       }
       setShowInvite(true);
-      // Clear query params from URL without reload
-      window.history.replaceState({}, '', window.location.pathname);
+      // Xoá query param khỏi URL (replace nên không thêm mục vào lịch sử back)
+      setSearchParams({}, { replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, tournaments]);
 
 
