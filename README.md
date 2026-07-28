@@ -1,73 +1,68 @@
-# React + TypeScript + Vite
+# Horse Tournament Management — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Giao diện web quản lý giải đua ngựa, viết bằng **ReactJS (JavaScript) + Vite + Tailwind CSS**.
 
-Currently, two official plugins are available:
+Hệ thống phục vụ 6 vai trò: Quản trị viên (Admin), Chủ ngựa (Horse Owner), Nài ngựa
+(Jockey), Trọng tài (Referee), Bác sĩ thú y (Veterinarian) và Khán giả (Spectator).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Công nghệ sử dụng
 
-## React Compiler
+| Thành phần | Công nghệ |
+|---|---|
+| Thư viện giao diện | React 19 |
+| Công cụ build | Vite 8 |
+| Ngôn ngữ | JavaScript (JSX) |
+| Giao diện | Tailwind CSS v4 (khai báo theme bằng `@theme` trong `src/index.css`) |
+| Định tuyến | React Router v7 |
+| Quản lý form | Formik + Yup |
+| Hiệu ứng | Framer Motion |
+| Biểu tượng | Lucide React |
+| Thời gian thực | SignalR (thông báo đẩy) |
+| Đăng nhập Google | @react-oauth/google |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Chạy dự án
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # chạy máy chủ phát triển
+npm run build    # đóng gói bản production
+npm run preview  # xem thử bản đã đóng gói
+npm run lint     # kiểm tra chất lượng mã nguồn
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Cấu hình
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Tạo file `.env.local` ở thư mục gốc (xem mẫu tại `.env.example`):
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+# Bỏ trống để dùng backend đã deploy trên Azure (mặc định trong mã nguồn)
+# Trỏ về máy khi chạy backend local:
+VITE_API_URL=http://localhost:55446/api
+
+VITE_GOOGLE_CLIENT_ID=<client id của Google OAuth>
+```
+
+## Cấu trúc thư mục
+
+```
+src/
+├─ api/           Lớp gọi API, tách theo vai trò (adminService, ownerService…)
+├─ components/    Thành phần dùng lại: layout, landing, ui
+├─ constants/     Hằng số dùng chung và các schema kiểm tra dữ liệu (Yup)
+├─ context/       Context API: xác thực, thông báo, hộp thoại xác nhận
+├─ pages/         Màn hình, chia theo vai trò: admin, owner, jockey,
+│                 referee, spectator, vet
+├─ routes/        Bảng định tuyến và lớp chặn truy cập theo vai trò
+├─ services/      Lớp gửi HTTP dùng chung (tự gắn token)
+└─ utils/         Hàm tiện ích: định dạng ngày giờ, xử lý lỗi, lọc thông báo
+```
+
+Dữ liệu chảy theo ba tầng: **màn hình** (`pages`) → **nghiệp vụ** (`api/*Service`) →
+**hạ tầng HTTP** (`services/api.js`). Màn hình không cần biết địa chỉ backend hay
+cách gắn token — đổi backend chỉ sửa một chỗ duy nhất.
+
+## Phân quyền
+
+Mọi đường dẫn nội bộ đều đi qua `PrivateRoute`: chưa đăng nhập thì chuyển về trang
+đăng nhập, sai vai trò thì bị chặn. Vai trò lấy từ máy chủ sau khi xác thực lại
+token, không đọc từ trình duyệt, nên không thể tự sửa để vượt quyền.
