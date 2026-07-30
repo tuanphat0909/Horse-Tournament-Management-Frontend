@@ -1,10 +1,21 @@
-# Báo cáo gửi Backend
+# Báo cáo gửi Backend — buổi làm việc tối 30/07/2026
 
-**Ngày:** 30/07/2026
 **Môi trường kiểm thử:** Backend local `http://localhost:55446` + SQL Server `.\SQLEXPRESS`
 **Phiên bản backend:** commit `65c86f1` (God API) — đã pull mới nhất
 
+Đây là **những phát hiện mới trong buổi tối 30/07**, sau khi pull backend bản mới nhất
+(có God API và các bản sửa lỗ hổng). Các vấn đề của những đợt trước không nhắc lại ở đây.
+
 Tất cả lỗi bên dưới đều **kiểm chứng bằng cách gọi API thật**, không suy đoán từ tài liệu.
+
+## Việc đã làm trong buổi này
+
+1. Pull backend bản mới nhất, chạy `update_db.sql` để đồng bộ lược đồ cơ sở dữ liệu local
+2. Làm tính năng phím tắt `Ctrl + Space` gọi God API ở phía giao diện
+3. Đối chiếu tài liệu `FRONTEND-API-CHANGES-v2.md` với hệ thống thật
+4. Kiểm chứng lại các bản sửa lỗ hổng backend vừa công bố
+5. **Làm sạch toàn bộ cơ sở dữ liệu local**, dựng lại dữ liệu phủ hết tình huống rồi
+   chạy kiểm thử validate từ đầu
 
 ---
 
