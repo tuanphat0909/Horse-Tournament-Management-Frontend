@@ -225,6 +225,9 @@ export function OwnerWalletOverviewPage() {
                   const isPos = amt > 0;
                   const isPrize = txType === 'prize';
                   const isJockey = txType === 'jockey';
+                  // Lệnh rút tiền bị trừ khỏi số dư ngay nhưng còn chờ duyệt — phải
+                  // nói rõ để chủ ngựa không tưởng tiền đã về tài khoản ngân hàng.
+                  const isPending = (tx.status ?? '').toLowerCase() === 'pending';
 
                   return (
                     <motion.div key={tx.id ?? i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.035 }} className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all group ${isPrize ? 'bg-amber-500/[0.06] border-amber-500/25 hover:border-amber-400/40 hover:bg-amber-500/10' : isJockey ? 'bg-purple-500/[0.06] border-purple-500/25 hover:border-purple-400/40' : 'bg-white/[0.02] border-glass-border hover:border-gold/30 hover:bg-gold/[0.04]'}`}>
@@ -236,10 +239,11 @@ export function OwnerWalletOverviewPage() {
                           <div className="text-sm text-white/90 font-medium truncate">{tx.description ?? cfg.label}</div>
                           {isPrize && <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 uppercase tracking-wider">Prize</span>}
                           {isJockey && <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30 uppercase tracking-wider">Jockey</span>}
+                          {isPending && <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 uppercase tracking-wider">Pending</span>}
                         </div>
                         <div className="text-[11px] text-muted mt-0.5">{tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</div>
                       </div>
-                      <div className={`text-sm font-bold shrink-0 tabular-nums ${isPrize ? 'text-amber-400' : isPos ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <div className={`text-sm font-bold shrink-0 tabular-nums ${isPending ? 'text-yellow-400' : isPrize ? 'text-amber-400' : isPos ? 'text-emerald-400' : 'text-red-400'}`}>
                         {isPos ? '+' : ''}
                         {Number(amt).toLocaleString()} <span className="text-[10px] font-normal text-muted">coins</span>
                       </div>
