@@ -1,4 +1,4 @@
-# Báo cáo gửi Backend — buổi làm việc tối 30/07/2026
+# Báo cáo gửi Backend — buổi làm việc tối 30/07 và 31/07/2026
 
 **Môi trường kiểm thử:** Backend local `http://localhost:55446` + SQL Server `.\SQLEXPRESS`
 **Phiên bản backend:** commit `65c86f1` (God API) — đã pull mới nhất
@@ -7,6 +7,13 @@
 (có God API và các bản sửa lỗ hổng). Các vấn đề của những đợt trước không nhắc lại ở đây.
 
 Tất cả lỗi bên dưới đều **kiểm chứng bằng cách gọi API thật**, không suy đoán từ tài liệu.
+
+> ## ✅ Cập nhật 31/07 — backend đã sửa xong 4 lỗi
+>
+> Sau khi pull bản mới nhất (commit `b562356` — *Feature/vulnerability concurrency fixes #149*),
+> tôi đã chạy lại và kiểm chứng: **các mục 1.1, 1.2, 1.3, 1.5 đều đã sửa và chạy đúng.**
+> Chi tiết ở [Phần 4](#phần-4--kiểm-chứng-lại-sau-khi-backend-sửa-3107).
+> Phần mô tả lỗi bên dưới giữ nguyên để tiện đối chiếu.
 
 ## Việc đã làm trong buổi này
 
@@ -300,3 +307,123 @@ Ghi lại để backend biết phía giao diện đã bắt kịp những thay �
 và đăng ký ngựa đều đúng. Vấn đề lớn nhất là **khoá tài khoản**: logic đã viết đầy đủ
 nhưng do gõ sai tên vai trò và tên trạng thái nên phần lớn code không bao giờ chạy tới.
 Sửa hai chỗ đó là tính năng hoạt động đúng như thiết kế.
+
+---
+
+# PHẦN 4 — Kiểm chứng lại sau khi backend sửa (31/07)
+
+**Bản backend:** commit `b562356` — *Feature/vulnerability concurrency fixes (#149)*
+
+Đã pull, chạy lại và gọi API thật để kiểm chứng.
+
+## 4.1. Kết quả — 4/5 lỗi đã sửa xong
+
+| # | Lỗi | Trạng thái | Kiểm chứng |
+|---|---|---|---|
+| 1.1 | Khoá tài khoản không kiểm tra ràng buộc nghiệp vụ | ✅ **Đã sửa** | Xem 4.2 |
+| 1.2 | God API lỗi 500 thiếu `UserId` | ✅ **Đã sửa** | Xem 4.3 |
+| 1.3 | `Forbid()` nuốt mất lời báo lỗi | ✅ **Đã sửa** | Xem 4.4 |
+| 1.4 | Tên trường phản hồi lỗi không thống nhất | ⏳ Chưa đổi | Frontend đã nhận hết các kiểu nên không gấp |
+| 1.5 | Tài liệu ghi sai đường dẫn | ✅ **Đã sửa** | Còn sót `/api/financials/wallet/deposit` |
+
+## 4.2. Khoá tài khoản — đã chặn đúng
+
+Backend sửa đúng cả hai nguyên nhân, và chọn cách đảo ngược logic như đề xuất:
+
+```csharp
+else if (role == "HorseOwner" || role == "Owner")        // nhận cả hai cách gọi
+...
+!(r.Tournament.Status == "Completed" || r.Tournament.Status == "Cancelled")
+```
+
+Kiểm chứng — đưa ví về 0 để chỉ còn ràng buộc nghiệp vụ:
+
+```
+PUT /api/admin/users/426/status   (chủ ngựa đang có ngựa thi đấu)
+→ 400 {"message":"Cannot lock user due to constraints.",
+       "blockers":["User has horses actively registered in ongoing tournaments."]}
+```
+
+Trước khi sửa thì khoá được luôn. Nay đã chặn và **nêu đúng lý do nghiệp vụ**, không
+còn chỉ báo mỗi chuyện ví còn tiền.
+
+## 4.3. God API — đã chạy được
+
+```
+POST /api/Demo/auto-setup
+→ 200 "Demo tournament setup successfully with 12 horses and jockeys."
+→ Giải #108 - Auto Demo Cup f1df9763
+```
+
+Dữ liệu sinh ra đầy đủ: 12 đơn `Approved` · 12 hợp đồng `Active` · 12 phiếu khám `Pass`.
+
+**Phím tắt `Ctrl + Space` trên giao diện giờ chạy trọn vẹn** — hiện màn hình chờ, bắn
+pháo hoa, tải lại danh sách.
+
+## 4.4. Xoá ngựa — đã hiện đúng lý do
+
+```
+DELETE /api/horses/{id}   (ngựa đang đăng ký giải)
+→ 400 {"message":"Cannot delete this horse because it has active registrations,
+        upcoming races, or active contracts."}
+```
+
+Trước đây trả 403 với thân phản hồi rỗng. Backend đã sửa **cả ba chỗ** trong
+`OwnerController` chứ không riêng chỗ xoá ngựa.
+
+---
+
+## 4.5. Hai điểm mới phát hiện ở God API
+
+### 🟡 a) Dùng tên trạng thái không có trong hệ thống
+
+`DemoService.cs` đặt giải ở trạng thái `"RegistrationClosed"` (viết liền). Nhưng toàn hệ
+thống dùng các tên sau:
+
+```
+PendingRegistration · Registration Open · Registration Suspended
+PendingScheduling · Upcoming · Active · AwaitingResults · Completed · Cancelled
+```
+
+Không có `RegistrationClosed`. Giao diện tra bảng cấu hình theo `"registration closed"`
+(có dấu cách) nên không khớp, giải bị hiển thị **sai nhãn trạng thái**.
+
+**Đề xuất:** dùng `"PendingScheduling"` — đúng nghĩa *"đã đóng đăng ký, chờ xếp lịch"*
+và khớp với luồng sinh cuộc đua sẵn có.
+
+*(Phía frontend tôi đã chuẩn hoá lại cách tra bảng — bỏ dấu cách trước khi so sánh — nên
+giờ chịu được cả hai cách viết. Nhưng nên sửa ở gốc cho thống nhất.)*
+
+### 🟡 b) Thiếu ngày mở/đóng đăng ký
+
+```sql
+TournamentId | Status             | RegistrationStartDate | RegistrationEndDate
+108          | RegistrationClosed | NULL                  | NULL
+```
+
+`DemoService` chỉ gán `StartDate` và `EndDate`, bỏ trống hai cột ngày đăng ký. Nhiều màn
+hình dựa vào hai cột này để tính trạng thái hiển thị và đếm ngược, nên giải demo sẽ hiện
+thiếu thông tin so với giải tạo bằng tay.
+
+**Đề xuất:**
+
+```csharp
+RegistrationStartDate = DateTime.UtcNow.AddDays(-10),
+RegistrationEndDate   = DateTime.UtcNow.AddDays(-1),
+StartDate             = DateTime.UtcNow.AddDays(1),
+EndDate               = DateTime.UtcNow.AddDays(7),
+Status                = "PendingScheduling",
+```
+
+---
+
+## 4.6. Tổng hợp còn lại
+
+| # | Nội dung | Mức độ |
+|---|---|---|
+| 4.5a | God API dùng trạng thái `RegistrationClosed` không có trong hệ thống | 🟡 Vừa |
+| 4.5b | God API không gán ngày mở/đóng đăng ký | 🟡 Vừa |
+| 1.4 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa |
+| — | Tài liệu còn sót `/api/financials/wallet/deposit` (đường dẫn thật là `/api/admin/wallet/deposit`) | 🟢 Thấp |
+
+**Không còn lỗi mức Cao.** Ba lỗi nghiêm trọng nhất đã được xử lý gọn.

@@ -35,10 +35,26 @@ const TOURNAMENT_STATUS_ORDER = {
   cancelled: 10,
 };
 
+/**
+ * Backend viết tên trạng thái không thống nhất: chỗ có dấu cách ("Registration Closed"),
+ * chỗ viết liền ("RegistrationClosed"). Bỏ hết dấu cách trước khi tra bảng để cả hai
+ * cách viết đều ra đúng nhãn, thay vì rơi về giá trị mặc định và hiện sai trạng thái.
+ */
+function chuanHoa(status) {
+  return String(status ?? '').toLowerCase().replace(/[\s_-]/g, '');
+}
+
+const CONFIG_THEO_KHOA_CHUAN = Object.fromEntries(
+  Object.entries(TOURNAMENT_STATUS_CONFIG).map(([k, v]) => [chuanHoa(k), v])
+);
+const ORDER_THEO_KHOA_CHUAN = Object.fromEntries(
+  Object.entries(TOURNAMENT_STATUS_ORDER).map(([k, v]) => [chuanHoa(k), v])
+);
+
 export function getTournamentStatusStyle(status) {
-  return TOURNAMENT_STATUS_CONFIG[(status ?? '').toLowerCase()] ?? TOURNAMENT_STATUS_CONFIG.upcoming;
+  return CONFIG_THEO_KHOA_CHUAN[chuanHoa(status)] ?? TOURNAMENT_STATUS_CONFIG.upcoming;
 }
 
 export function getStatusOrder(status) {
-  return TOURNAMENT_STATUS_ORDER[(status ?? '').toLowerCase()] ?? 11;
+  return ORDER_THEO_KHOA_CHUAN[chuanHoa(status)] ?? 11;
 }
