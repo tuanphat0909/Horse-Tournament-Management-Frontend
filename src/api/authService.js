@@ -34,9 +34,20 @@ function parseApiError(err) {
       return `${label}: ${message}`;
     });
     if (lines.length) return lines.join('\n');
+
+    const base = parsed.message || parsed.title;
+
+    // Khi một hành động bị chặn vì còn ràng buộc, BE trả kèm mảng `blockers` liệt kê
+    // từng lý do (ví dụ khoá tài khoản đang có hợp đồng hiệu lực, ví còn tiền...).
+    // Nếu chỉ lấy `message` thì người dùng chỉ thấy câu chung chung, không biết vướng gì.
+    const blockers = parsed.blockers ?? parsed.result?.blockers;
+    if (Array.isArray(blockers) && blockers.length) {
+      const details = blockers.filter(Boolean).map(b => `• ${b}`).join('\n');
+      return base ? `${base}\n${details}` : details;
+    }
+
     // Lỗi 500 của BE trả { message: "An error occurred during ...", detail: "<lý do thật>" }
     // → nếu bỏ `detail` thì người dùng chỉ thấy câu chung chung.
-    const base = parsed.message || parsed.title;
     if (base && parsed.detail && parsed.detail !== base) return `${base}\n${parsed.detail}`;
     return base || err.message;
   } catch {

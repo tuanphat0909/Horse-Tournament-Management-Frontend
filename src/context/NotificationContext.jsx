@@ -245,7 +245,8 @@ export const NotificationProvider = ({ children }) => {
                     Close
                   </button>
                 </div>
-                <p className="text-xs text-white/90 leading-relaxed font-sans">
+                {/* whitespace-pre-line: giữ xuống dòng khi BE trả nhiều lý do (mảng blockers) */}
+                <p className="text-xs text-white/90 leading-relaxed font-sans whitespace-pre-line">
                   <HighlightQuoted text={toast.content} />
                 </p>
               </motion.div>

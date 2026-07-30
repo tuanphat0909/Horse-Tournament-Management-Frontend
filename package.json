@@ -12,6 +12,7 @@
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
     "@react-oauth/google": "^0.13.5",
+    "canvas-confetti": "^1.9.4",
     "formik": "^2.4.9",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",

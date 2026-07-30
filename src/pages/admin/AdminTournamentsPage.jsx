@@ -13,6 +13,8 @@ import { formatDateTime } from '../../utils/format';
 import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { useNotifications } from '../../context/NotificationContext';
 import { useConfirm } from '../../context/ConfirmContext';
+import { useDemoSetup } from '../../hooks/useDemoSetup';
+import { DemoSetupOverlay } from '../../components/ui/DemoSetupOverlay';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
@@ -274,6 +276,9 @@ export function AdminTournamentsPage() {
       setLoadingTournaments(false);
     }
   }
+
+  // Ctrl + Space: dựng nhanh một giải demo đầy đủ dữ liệu để trình bày
+  const { running: demoRunning } = useDemoSetup(loadTournaments);
 
   useEffect(() => {
     loadTournaments();
@@ -541,6 +546,7 @@ export function AdminTournamentsPage() {
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
+      <DemoSetupOverlay show={demoRunning} />
       <Sidebar />
       <div className="flex-1 relative min-w-0 overflow-y-auto">
         <PageAmbience accent="gold" />

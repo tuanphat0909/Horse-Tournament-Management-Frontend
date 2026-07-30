@@ -66,3 +66,10 @@ export const getAdminWalletBalance = () => api.get('/admin/wallet/balance');
 export const getAdminWalletHistory = () => api.get('/admin/wallet/history');
 export const depositAdminWallet = (amount) => api.post('/admin/wallet/deposit', { amount });
 export const withdrawAdminWallet = (amount) => api.post('/admin/wallet/withdraw', { amount });
+
+/**
+ * Dựng sẵn một giải đấu demo chỉ bằng một lệnh: giải đã đóng đăng ký, 12 ngựa đã
+ * được duyệt kèm phiếu khám sức khoẻ và hợp đồng nài ngựa. Dùng khi cần dữ liệu
+ * nhanh để trình bày, thay vì bấm tay qua từng bước.
+ */
+export const setupDemoTournament = () => api.post('/Demo/auto-setup');
