@@ -35,7 +35,10 @@ function parseApiError(err) {
     });
     if (lines.length) return lines.join('\n');
 
-    const base = parsed.message || parsed.title;
+    // Mỗi controller của BE đặt tên trường hơi khác nhau: chỗ dùng `message`, chỗ
+    // dùng `error` (ví dụ DemoController), ASP.NET tự sinh thì dùng `title`.
+    // Bỏ sót một tên là người dùng nhìn thấy nguyên cục JSON thô trên màn hình.
+    const base = parsed.message || parsed.error || parsed.title;
 
     // Khi một hành động bị chặn vì còn ràng buộc, BE trả kèm mảng `blockers` liệt kê
     // từng lý do (ví dụ khoá tài khoản đang có hợp đồng hiệu lực, ví còn tiền...).
@@ -48,7 +51,9 @@ function parseApiError(err) {
 
     // Lỗi 500 của BE trả { message: "An error occurred during ...", detail: "<lý do thật>" }
     // → nếu bỏ `detail` thì người dùng chỉ thấy câu chung chung.
-    if (base && parsed.detail && parsed.detail !== base) return `${base}\n${parsed.detail}`;
+    // Có chỗ đặt tên là `details` (số nhiều) nên nhận cả hai.
+    const detail = parsed.detail ?? parsed.details;
+    if (base && detail && detail !== base) return `${base}\n${detail}`;
     return base || err.message;
   } catch {
     return err.message;

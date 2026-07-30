@@ -33,12 +33,16 @@ const LABEL = 'block text-xs font-bold text-muted uppercase tracking-wider mb-1.
  * có số giấy phép, số năm kinh nghiệm là số nguyên 0..80.
  */
 const accountSchema = Yup.object({
-  fullName: Yup.string().trim().required('Full name is required.'),
+  fullName: Yup.string().trim().min(2, 'Full name must be at least 2 characters.').max(100, 'Full name is too long (max 100 characters).').required('Full name is required.'),
   email: Yup.string()
     .trim()
     .required('Email is required.')
     .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format.'),
-  password: Yup.string().required('Password is required.').min(6, 'Password must be at least 6 characters.'),
+  password: Yup.string().required('Password is required.').min(8, 'Password must be at least 8 characters.')
+    .matches(/[A-Z]/, 'Password must contain an uppercase letter.')
+    .matches(/[a-z]/, 'Password must contain a lowercase letter.')
+    .matches(/[0-9]/, 'Password must contain a number.')
+    .matches(/[^A-Za-z0-9]/, 'Password must contain a special character.'),
   role: Yup.string().required('Please select a role.'),
   licenseNumber: Yup.string().when('role', {
     is: 'Referee',

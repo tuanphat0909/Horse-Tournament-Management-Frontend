@@ -34,7 +34,11 @@ function CornerOrnament() {
 const registerSchema = Yup.object({
   fullName: Yup.string().trim().required('Please enter your full name.'),
   email: Yup.string().trim().email('Please enter a valid email address.').required('Please enter your email.'),
-  password: Yup.string().min(6, 'Password must be at least 6 characters.').required('Please enter a password.'),
+  password: Yup.string().required('Please enter a password.').min(8, 'Password must be at least 8 characters.')
+    .matches(/[A-Z]/, 'Password must contain an uppercase letter.')
+    .matches(/[a-z]/, 'Password must contain a lowercase letter.')
+    .matches(/[0-9]/, 'Password must contain a number.')
+    .matches(/[^A-Za-z0-9]/, 'Password must contain a special character.'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password')], 'Passwords do not match.')
     .required('Please confirm your password.'),
