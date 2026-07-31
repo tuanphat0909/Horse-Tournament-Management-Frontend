@@ -207,7 +207,10 @@ export function RefereeConfirmResultsPage() {
 
       await submitResult({
         raceId: Number(form.raceId),
-        winner: top1.horseName || String(top1.horseId),
+        // Gửi mã ngựa thay vì tên: backend nhận cả hai, nhưng nhánh mã tra thẳng theo
+        // khoá chính nên không phụ thuộc vào việc tên có khớp từng ký tự hay không.
+        // Tên chỉ dùng khi thiếu mã.
+        winner: top1.horseId != null ? String(top1.horseId) : top1.horseName,
         entries: sorted.map((e) => ({
           raceEntryId: e.raceEntryId,
           finishPosition: Number(e.finishPosition),
