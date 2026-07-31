@@ -1,45 +1,79 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { populateTournament, resolveRace } from '../../api/adminService';
+import { getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
+import { useNotifications } from '../../context/NotificationContext';
 
 export function AdminDemoToolsPage() {
-  const [tournamentId, setTournamentId] = useState('');
+  const { showToast } = useNotifications();
+  const [tournaments, setTournaments] = useState([]);
+  const [loadingTournaments, setLoadingTournaments] = useState(true);
+  const [selectedId, setSelectedId] = useState('');
   const [loading, setLoading] = useState({ populate: false, resolve: false });
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
+  async function loadTournaments() {
+    setLoadingTournaments(true);
+    try {
+      const res = await getTournaments();
+      const list = Array.isArray(res?.result) ? res.result : (Array.isArray(res) ? res : []);
+      setTournaments(list);
+    } catch {
+      setTournaments([]);
+    } finally {
+      setLoadingTournaments(false);
+    }
+  }
+
+  useEffect(() => {
+    loadTournaments();
+  }, []);
+
   async function handlePopulate() {
-    if (!tournamentId.trim()) return;
+    if (!selectedId) return;
     setLoading((p) => ({ ...p, populate: true }));
     setResult(null);
     setError('');
     try {
-      const res = await populateTournament(tournamentId.trim());
+      const res = await populateTournament(selectedId);
       setResult(res);
+      showToast('Success', 'Populate Tournament thành công!');
+      await loadTournaments();
     } catch (err) {
-      setError(parseApiError(err));
+      const msg = parseApiError(err);
+      setError(msg);
+      showToast('Error', msg, 'error');
     } finally {
       setLoading((p) => ({ ...p, populate: false }));
     }
   }
 
   async function handleResolve() {
-    if (!tournamentId.trim()) return;
+    if (!selectedId) return;
     setLoading((p) => ({ ...p, resolve: true }));
     setResult(null);
     setError('');
     try {
-      const res = await resolveRace(tournamentId.trim());
+      const res = await resolveRace(selectedId);
       setResult(res);
+      showToast('Success', 'Resolve Race thành công!');
+      await loadTournaments();
     } catch (err) {
-      setError(parseApiError(err));
+      const msg = parseApiError(err);
+      setError(msg);
+      showToast('Error', msg, 'error');
     } finally {
       setLoading((p) => ({ ...p, resolve: false }));
     }
   }
+
+  const selectedTour = tournaments.find((t) => String(t.tournamentId) === selectedId);
+  const anyLoading = loading.populate || loading.resolve;
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -48,9 +82,10 @@ export function AdminDemoToolsPage() {
         <PageAmbience accent="gold" />
         <Topbar />
         <main className="relative z-10 max-w-2xl mx-auto px-8 py-10 space-y-6">
-          <div className="glass-panel rounded-2xl p-6 border border-amber-500/30 space-y-2">
-            <p className="text-amber-400 text-xs font-bold uppercase tracking-wider">Trang nội bộ</p>
-            <p className="text-muted text-sm">Trang nội bộ dùng để demo — không chia sẻ đường dẫn này cho người ngoài.</p>
+
+          <div className="glass-panel rounded-2xl p-4 border border-amber-500/30 flex items-start gap-3">
+            <span className="text-amber-400 text-base shrink-0">⚠️</span>
+            <p className="text-amber-200 text-sm">Trang nội bộ dùng để demo — không chia sẻ đường dẫn này cho người ngoài.</p>
           </div>
 
           <div className="glass-panel rounded-2xl p-6 border border-glass-border space-y-5">
@@ -58,33 +93,57 @@ export function AdminDemoToolsPage() {
 
             <div>
               <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">
-                Tournament ID
+                Chọn giải đấu
               </label>
-              <input
-                type="text"
-                value={tournamentId}
-                onChange={(e) => setTournamentId(e.target.value)}
-                placeholder="Nhập Tournament ID..."
-                className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors"
-              />
+              {loadingTournaments ? (
+                <div className="h-10 bg-navy/50 rounded-lg animate-pulse" />
+              ) : tournaments.length === 0 ? (
+                <p className="text-sm text-muted">
+                  Chưa có giải đấu nào.{' '}
+                  <Link to="/admin/tournaments" className="text-gold hover:underline">
+                    Vào Tournaments để tạo mới →
+                  </Link>
+                </p>
+              ) : (
+                <select
+                  value={selectedId}
+                  onChange={(e) => { setSelectedId(e.target.value); setResult(null); setError(''); }}
+                  className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors"
+                >
+                  <option value="">-- Chọn giải đấu --</option>
+                  {tournaments.map((t) => (
+                    <option key={t.tournamentId} value={String(t.tournamentId)}>
+                      {t.name ?? `Tournament #${t.tournamentId}`} — {t.status ?? 'Unknown'}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={handlePopulate}
-                disabled={loading.populate || !tournamentId.trim()}
+                disabled={anyLoading || !selectedId}
                 className="px-5 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-blue-400 border border-blue-500/30 text-sm font-bold rounded-lg transition-colors"
               >
                 {loading.populate ? 'Đang gọi...' : 'Populate Tournament'}
               </button>
               <button
                 onClick={handleResolve}
-                disabled={loading.resolve || !tournamentId.trim()}
+                disabled={anyLoading || !selectedId}
                 className="px-5 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-400 border border-emerald-500/30 text-sm font-bold rounded-lg transition-colors"
               >
                 {loading.resolve ? 'Đang gọi...' : 'Resolve Race'}
               </button>
             </div>
+
+            {selectedTour && (
+              <p className="text-xs text-muted">
+                Tournament ID: <span className="text-white font-mono">{selectedTour.tournamentId}</span>
+                {' · '}
+                Status: <span className="text-champagne">{selectedTour.status}</span>
+              </p>
+            )}
           </div>
 
           {error && (
@@ -102,6 +161,7 @@ export function AdminDemoToolsPage() {
               </pre>
             </div>
           )}
+
         </main>
       </div>
     </div>
