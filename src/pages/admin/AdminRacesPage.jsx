@@ -1063,7 +1063,7 @@ export function AdminRacesPage() {
                                 </button>
                                 {t.hasAnyRaces && (
                                   <span className="text-[10px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
-                                    <CheckCircle2 size={10} /> Assigned once
+                                    <CheckCircle2 size={10} /> Races generated (assign horses to lanes)
                                   </span>
                                 )}
                               </div>
