@@ -27,6 +27,9 @@ function normalizeStatus(s) {
   return 'pending';
 }
 
+// Khớp với luật ở backend: RegistrationService.cs — mỗi chủ ngựa tối đa 3 ngựa cho một giải.
+const MAX_NGUA_MOI_GIAI = 3;
+
 const STATUS_CONFIG = {
   pending_vet: { label: 'Pending Vet Health Check', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
   pending: { label: 'Pending Admin approval', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
@@ -86,6 +89,17 @@ export function OwnerRegistrationsPage() {
     validationSchema: registerHorseSchema,
     onSubmit: async (values) => {
       setSubmitError('');
+      // Backend chỉ cho mỗi chủ ngựa đăng ký tối đa 3 ngựa cho một giải, đếm mọi bản ghi
+      // trừ Cancelled và Rejected. Kiểm tra trước ở đây để báo ngay thay vì để người dùng
+      // điền xong mới nhận lỗi từ máy chủ.
+      const daDangKy = registrations.filter(
+        (r) => String(r.tournamentId) === String(values.tournamentId) && !['cancelled', 'rejected'].includes(String(r.status ?? '').toLowerCase())
+      ).length;
+      if (daDangKy >= MAX_NGUA_MOI_GIAI) {
+        setSubmitError(`You already have ${daDangKy} horses in this tournament. Each owner can register at most ${MAX_NGUA_MOI_GIAI} horses per tournament.`);
+        return;
+      }
+
       const selectedHorse = horses.find((h) => String(h.id) === String(values.horseId));
       if (selectedHorse && !isHealthy(selectedHorse)) {
         setSubmitError(`Horse "${selectedHorse.name}" is currently "${selectedHorse.healthStatus}" — only Healthy horses can register to race. Update the status on the My Horses page once the horse has recovered.`);
