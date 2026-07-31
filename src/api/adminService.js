@@ -73,3 +73,6 @@ export const withdrawAdminWallet = (amount) => api.post('/admin/wallet/withdraw'
  * nhanh để trình bày, thay vì bấm tay qua từng bước.
  */
 export const setupDemoTournament = () => api.post('/Demo/auto-setup');
+
+export const populateTournament = (tournamentId) => api.post(`/demo/populate-tournament/${tournamentId}`);
+export const resolveRace = (tournamentId) => api.post(`/demo/resolve-race/${tournamentId}`);

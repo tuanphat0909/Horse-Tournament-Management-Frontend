@@ -20,6 +20,7 @@ import { AdminViolationsPage } from '../pages/admin/AdminViolationsPage';
 import { AdminReportsPage } from '../pages/admin/AdminReportsPage';
 import { AdminWalletPage } from '../pages/admin/AdminWalletPage';
 import { NotificationsPage } from '../pages/NotificationsPage';
+import { AdminDemoToolsPage } from '../pages/admin/AdminDemoToolsPage';
 
 // Owner
 import { OwnerDashboardPage } from '../pages/owner/OwnerDashboardPage';
@@ -213,6 +214,15 @@ export function AppRoutes() {
             element={
               <PrivateRoute allowedRoles={['Admin']}>
                 <NotificationsPage />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/admin/demo-tools"
+            element={
+              <PrivateRoute allowedRoles={['Admin']}>
+                <AdminDemoToolsPage />
               </PrivateRoute>
             }
           />
