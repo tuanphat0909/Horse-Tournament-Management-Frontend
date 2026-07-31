@@ -85,7 +85,76 @@ public async Task<bool> HasUpcomingJockeyAssignmentsAsync(int jockeyId)
 
 ---
 
-## 🟡 2. Tên trường trong phản hồi lỗi không thống nhất
+## 🔴 2. 🆕 Giải đã có người đặt cược thì **không bao giờ huỷ được** — thiếu cơ chế hoàn cược
+
+> *Phát hiện 31/07 khi chạy thử vòng đời huỷ giải trên máy.*
+
+**Nơi sửa:** `TournamentService.CancelTournamentAsync`
+
+### Kiểm chứng
+
+```
+PUT /api/admin/tournaments/100/cancel  (giải không có cược)
+→ 200 "Tournament cancelled successfully."
+   Thông báo gửi tới 3 chủ ngựa + 12 nài ngựa + trọng tài + khán giả ✅
+
+PUT /api/admin/tournaments/101/cancel  (giải có cược)
+→ 400 "Tournament with existing bets cannot be cancelled until bets are refunded."
+```
+
+Chặn như vậy là **đúng** — không thể huỷ giải khi tiền cược của khán giả còn treo. Nhưng
+rà toàn bộ mã nguồn thì **không có API hoàn cược nào**, cũng không có hàm `RefundBet` /
+`RefundAllBets` ở tầng nghiệp vụ.
+
+### Hậu quả
+
+Câu lỗi bảo *"cho tới khi cược được hoàn"* nhưng **không tồn tại cách nào để hoàn**. Nghĩa
+là chỉ cần một người đặt cược là giải đó **kẹt vĩnh viễn**, không huỷ được nữa dù có lý do
+chính đáng (thiếu ngựa, thời tiết, sự cố sân).
+
+### Đề xuất
+
+Gộp hoàn cược vào chính hàm huỷ giải, làm trước khi đổi trạng thái — quản trị viên chỉ cần
+một thao tác:
+
+```csharp
+var pendingBets = await _context.Bets
+    .Where(b => raceIds.Contains(b.RaceId) && b.Status == "Pending")
+    .ToListAsync();
+
+foreach (var bet in pendingBets)
+{
+    var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == bet.UserId);
+    if (wallet == null) continue;
+
+    wallet.Balance += bet.Amount;
+    bet.Status = "Refunded";
+
+    _context.WalletTransactions.Add(new WalletTransaction
+    {
+        WalletId = wallet.WalletId,
+        Amount = bet.Amount,
+        Type = "BetRefund",
+        Description = $"Refund for cancelled tournament '{tournament.Name}'",
+        CreatedAt = DateTime.UtcNow
+    });
+
+    await _notificationService.SendNotificationToUserAsync(
+        bet.UserId, "Bet refunded",
+        $"Your bet of {bet.Amount:N0} has been refunded because tournament "
+        + $"'{tournament.Name}' was cancelled.",
+        "Wallet", (int)tournament.TournamentId, actionUrl: "/spectator/wallet");
+}
+```
+
+**Nếu backend làm phần này**, phía frontend sẽ bổ sung cảnh báo trong hộp thoại xác nhận
+huỷ: *"Giải này đang có N vé cược trị giá X — huỷ giải sẽ hoàn lại toàn bộ cho người
+chơi."* Cần backend trả về số vé và tổng tiền cược trong dữ liệu chi tiết giải để hiện
+được con số này.
+
+---
+
+## 🟡 3. Tên trường trong phản hồi lỗi không thống nhất
 
 > *Báo từ 30/07, backend chưa xử lý*
 
@@ -108,9 +177,11 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 | # | Nội dung | Mức độ | Phát hiện | Nơi sửa |
 |---|---|---|---|---|
 | 1 | Ràng buộc khoá tài khoản của Nài ngựa vẫn dùng danh sách trạng thái cũ | 🔴 Cao | 31/07 | `UserRepository.cs` |
-| 2 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
+| 2 | 🆕 Giải có cược không huỷ được vì thiếu cơ chế hoàn cược | 🔴 Cao | 31/07 | `TournamentService.cs` |
+| 3 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
 **Ưu tiên mục 1** — chỉ cần sửa một hàm, dùng lại đúng cách đã áp dụng cho Chủ ngựa.
+**Mục 2 nặng hơn** vì đang khoá cứng một luồng nghiệp vụ và dính tới tiền của người dùng.
 
 ---
 
@@ -124,3 +195,4 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 | Nhận thêm trường `error` / `details` để không hiện JSON thô | ✅ |
 | Đồng bộ luật mật khẩu (8 ký tự + chữ hoa/thường/số/ký tự đặc biệt) | ✅ |
 | Nhãn `Pending` cho lệnh rút tiền chờ duyệt ở ví Chủ ngựa | ✅ |
+| Bỏ chức năng nạp tiền của Chủ ngựa — ví chỉ còn nhận thưởng rồi rút (phí giải và tiền thuê nài ngựa thanh toán ngoài hệ thống) | ✅ |

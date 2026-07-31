@@ -29,7 +29,6 @@ import { OwnerRegistrationsPage } from '../pages/owner/OwnerRegistrationsPage';
 import { OwnerResultsPage } from '../pages/owner/OwnerResultsPage';
 import { OwnerTournamentsPage } from '../pages/owner/OwnerTournamentsPage';
 import { OwnerWalletOverviewPage } from '../pages/owner/OwnerWalletOverviewPage';
-import { OwnerDepositPage } from '../pages/owner/OwnerDepositPage';
 import { OwnerWithdrawPage } from '../pages/owner/OwnerWithdrawPage';
 
 // Jockey
@@ -233,14 +232,6 @@ export function AppRoutes() {
             element={
               <PrivateRoute allowedRoles={['HorseOwner', 'Owner']}>
                 <OwnerWalletOverviewPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/owner/wallet/deposit"
-            element={
-              <PrivateRoute allowedRoles={['HorseOwner', 'Owner']}>
-                <OwnerDepositPage />
               </PrivateRoute>
             }
           />

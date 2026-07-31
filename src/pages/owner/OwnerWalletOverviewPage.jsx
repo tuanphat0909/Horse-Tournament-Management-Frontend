@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 
 const COINS_PER_USD = 100;
 
+// Chủ ngựa không còn nạp tiền, nhưng vẫn giữ kiểu `deposit` ở đây để những giao dịch
+// nạp cũ trong lịch sử hiển thị đúng nhãn thay vì rơi vào nhóm "Other".
 const TX_CONFIG = {
   deposit: { color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', label: 'Deposit', icon: ArrowUpRight },
   withdraw: { color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', label: 'Withdraw', icon: ArrowUpRight },
@@ -79,7 +81,6 @@ export function OwnerWalletOverviewPage() {
     ['all', 'All'],
     ['prize', '🏆 Prizes'],
     ['jockey', '🏇 Jockey Hires'],
-    ['deposit', 'Deposit'],
     ['withdraw', 'Withdraw'],
   ];
   const filtered = txFilter === 'all' ? transactions : transactions.filter((t) => normalizeType(t.type ?? t.transactionType ?? '') === txFilter);

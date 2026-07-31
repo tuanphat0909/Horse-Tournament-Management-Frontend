@@ -65,9 +65,10 @@ const NAV_BY_ROLE = {
 };
 
 const WALLET_SUB_ITEMS = {
+  // Chủ ngựa chỉ nhận tiền thưởng rồi rút ra — không nạp tiền vào hệ thống,
+  // vì phí giải và tiền thuê nài ngựa đều thanh toán bên ngoài.
   owner: [
     { icon: LayoutList, label: 'Asset Overview', path: '/owner/wallet/overview' },
-    { icon: ArrowDownLeft, label: 'Deposit', path: '/owner/wallet/deposit' },
     { icon: ArrowUpRight, label: 'Withdraw', path: '/owner/wallet/withdraw' },
   ],
   spectator: [
