@@ -178,7 +178,7 @@ export function AdminRacesPage() {
     }
 
     // Validate race date is within round limits if round has start/end date
-    const round = tournamentsList.flatMap((t) => t.rounds ?? []).find((r) => r.roundId === editingRace.roundId);
+    const round = allRounds.find((r) => r.roundId === editingRace.roundId);
     if (round && round.startDate && round.endDate) {
       const startVal = new Date(round.startDate);
       const endVal = new Date(round.endDate);
@@ -213,10 +213,38 @@ export function AdminRacesPage() {
     return registrationsList.filter((r) => String(r.tournamentId) === selectedTournamentId && r.status === 'Approved').length;
   }, [selectedTournamentId, registrationsList]);
 
+  // Dữ liệu giải trả về từ `/public/tournaments` không kèm danh sách vòng đấu — endpoint
+  // duy nhất có trường đó (GetAllTournamentsAsync) hiện không được controller nào gọi.
+  // Nên dựng lại vòng từ chính lịch đua: mỗi cuộc đua đã mang sẵn roundId, roundName và
+  // roundNumber, đủ để nhóm lại. Vòng chưa có cuộc đua nào thì không hiện, nhưng cũng
+  // không mất gì vì trước đó danh sách vòng luôn rỗng.
+  const roundsByTournamentId = useMemo(() => {
+    const theoGiai = new Map();
+    for (const race of racesList) {
+      if (!theoGiai.has(race.tournamentId)) theoGiai.set(race.tournamentId, new Map());
+      const cacVong = theoGiai.get(race.tournamentId);
+      if (!cacVong.has(race.roundId)) {
+        cacVong.set(race.roundId, {
+          roundId: race.roundId,
+          tournamentId: race.tournamentId,
+          name: race.roundName ?? '',
+          roundNumber: race.roundNumber ?? 0,
+          status: 'Scheduled',
+          races: [],
+        });
+      }
+      cacVong.get(race.roundId).races.push(race);
+    }
+    return new Map([...theoGiai].map(([tourId, cacVong]) => [tourId, [...cacVong.values()].sort((a, b) => a.roundNumber - b.roundNumber)]));
+  }, [racesList]);
+
+  // Danh sách phẳng để tra vòng theo roundId — rẻ nên không cần memo hoá riêng.
+  const allRounds = [...roundsByTournamentId.values()].flat();
+
   const availableRounds = useMemo(() => {
     if (!selectedTournamentId) return [];
     const selectedTour = tournamentsList.find((t) => String(t.tournamentId) === selectedTournamentId);
-    const allRounds = selectedTour?.rounds ?? [];
+    const allRounds = selectedTour ? (roundsByTournamentId.get(selectedTour.tournamentId) ?? []) : [];
     const horseCount = selectedTournamentApprovedHorsesCount;
 
     if (horseCount < 12) {
@@ -226,7 +254,7 @@ export function AdminRacesPage() {
       return allRounds.filter((r) => r.roundNumber === 2 || r.name?.toLowerCase().includes('final'));
     }
     return allRounds;
-  }, [selectedTournamentId, tournamentsList, selectedTournamentApprovedHorsesCount]);
+  }, [selectedTournamentId, tournamentsList, roundsByTournamentId, selectedTournamentApprovedHorsesCount]);
 
   const selectedRound = useMemo(() => {
     if (!raceForm.roundId) return null;
@@ -358,9 +386,9 @@ export function AdminRacesPage() {
   function openRaceModal(roundId) {
     let tourId = '';
     if (roundId) {
-      const tour = tournamentsList.find((t) => (t.rounds ?? []).some((r) => r.roundId === roundId));
-      if (tour) {
-        tourId = String(tour.tournamentId);
+      const round = allRounds.find((r) => r.roundId === roundId);
+      if (round) {
+        tourId = String(round.tournamentId);
       }
     }
     setSelectedTournamentId(tourId);
@@ -677,15 +705,7 @@ export function AdminRacesPage() {
       .trim()
       .toLowerCase();
     const isTerminalTournament = normalizedTournamentStatus === 'completed' || normalizedTournamentStatus === 'finished' || normalizedTournamentStatus === 'cancelled';
-    const tRaces = racesList.filter((r) => r.tournamentId === t.tournamentId);
-
-    const rounds = (t.rounds ?? []).map((r) => {
-      const rRaces = tRaces.filter((race) => race.roundId === r.roundId);
-      return {
-        ...r,
-        races: rRaces,
-      };
-    });
+    const rounds = roundsByTournamentId.get(t.tournamentId) ?? [];
 
     const prefinalRound = rounds.find((r) => r.roundNumber === 1);
     const finalRound = rounds.find((r) => r.roundNumber === 2);
@@ -992,7 +1012,9 @@ export function AdminRacesPage() {
                 <div className="space-y-6">
                   {pagedTournaments.map((t) => {
                     const isOpen = openTournaments.has(t.tournamentId);
-                    const isAutoAssignLanesDisabled = t.status === 'Ongoing' || t.status === 'Finished' || t.status === 'Completed' || t.rounds.some((r) => r.races.some((race) => race.status === 'Live' || race.status === 'Finished' || race.status === 'Completed' || race.status === 'InProgress'));
+                    // Xếp làn chỉ làm một lần cho mỗi giải — hễ đã sinh ra cuộc đua thì khoá
+                    // nút lại, tránh bấm lần hai tạo trùng lịch.
+                    const isAutoAssignLanesDisabled = t.hasAnyRaces || t.status === 'Ongoing' || t.status === 'Finished' || t.status === 'Completed';
                     return (
                       <div key={t.tournamentId} className={`glass-panel rounded-xl p-6 relative overflow-hidden animate-fade-in ${isOpen ? 'space-y-6' : ''}`}>
                         <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent pointer-events-none" />
@@ -1358,7 +1380,7 @@ export function AdminRacesPage() {
                   </button>
                 </div>
                 {(() => {
-                  const round = tournamentsList.flatMap((t) => t.rounds ?? []).find((r) => r.roundId === editingRace.roundId);
+                  const round = allRounds.find((r) => r.roundId === editingRace.roundId);
                   return round && (round.startDate || round.endDate) ? (
                     <div className="text-xs text-gold/80 mt-1.5 flex items-center gap-1.5">
                       <span>⏰</span>
