@@ -5,7 +5,7 @@ import { useNotifications } from '../../context/NotificationContext';
 import { getCurrentUser } from '../../api/authService';
 import { HighlightQuoted } from '../ui/HighlightQuoted';
 import { toRoleKey } from '../../utils/notificationFilter';
-import { getTournaments } from '../../api/publicService';
+import { getTournaments, getRaceSchedule } from '../../api/publicService';
 
 // Mỗi role có trang thông báo riêng — chuông và nút "View all" trỏ đúng trang đó.
 const NOTIFICATIONS_PATH = {
@@ -36,8 +36,11 @@ export function Topbar() {
     let active = true;
     const loadReadinessAlerts = async () => {
       try {
-        const response = await getTournaments();
-        const tournaments = Array.isArray(response?.result) ? response.result : [];
+        const [tourResponse, schedResponse] = await Promise.all([getTournaments(), getRaceSchedule()]);
+        const tournaments = Array.isArray(tourResponse?.result) ? tourResponse.result : [];
+        const races = Array.isArray(schedResponse?.result) ? schedResponse.result : (Array.isArray(schedResponse) ? schedResponse : []);
+        // Tournament IDs that already have at least one race generated
+        const tourIdsWithRaces = new Set(races.map((r) => Number(r.tournamentId)).filter(Boolean));
         const now = Date.now();
         const alerts = tournaments
           .filter((tournament) => {
@@ -46,12 +49,14 @@ export function Topbar() {
             if (!tournament.startDate) return false;
             const start = new Date(tournament.startDate).getTime();
             const end = tournament.endDate ? new Date(tournament.endDate).getTime() : start;
-            return Number.isFinite(start) && start - now <= 24 * 60 * 60 * 1000 && end >= now && (!tournament.hasCompleteLaneAssignments || tournament.hasMissingReferees);
+            const missingLanes = !tourIdsWithRaces.has(Number(tournament.tournamentId));
+            const missingReferees = Boolean(tournament.hasMissingReferees);
+            return Number.isFinite(start) && start - now <= 24 * 60 * 60 * 1000 && end >= now && (missingLanes || missingReferees);
           })
           .map((tournament) => ({
             tournamentId: Number(tournament.tournamentId),
             name: String(tournament.name ?? `Tournament #${tournament.tournamentId}`),
-            missingLanes: !tournament.hasCompleteLaneAssignments,
+            missingLanes: !tourIdsWithRaces.has(Number(tournament.tournamentId)),
             missingReferees: Boolean(tournament.hasMissingReferees),
             qualifiedHorses: Number(tournament.qualifiedRegistration ?? 0),
             hasInvalidHorseCount: Number(tournament.qualifiedRegistration ?? 0) < 12 || Number(tournament.qualifiedRegistration ?? 0) > 48,
