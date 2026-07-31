@@ -5,7 +5,7 @@ import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { getRefereeDashboard, submitResult } from '../../api/refereeService';
+import { getRefereeDashboard, getSubmittedResults, submitResult } from '../../api/refereeService';
 import { getRaceEntries } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
@@ -21,6 +21,8 @@ const cleanDisplayString = (str) => {
 
 export function RefereeConfirmResultsPage() {
   const [races, setRaces] = useState([]);
+  // Tăng lên sau mỗi lần nộp để nạp lại danh sách, cuộc đua vừa nộp sẽ tự biến mất.
+  const [reloadKey, setReloadKey] = useState(0);
   const [loadingRaces, setLoadingRaces] = useState(true);
 
   const [form, setForm] = useState({ raceId: '', winner: '', winningTime: '' });
@@ -62,11 +64,22 @@ export function RefereeConfirmResultsPage() {
           const isStartedOrDone = st === 'inprogress' || st === 'running' || st === 'finished' || st === 'completed' || (r.raceDate && new Date(r.raceDate) <= now);
           return isStartedOrDone;
         });
-        setRaces(activeOrFinishedRaces);
+        // Cuộc đua đã nộp kết quả thì không cho chọn lại — backend sẽ từ chối, mà trạng
+        // thái cuộc đua vẫn là Active nên không nhìn vào đó mà biết được.
+        return Promise.all(
+          activeOrFinishedRaces.map((r) =>
+            getSubmittedResults(r.raceId)
+              .then((res) => {
+                const ds = Array.isArray(res) ? res : (res?.result ?? []);
+                return ds.length > 0 ? null : r;
+              })
+              .catch(() => r)
+          )
+        ).then((ket) => setRaces(ket.filter(Boolean)));
       })
       .catch(() => setRaces([]))
       .finally(() => setLoadingRaces(false));
-  }, []);
+  }, [reloadKey]);
 
   function setF(field, val) {
     setForm((p) => ({ ...p, [field]: val }));
@@ -219,6 +232,7 @@ export function RefereeConfirmResultsPage() {
       });
 
       setSuccess('Race results submitted successfully and are pending Admin review.');
+      setReloadKey((k) => k + 1);
       setForm({ raceId: '', winner: '', winningTime: '' });
       setRaceEntries([]);
       setOriginalTimes({});
