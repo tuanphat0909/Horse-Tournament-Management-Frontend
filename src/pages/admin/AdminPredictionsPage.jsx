@@ -25,12 +25,12 @@ export function AdminPredictionsPage() {
         let loadedBets = [];
         let loadedStats = null;
 
-        if (listRes.data && Array.isArray(listRes.data.result) && listRes.data.result.length > 0) {
-          loadedBets = listRes.data.result;
+        if (Array.isArray(listRes?.result) && listRes.result.length > 0) {
+          loadedBets = listRes.result;
         }
 
-        if (statsRes.data && statsRes.data.result) {
-          loadedStats = statsRes.data.result;
+        if (statsRes?.result) {
+          loadedStats = statsRes.result;
         }
 
         if (loadedBets.length > 0 || (loadedStats && loadedStats.totalBets > 0)) {
@@ -40,8 +40,8 @@ export function AdminPredictionsPage() {
         } else {
           // Fallback check predictions
           return Promise.all([getPredictionStats(), getPredictions()]).then(([pStatsRes, pListRes]) => {
-            if (pListRes.data && Array.isArray(pListRes.data.result) && pListRes.data.result.length > 0) {
-              const mapped = pListRes.data.result.map((p) => ({
+            if (Array.isArray(pListRes?.result) && pListRes.result.length > 0) {
+              const mapped = pListRes.result.map((p) => ({
                 betId: p.predictionId,
                 spectatorName: p.spectatorName,
                 raceName: p.raceName,
@@ -54,9 +54,9 @@ export function AdminPredictionsPage() {
               }));
               setBets(mapped);
 
-              const totalCount = pStatsRes.data?.result?.totalPredictions || mapped.length;
-              const wonCount = pStatsRes.data?.result?.correctPredictions || mapped.filter((m) => m.status === 'Won').length;
-              const lostCount = pStatsRes.data?.result?.wrongPredictions || mapped.filter((m) => m.status === 'Lost').length;
+              const totalCount = pStatsRes?.result?.totalPredictions || mapped.length;
+              const wonCount = pStatsRes?.result?.correctPredictions || mapped.filter((m) => m.status === 'Won').length;
+              const lostCount = pStatsRes?.result?.wrongPredictions || mapped.filter((m) => m.status === 'Lost').length;
               const pendingCount = mapped.filter((m) => m.status === 'Pending').length;
               const totalAmount = mapped.reduce((s, m) => s + m.amount, 0);
               const totalPayouts = mapped.filter((m) => m.status === 'Won').reduce((s, m) => s + m.potentialPayout, 0);
@@ -124,7 +124,7 @@ export function AdminPredictionsPage() {
   const statsDisplay = [
     {
       label: 'Total Bet Volume',
-      value: loading ? '...' : `${(stats?.totalAmount ?? 0).toLocaleString('en-US')} VND`,
+      value: loading ? '...' : `$${(stats?.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: DollarSign,
       color: 'text-blue-400',
       bg: 'from-blue-500/15 to-blue-900/20',
@@ -138,14 +138,14 @@ export function AdminPredictionsPage() {
     },
     {
       label: 'Total Payouts Paid',
-      value: loading ? '...' : `${(stats?.totalPayoutsPaid ?? 0).toLocaleString('en-US')} VND`,
+      value: loading ? '...' : `$${(stats?.totalPayoutsPaid ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: Coins,
       color: 'text-gold',
       bg: 'from-gold/15 to-amber-900/20',
     },
     {
       label: 'House Profit',
-      value: loading ? '...' : `${(stats?.houseProfit ?? 0).toLocaleString('en-US')} VND`,
+      value: loading ? '...' : `$${(stats?.houseProfit ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: TrendingUp,
       color: (stats?.houseProfit ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400',
       bg: 'from-purple-500/15 to-purple-900/20',
@@ -248,9 +248,9 @@ export function AdminPredictionsPage() {
                           <td className="px-6 py-4 font-medium">{b.spectatorName}</td>
                           <td className="px-6 py-4 text-muted">{b.raceName}</td>
                           <td className="px-6 py-4 text-gold font-semibold">{b.horseName}</td>
-                          <td className="px-6 py-4 font-mono text-xs">{b.amount.toLocaleString('en-US')} VND</td>
+                          <td className="px-6 py-4 font-mono text-xs">${b.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="px-6 py-4 font-mono text-xs text-amber-400 font-bold">x{b.odds?.toFixed(2) || '1.00'}</td>
-                          <td className="px-6 py-4 font-mono text-xs text-emerald-400 font-semibold">{b.potentialPayout.toLocaleString('en-US')} VND</td>
+                          <td className="px-6 py-4 font-mono text-xs text-emerald-400 font-semibold">${b.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-1 rounded text-xs font-semibold ${st === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' : st === 'won' || st === 'paidout' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>{st === 'pending' ? 'Pending' : st === 'won' || st === 'paidout' ? 'Won' : 'Lost'}</span>
                           </td>

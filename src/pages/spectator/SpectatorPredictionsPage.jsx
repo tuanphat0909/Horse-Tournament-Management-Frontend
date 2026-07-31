@@ -132,7 +132,10 @@ export function SpectatorPredictionsPage() {
     incorrect: activeList.filter((b) => normalizeStatus(b.status || (b.isCorrect === true ? 'win' : b.isCorrect === false ? 'lose' : 'pending')) === 'incorrect').length,
   };
 
-  const totalWon = bets.filter((b) => normalizeStatus(b.status) === 'correct').reduce((s, b) => s + (b.prize ?? b.reward ?? 0), 0);
+  // Backend tra tien thang thuc nhan o `actualPayout`; giu them `prize`/`reward`
+  // de phong cac endpoint cu van dung ten khac.
+  const tienThang = (b) => b.actualPayout ?? b.prize ?? b.reward ?? 0;
+  const totalWon = bets.filter((b) => normalizeStatus(b.status) === 'correct').reduce((s, b) => s + tienThang(b), 0);
   const totalBets = counts.correct + counts.incorrect;
   const accuracy = totalBets > 0 ? `${Math.round((counts.correct / totalBets) * 100)}%` : '—';
 
@@ -224,7 +227,7 @@ export function SpectatorPredictionsPage() {
                         <div className="text-xs text-muted">
                           Bet: <span className="text-white font-medium">${Number(b.amount ?? 0).toLocaleString()}</span>
                         </div>
-                        {b.prize != null && b.prize > 0 && <div className="text-sm font-bold text-gold">+${Number(b.prize).toLocaleString()}</div>}
+                        {tienThang(b) > 0 && <div className="text-sm font-bold text-gold">+${Number(tienThang(b)).toLocaleString()}</div>}
                         {isExpanded ? <ChevronUp size={14} className="text-muted mt-1" /> : <ChevronDown size={14} className="text-muted mt-1" />}
                       </div>
                     </button>

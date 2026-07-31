@@ -42,7 +42,7 @@ export function AdminDemoToolsPage() {
     try {
       const res = await populateTournament(selectedId);
       setResult(res);
-      showToast('Success', 'Populate Tournament thành công!');
+      showToast('Success', 'Tournament populated successfully.');
       await loadTournaments();
     } catch (err) {
       const msg = parseApiError(err);
@@ -61,7 +61,7 @@ export function AdminDemoToolsPage() {
     try {
       const res = await resolveRace(selectedId);
       setResult(res);
-      showToast('Success', 'Resolve Race thành công!');
+      showToast('Success', 'Race resolved successfully.');
       await loadTournaments();
     } catch (err) {
       const msg = parseApiError(err);
@@ -85,7 +85,7 @@ export function AdminDemoToolsPage() {
 
           <div className="glass-panel rounded-2xl p-4 border border-amber-500/30 flex items-start gap-3">
             <span className="text-amber-400 text-base shrink-0">⚠️</span>
-            <p className="text-amber-200 text-sm">Trang nội bộ dùng để demo — không chia sẻ đường dẫn này cho người ngoài.</p>
+            <p className="text-amber-200 text-sm">Internal demo page — do not share this link outside the team.</p>
           </div>
 
           <div className="glass-panel rounded-2xl p-6 border border-glass-border space-y-5">
@@ -93,15 +93,15 @@ export function AdminDemoToolsPage() {
 
             <div>
               <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">
-                Chọn giải đấu
+                Select tournament
               </label>
               {loadingTournaments ? (
                 <div className="h-10 bg-navy/50 rounded-lg animate-pulse" />
               ) : tournaments.length === 0 ? (
                 <p className="text-sm text-muted">
-                  Chưa có giải đấu nào.{' '}
+                  No tournaments yet.{' '}
                   <Link to="/admin/tournaments" className="text-gold hover:underline">
-                    Vào Tournaments để tạo mới →
+                    Go to Tournaments to create one →
                   </Link>
                 </p>
               ) : (
@@ -110,7 +110,7 @@ export function AdminDemoToolsPage() {
                   onChange={(e) => { setSelectedId(e.target.value); setResult(null); setError(''); }}
                   className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors"
                 >
-                  <option value="">-- Chọn giải đấu --</option>
+                  <option value="">-- Select a tournament --</option>
                   {tournaments.map((t) => (
                     <option key={t.tournamentId} value={String(t.tournamentId)}>
                       {t.name ?? `Tournament #${t.tournamentId}`} — {t.status ?? 'Unknown'}
@@ -126,14 +126,14 @@ export function AdminDemoToolsPage() {
                 disabled={anyLoading || !selectedId}
                 className="px-5 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-blue-400 border border-blue-500/30 text-sm font-bold rounded-lg transition-colors"
               >
-                {loading.populate ? 'Đang gọi...' : 'Populate Tournament'}
+                {loading.populate ? 'Working...' : 'Populate Tournament'}
               </button>
               <button
                 onClick={handleResolve}
                 disabled={anyLoading || !selectedId}
                 className="px-5 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-400 border border-emerald-500/30 text-sm font-bold rounded-lg transition-colors"
               >
-                {loading.resolve ? 'Đang gọi...' : 'Resolve Race'}
+                {loading.resolve ? 'Working...' : 'Resolve Race'}
               </button>
             </div>
 
