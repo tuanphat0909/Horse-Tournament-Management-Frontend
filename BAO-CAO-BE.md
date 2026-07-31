@@ -245,6 +245,39 @@ Khi BE nối vào Azure, God API báo **chỉ có 1 nài ngựa có hồ sơ**, 
 tự vá hồ sơ thiếu mà backend thêm ở bản `4b87585` chạy tốt trên DB local (93/93 hồ sơ)
 nhưng **dữ liệu trên deploy vẫn chưa được vá**.
 
+### Vì sao phần tự vá không chạy — chỗ này là điểm yếu của code
+
+Đoạn vá nằm ở `DataSeeder.cs:618`, nhưng **bị đặt bên trong** `SeedSUTournamentsAsync()`
+— một hàm tạo dữ liệu test — và đứng **sau** một lệnh thoát sớm không liên quan gì tới nó:
+
+```csharp
+var vetUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == "vet@gmail.com")
+    ?? await _context.Users.FirstOrDefaultAsync(u => u.RoleId == 6);
+if (vetUser == null) return;          // ← thoat o day
+
+// ... 45 dong sau moi toi:
+// 3.5. Ensure all seeded Jockeys have a JockeyProfile (fixes corrupted data)
+```
+
+Ba cách để phần vá **im lặng không chạy**:
+
+| # | Tình huống | Kết quả |
+|---|---|---|
+| 1 | Database không có tài khoản bác sĩ thú y (`vet@gmail.com` hoặc `RoleId = 6`) | Thoát ở dòng 573, chưa tới chỗ vá |
+| 2 | Bất kỳ bước nào trước đó ném lỗi | Lời gọi nằm ở bước 7 cuối khối `try`; lỗi bị `catch` nuốt, `Program.cs` nuốt tiếp với log *"Continuing startup..."* |
+| 3 | Script SQL đánh số vai trò khác | Đoạn vá tìm theo `RoleId == 3` viết cứng, không khớp ai |
+
+Trường hợp DB deploy được dựng bằng script SQL thay vì để seeder tự tạo thì rất dễ rơi vào
+tình huống 1 hoặc 3.
+
+### Đề xuất
+
+Tách đoạn vá hồ sơ thành **một bước độc lập, chạy đầu tiên trong `SeedAsync`**, không phụ
+thuộc vào tài khoản vet hay 55 nài ngựa test. Đây là sửa chữa dữ liệu cho toàn hệ thống,
+không phải một phần của việc tạo dữ liệu test. Đồng thời tìm nài ngựa theo **tên vai trò**
+(`Role.Name == "Jockey"`) thay vì `RoleId == 3` viết cứng, để không phụ thuộc vào thứ tự
+chèn của script.
+
 Nếu buổi trình bày định demo trên bản deploy thì cần chạy lại phần seeding trên Azure
 trước, nếu không phím tắt God API sẽ hỏng ngay trên sân khấu.
 
@@ -275,7 +308,7 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 | 1 | Ràng buộc khoá tài khoản của Nài ngựa vẫn dùng danh sách trạng thái cũ | 🔴 Cao | 31/07 | `UserRepository.cs` |
 | 2 | 🆕 Điều kiện huỷ giải và điều kiện đặt cược chồng lấn → giải có cược kẹt vĩnh viễn | 🔴 Cao | 31/07 | `TournamentService.cs` |
 | 3 | 🆕 Chạy `.exe` là nối thẳng vào DB deploy + chuỗi kết nối kèm mật khẩu đã commit | 🔴 Cao | 31/07 | `appsettings.json` |
-| 4 | 🆕 DB deploy thiếu hồ sơ nài ngựa, God API hỏng trên bản deploy | 🟡 Vừa | 31/07 | Seeding trên Azure |
+| 4 | 🆕 Đoạn tự vá hồ sơ nài ngựa bị đặt sau lệnh thoát sớm nên không chạy trên DB deploy | 🟡 Vừa | 31/07 | `DataSeeder.cs:618` |
 | 5 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
 **Ưu tiên mục 3** — đây là mục duy nhất có thể gây hỏng dữ liệu thật, và phần đổi mật khẩu
