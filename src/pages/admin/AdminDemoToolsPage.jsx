@@ -111,8 +111,9 @@ export function AdminDemoToolsPage() {
 
   const selectedTour = tournaments.find((t) => String(t.tournamentId) === selectedId);
   const anyLoading = loading.populate || loading.resolve || loading.startRace;
-  // Chỉ hiện cuộc đua của giải đang chọn; chưa chọn giải thì hiện tất cả.
-  const racesCuaGiai = selectedId ? races.filter((r) => String(r.tournamentId) === String(selectedId)) : races;
+  // Phải chọn giải trước — tên cuộc đua hay trùng nhau giữa các giải nên hiện tất cả
+  // thì không phân biệt được cái nào của giải nào.
+  const racesCuaGiai = selectedId ? races.filter((r) => String(r.tournamentId) === String(selectedId)) : [];
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -146,7 +147,7 @@ export function AdminDemoToolsPage() {
               ) : (
                 <select
                   value={selectedId}
-                  onChange={(e) => { setSelectedId(e.target.value); setResult(null); setError(''); }}
+                  onChange={(e) => { setSelectedId(e.target.value); setSelectedRaceId(''); setResult(null); setError(''); }}
                   className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors"
                 >
                   <option value="">-- Select a tournament --</option>
@@ -183,10 +184,11 @@ export function AdminDemoToolsPage() {
               <div className="flex gap-3 flex-wrap items-start">
                 <select
                   value={selectedRaceId}
+                  disabled={!selectedId}
                   onChange={(e) => { setSelectedRaceId(e.target.value); setResult(null); setError(''); }}
-                  className="flex-1 min-w-[220px] bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors"
+                  className="flex-1 min-w-[220px] bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  <option value="">-- Select a race --</option>
+                  <option value="">{selectedId ? '-- Select a race --' : '-- Select a tournament first --'}</option>
                   {racesCuaGiai.map((r) => (
                     <option key={r.raceId} value={String(r.raceId)}>
                       {r.name ?? `Race #${r.raceId}`} — {r.status ?? 'Unknown'}
@@ -202,9 +204,11 @@ export function AdminDemoToolsPage() {
                 </button>
               </div>
               <p className="text-[11px] text-muted mt-1.5">
-                Sets the race to Active and moves its date to now, so the referee can enter results
-                without waiting for the scheduled day.
-                {racesCuaGiai.length === 0 && ' No races found for the selected tournament.'}
+                {!selectedId
+                  ? 'Select a tournament above to see its races.'
+                  : racesCuaGiai.length === 0
+                    ? 'This tournament has no races yet — use Populate Tournament, then Resolve Race.'
+                    : 'Sets the race to Active and moves its date to now, so the referee can enter results without waiting for the scheduled day.'}
               </p>
             </div>
 
