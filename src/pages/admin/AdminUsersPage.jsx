@@ -15,7 +15,7 @@ import { Pager, paginate } from '../../components/ui/Pager';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
-const ROLE_LABELS = { owner: 'Horse Owner', jockey: 'Jockey', referee: 'Referee', spectator: 'Spectator', admin: 'Admin' };
+const ROLE_LABELS = { owner: 'Horse Owner', jockey: 'Jockey', referee: 'Referee', spectator: 'Spectator', vet: 'Veterinarian', admin: 'Admin' };
 
 const NEEDS_LICENSE = ['Jockey', 'Referee'];
 
@@ -211,12 +211,15 @@ export function AdminUsersPage() {
     jockey: accounts.filter((a) => (a.roleName ?? '').toLowerCase() === 'jockey').length,
     referee: accounts.filter((a) => (a.roleName ?? '').toLowerCase() === 'referee').length,
     spectator: accounts.filter((a) => (a.roleName ?? '').toLowerCase() === 'spectator').length,
+    vet: accounts.filter((a) => (a.roleName ?? '').toLowerCase() === 'veterinarian').length,
   };
 
   const filteredAccounts = accounts.filter((acc) => {
     // 1. Role Filter
     if (filter !== 'all') {
-      const targetRole = filter === 'owner' ? 'horseowner' : filter.toLowerCase();
+      // Nhan tren giao dien ngan gon hon ten luu trong CSDL nen phai anh xa lai
+      const ROLE_DB_NAME = { owner: 'horseowner', vet: 'veterinarian' };
+      const targetRole = ROLE_DB_NAME[filter] ?? filter.toLowerCase();
       if ((acc.roleName ?? '').toLowerCase() !== targetRole) return false;
     }
     // 2. Search filter
@@ -261,8 +264,8 @@ export function AdminUsersPage() {
           />
 
           {/* Role Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-            {['all', 'admin', 'owner', 'jockey', 'referee', 'spectator'].map((r) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            {['all', 'admin', 'owner', 'jockey', 'referee', 'spectator', 'vet'].map((r) => (
               <button
                 key={r}
                 onClick={() => {
