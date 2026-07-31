@@ -283,7 +283,72 @@ trước, nếu không phím tắt God API sẽ hỏng ngay trên sân khấu.
 
 ---
 
-## 🟡 5. Tên trường trong phản hồi lỗi không thống nhất
+## 🔴 5. 🆕 Giải không bao giờ tự chuyển sang `Active` — vòng đời giải bị kẹt
+
+> *Phát hiện 31/07 khi chạy trọn vòng đời một giải trên máy.*
+
+**Nơi sửa:** `TournamentService.cs` + `TournamentDeadlineWorker.cs`
+
+### Chuyện gì xảy ra
+
+Chỉ có **hai chỗ** trong toàn bộ mã nguồn đặt `tournament.Status = "Active"`:
+
+| Dòng | Nằm trong hàm | Ai gọi |
+|---|---|---|
+| `TournamentService.cs:425` | `GetAllTournamentsAsync()` | **Không controller nào** |
+| `TournamentService.cs:540` | `GetTournamentByIdAsync()` | `GET /public/tournaments/{id}/rounds` |
+
+`TournamentDeadlineWorker` — tiến trình nền lo chuyển trạng thái theo mốc thời gian — xử lý
+`PendingRegistration` → `Registration Open` → `PendingScheduling` → `Registration Suspended`,
+nhưng **không hề đụng tới `Active`**.
+
+### Hậu quả
+
+Giải chỉ chuyển sang `Active` khi **có người tình cờ gọi `GET /public/tournaments/{id}/rounds`**.
+Frontend không gọi endpoint này ở đâu, nên trên thực tế giải **nằm mãi ở `Upcoming`**, kéo theo:
+
+- Không kết thúc giải được — `CompleteTournamentAsync` đòi `Status == "Active"`
+- Không trao thưởng được
+- Vòng đời một giải không bao giờ chạy hết
+
+### Kiểm chứng
+
+Giải #117, ngày bắt đầu đã lùi về quá khứ, trọng tài đã phân công đủ:
+
+```
+Truoc khi goi   → Status = Upcoming   (dung yen, ke ca sau khi worker chay)
+GET /api/public/tournaments/117/rounds
+Sau khi goi     → Status = Active     ✅
+```
+
+### Đề xuất
+
+Chuyển logic kích hoạt vào `TournamentDeadlineWorker` — nơi đã có sẵn vòng lặp theo mốc
+thời gian và đã xử lý mọi chuyển trạng thái khác. Điều kiện y như hiện tại: tới ngày bắt
+đầu, mọi cuộc đua đã có trọng tài thì sang `Active`, thiếu trọng tài thì sang
+`PendingAdminAttention`.
+
+**Không nên để một endpoint `GET` thay đổi dữ liệu.** Ngoài chuyện khó đoán, nó còn khiến
+trạng thái giải phụ thuộc vào việc có ai mở trang hay không.
+
+---
+
+## 🟡 6. 🆕 Endpoint duy nhất trả về danh sách vòng đấu không được frontend dùng
+
+> *Phát hiện 31/07.*
+
+`GET /public/tournaments/{id}/rounds` trả về đầy đủ vòng đấu kèm cuộc đua bên trong — đúng
+thứ trang quản lý cuộc đua cần. Nhưng frontend lại đọc `rounds` từ `/public/tournaments`,
+mà DTO của endpoint đó **không có trường này** (chỉ 12 trường tóm tắt).
+
+Frontend đã tự xử lý bằng cách dựng lại vòng từ lịch đua (`/public/races/schedule` có sẵn
+`roundId`, `roundName`, `roundNumber`), nên **không cần backend sửa gấp**. Ghi lại để backend
+biết là có một endpoint đang không ai dùng, và cân nhắc thêm `rounds` vào DTO danh sách giải
+cho nhất quán.
+
+---
+
+## 🟡 7. Tên trường trong phản hồi lỗi không thống nhất
 
 > *Báo từ 30/07, backend chưa xử lý*
 
@@ -309,10 +374,14 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 | 2 | 🆕 Điều kiện huỷ giải và điều kiện đặt cược chồng lấn → giải có cược kẹt vĩnh viễn | 🔴 Cao | 31/07 | `TournamentService.cs` |
 | 3 | 🆕 Chạy `.exe` là nối thẳng vào DB deploy + chuỗi kết nối kèm mật khẩu đã commit | 🔴 Cao | 31/07 | `appsettings.json` |
 | 4 | 🆕 Đoạn tự vá hồ sơ nài ngựa bị đặt sau lệnh thoát sớm nên không chạy trên DB deploy | 🟡 Vừa | 31/07 | `DataSeeder.cs:618` |
-| 5 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
+| 5 | 🆕 Giải không tự chuyển sang `Active`, vòng đời giải bị kẹt ở `Upcoming` | 🔴 Cao | 31/07 | `TournamentDeadlineWorker.cs` |
+| 6 | 🆕 Endpoint trả về vòng đấu không được frontend dùng | 🟡 Vừa | 31/07 | `PublicController.cs` |
+| 7 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
-**Ưu tiên mục 3** — đây là mục duy nhất có thể gây hỏng dữ liệu thật, và phần đổi mật khẩu
-nên làm sớm vì mật khẩu cũ đã nằm trong lịch sử git.
+**Ưu tiên mục 5** — đây là mục chặn cứng việc chạy trọn vòng đời một giải, cần xong trước
+buổi trình bày.
+**Mục 3** là mục duy nhất có thể gây hỏng dữ liệu thật, và phần đổi mật khẩu nên làm sớm
+vì mật khẩu cũ đã nằm trong lịch sử git.
 **Mục 1** chỉ cần sửa một hàm, dùng lại đúng cách đã áp dụng cho Chủ ngựa.
 **Mục 2** khoá cứng một luồng nghiệp vụ và dính tới tiền của người dùng.
 **Mục 4** cần xong trước buổi trình bày nếu định demo trên bản deploy.
