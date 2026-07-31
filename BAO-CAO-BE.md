@@ -106,16 +106,52 @@ Chặn như vậy là **đúng** — không thể huỷ giải khi tiền cượ
 rà toàn bộ mã nguồn thì **không có API hoàn cược nào**, cũng không có hàm `RefundBet` /
 `RefundAllBets` ở tầng nghiệp vụ.
 
+### Vì sao tình huống này xảy ra được — hai điều kiện đang chồng lấn
+
+Điều kiện huỷ giải (`TournamentService.cs:1400`) chỉ loại trừ 4 trạng thái:
+
+```csharp
+new[] { "Active", "AwaitingResults", "Completed", "Cancelled" }
+```
+
+Điều kiện đặt cược (`BettingService.cs:104-116`) cho phép khi cuộc đua ở
+`Upcoming`/`Scheduled` và giải chưa `finished`/`completed`/`cancelled`/`ended`.
+
+Lịch đua được xếp **trước** khi giải chuyển sang `Active`. Nên có nguyên một khoảng —
+giải `Upcoming` + cuộc đua `Scheduled` — mà **vừa nhận cược được, vừa huỷ được**:
+
+```
+… → PendingScheduling → Upcoming ──────► Active → AwaitingResults → Completed
+                            │
+              ┌─────────────┴─────────────┐
+              │  đặt cược : ĐÃ MỞ         │  ← khoảng chồng lấn
+              │  huỷ giải : VẪN CHO PHÉP  │
+              └───────────────────────────┘
+```
+
+Giải #101 nằm đúng trong khoảng này: `Upcoming`, cuộc đua `Scheduled`, 1 vé cược 15.000
+đang `Pending`. Trên cơ sở dữ liệu máy hiện có **5 giải** rơi vào khoảng này.
+
 ### Hậu quả
 
 Câu lỗi bảo *"cho tới khi cược được hoàn"* nhưng **không tồn tại cách nào để hoàn**. Nghĩa
 là chỉ cần một người đặt cược là giải đó **kẹt vĩnh viễn**, không huỷ được nữa dù có lý do
-chính đáng (thiếu ngựa, thời tiết, sự cố sân).
+chính đáng (thời tiết, sự cố sân, doping).
 
-### Đề xuất
+### Hai hướng sửa — cần backend chọn một
 
-Gộp hoàn cược vào chính hàm huỷ giải, làm trước khi đổi trạng thái — quản trị viên chỉ cần
-một thao tác:
+| Hướng | Ý nghĩa nghiệp vụ | Công sức |
+|---|---|---|
+| **A. Hoàn cược rồi huỷ** | Giải đã mở cược vẫn huỷ được; huỷ thì trả tiền lại cho người đặt | Phải viết thêm phần hoàn cược |
+| **B. Khoá huỷ từ lúc mở cược** | Một khi đã nhận tiền cược thì giải buộc phải chạy | Chỉ sửa điều kiện + câu lỗi |
+
+**Nếu chọn hướng B**, thêm `Upcoming` vào danh sách trạng thái không cho huỷ, và **đổi câu
+lỗi** thành đại ý *"Tournament that has opened betting cannot be cancelled."* — câu hiện
+tại hứa hẹn một cơ chế hoàn tiền không tồn tại, gây hiểu nhầm cho cả người dùng lẫn người
+đọc mã nguồn.
+
+**Nếu chọn hướng A**, gộp hoàn cược vào chính hàm huỷ giải, làm trước khi đổi trạng thái —
+quản trị viên chỉ cần một thao tác:
 
 ```csharp
 var pendingBets = await _context.Bets
@@ -147,10 +183,15 @@ foreach (var bet in pendingBets)
 }
 ```
 
-**Nếu backend làm phần này**, phía frontend sẽ bổ sung cảnh báo trong hộp thoại xác nhận
-huỷ: *"Giải này đang có N vé cược trị giá X — huỷ giải sẽ hoàn lại toàn bộ cho người
-chơi."* Cần backend trả về số vé và tổng tiền cược trong dữ liệu chi tiết giải để hiện
-được con số này.
+**Phía frontend sẽ làm gì tuỳ theo hướng backend chọn:**
+
+- *Hướng A* — hiện cảnh báo trong hộp thoại xác nhận huỷ: *"Giải này đang có N vé cược trị
+  giá X — huỷ giải sẽ hoàn lại toàn bộ cho người chơi."*
+- *Hướng B* — ẩn luôn nút Huỷ với giải đã mở cược, kèm chú thích lý do, để quản trị viên
+  không bấm vào rồi nhận lỗi.
+
+Cả hai hướng đều cần backend trả về **số vé cược và tổng tiền cược** trong dữ liệu chi tiết
+giải — hiện chưa có trường nào cho thông tin này.
 
 ---
 
@@ -177,7 +218,7 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 | # | Nội dung | Mức độ | Phát hiện | Nơi sửa |
 |---|---|---|---|---|
 | 1 | Ràng buộc khoá tài khoản của Nài ngựa vẫn dùng danh sách trạng thái cũ | 🔴 Cao | 31/07 | `UserRepository.cs` |
-| 2 | 🆕 Giải có cược không huỷ được vì thiếu cơ chế hoàn cược | 🔴 Cao | 31/07 | `TournamentService.cs` |
+| 2 | 🆕 Điều kiện huỷ giải và điều kiện đặt cược chồng lấn → giải có cược kẹt vĩnh viễn | 🔴 Cao | 31/07 | `TournamentService.cs` |
 | 3 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
 **Ưu tiên mục 1** — chỉ cần sửa một hàm, dùng lại đúng cách đã áp dụng cho Chủ ngựa.

@@ -118,17 +118,37 @@ tầng nghiệp vụ.
 **Hậu quả:** giải nào đã có người đặt cược thì **không bao giờ huỷ được**. Câu thông báo
 lỗi bảo *"cho tới khi cược được hoàn"* nhưng không có cách nào hoàn.
 
-Đây là chỗ **buộc phải xử lý**, vì nó liên quan tới tiền thật của khán giả trong hệ thống
-— khác với phí hợp đồng vốn đã thống nhất để ngoài.
+### Vì sao lại rơi vào tình huống này
+
+Dễ tưởng huỷ giải chỉ dành cho giải *chưa đủ ngựa*, nhưng backend không làm vậy — huỷ được
+ở **mọi trạng thái trừ** `Active`, `AwaitingResults`, `Completed`, `Cancelled`. Trong khi
+đó đặt cược mở ngay khi lịch đua được xếp, tức là **trước** lúc giải sang `Active`.
+
+```
+… → PendingScheduling → Upcoming ──────► Active → AwaitingResults → Completed
+                            │
+              ┌─────────────┴─────────────┐
+              │  đặt cược : ĐÃ MỞ         │  ← khoảng chồng lấn
+              │  huỷ giải : VẪN CHO PHÉP  │
+              └───────────────────────────┘
+```
+
+Trên cơ sở dữ liệu máy hiện có **5 giải** nằm trong khoảng này. Đây là chỗ **buộc phải xử
+lý**, vì nó liên quan tới tiền thật của khán giả trong hệ thống — khác với phí hợp đồng
+vốn đã thống nhất để ngoài.
 
 ### Hai hướng, chọn một
 
 | Hướng | Cách làm | Đánh giá |
 |---|---|---|
-| **A. Tự hoàn cược khi huỷ** | Khi huỷ giải, duyệt các vé cược `Pending` của giải đó, cộng lại tiền vào ví người cược, đổi trạng thái vé thành `Refunded`, gửi thông báo | **Nên chọn** — đúng nghiệp vụ, người chơi không mất tiền, và huỷ giải trở thành một thao tác trọn vẹn |
-| **B. Thêm nút hoàn cược riêng** | Quản trị viên bấm hoàn cược trước, rồi mới huỷ được giải | Đúng quy trình hơn nhưng thêm một bước thủ công dễ quên |
+| **A. Hoàn cược rồi huỷ** | Khi huỷ giải, duyệt các vé cược `Pending`, cộng tiền lại vào ví người đặt, đổi vé thành `Refunded`, gửi thông báo | Thực tế hơn — giải vẫn huỷ được khi có sự cố (thời tiết, doping), người chơi không mất tiền |
+| **B. Khoá huỷ từ lúc mở cược** | Thêm `Upcoming` vào danh sách không cho huỷ; đã nhận cược thì giải buộc phải chạy | **Gọn hơn, hợp phạm vi đồ án** — chỉ sửa điều kiện và câu lỗi, không phải viết luồng hoàn tiền |
 
-Đề xuất **hướng A**: gộp vào chính hàm huỷ giải, người dùng chỉ cần một thao tác.
+**Nếu chọn hướng B**, bắt buộc đổi luôn câu thông báo lỗi — câu hiện tại hứa hẹn một cơ chế
+hoàn tiền không tồn tại. Khi vấn đáp thì nói thẳng: *"giải đã mở bán cược thì không huỷ
+được nữa, vì tiền cược đã vào hệ thống."*
+
+**Nếu chọn hướng A**, gộp vào chính hàm huỷ giải để người dùng chỉ cần một thao tác:
 
 ```csharp
 // Trong CancelTournamentAsync, làm trước khi đổi trạng thái giải
@@ -177,7 +197,7 @@ chơi."* — để quản trị viên biết hậu quả trước khi bấm.
 | 3 | Thanh toán hợp đồng nài ngựa | ⬜ **Cố ý để ngoài hệ thống** |
 | 4 | Phí tham gia giải | ⬜ **Cố ý để ngoài hệ thống** |
 | 5 | Bỏ nạp tiền của chủ ngựa (ví chỉ còn nhận thưởng → rút) | ✅ **Đã xoá ở giao diện** |
-| 6 | Hoàn cược khi huỷ giải | 🔴 **Chưa có — giải có cược đang bị kẹt, không huỷ được** |
+| 6 | Xử lý giải đã mở cược khi huỷ | 🔴 **Đang kẹt — chờ chọn hướng A hay B** |
 
 Chỉ còn **mục 6** cần làm, và nó nằm ở phía backend. Mục 3 và 4 là quyết định có chủ đích
 của nhóm chứ không phải thiếu sót.
