@@ -72,7 +72,11 @@ export const withdrawAdminWallet = (amount) => api.post('/admin/wallet/withdraw'
  * được duyệt kèm phiếu khám sức khoẻ và hợp đồng nài ngựa. Dùng khi cần dữ liệu
  * nhanh để trình bày, thay vì bấm tay qua từng bước.
  */
-export const setupDemoTournament = () => api.post('/Demo/auto-setup');
+// Backend đã đổi tên nhóm endpoint demo: `auto-setup` → `setup-race`, và không còn
+// `resolve-race` — chạy giải giờ là `start-race/{tournamentId}`.
+export const setupDemoTournament = () => api.post('/demo/setup-race');
 
-export const populateTournament = (tournamentId) => api.post(`/demo/populate-tournament/${tournamentId}`);
-export const resolveRace = (tournamentId) => api.post(`/demo/resolve-race/${tournamentId}`);
+// `count` là số suất đua muốn tạo; backend nhận qua query và không có giá trị mặc định,
+// thiếu nó thì tạo 0 suất.
+export const populateTournament = (tournamentId, count = 12) => api.post(`/demo/populate-tournament/${tournamentId}?count=${count}`);
+export const resolveRace = (tournamentId) => api.post(`/demo/start-race/${tournamentId}`);
