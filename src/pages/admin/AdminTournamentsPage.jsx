@@ -632,36 +632,24 @@ export function AdminTournamentsPage() {
                             <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} /> {config.label}
                           </span>
                         </div>
-                        {/* Hàng 2: badge loại rounds + đếm ngược thời gian — min-h giữ chỗ để card không bị lệch khi thiếu badge */}
+                        {/* Hàng 2: đồng hồ đếm ngược và cảnh báo — trước đây hàng này còn
+                            lặp lại đúng trạng thái đã hiện ở hàng 1 (Reg. Upcoming / Reg. Open /
+                            Scheduled / Racing...) nên mỗi thẻ hiện hai nhãn cùng nghĩa. Bỏ phần
+                            lặp, chỉ giữ thông tin mà hàng 1 không có.
+                            min-h giữ chỗ để các thẻ không cao thấp lệch nhau. */}
                         <div className="flex items-center gap-2 flex-wrap min-h-[26px]">
-                          {customStatus === 'Upcoming Registration' && (
-                            <>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-500/30 bg-blue-500/8 text-blue-400 shrink-0">Reg. Upcoming</span>
-                              {tour.registrationStartDate && <CountdownTimer target={tour.registrationStartDate} utc={false} label="Opens in:" />}
-                            </>
+                          {customStatus === 'Upcoming Registration' && tour.registrationStartDate && (
+                            <CountdownTimer target={tour.registrationStartDate} utc={false} label="Opens in:" />
                           )}
-                          {customStatus === 'Registration Open' && (
-                            <>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/8 text-emerald-400 shrink-0">Reg. Open</span>
-                              {tour.registrationEndDate && <CountdownTimer target={tour.registrationEndDate} utc={false} label="Remaining:" />}
-                            </>
+                          {customStatus === 'Registration Open' && tour.registrationEndDate && (
+                            <CountdownTimer target={tour.registrationEndDate} utc={false} label="Remaining:" />
                           )}
-                          {customStatus === 'Registration Closed' && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">🔒 Reg. Closed</span>}
-                          {customStatus === 'Scheduled' && (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-500/40 bg-indigo-500/10 text-indigo-400 shrink-0">📅 Scheduled</span>
-                              {show24hWarning && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/15 text-red-400 shrink-0 flex items-center gap-1 animate-pulse">
-                                  <AlertTriangle size={10} className="text-red-400 shrink-0" />
-                                  {'Missing referees!'}
-                                </span>
-                              )}
-                            </div>
+                          {customStatus === 'Scheduled' && show24hWarning && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/15 text-red-400 shrink-0 flex items-center gap-1 animate-pulse">
+                              <AlertTriangle size={10} className="text-red-400 shrink-0" />
+                              {'Missing referees!'}
+                            </span>
                           )}
-                          {customStatus === 'Pending Admin Attention' && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-400 shrink-0 animate-pulse">⚠️ {'Referee assignment needed'}</span>}
-                          {customStatus === 'Racing' && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/40 bg-orange-500/10 text-orange-400 shrink-0">🏃 Racing</span>}
-                          {customStatus === 'Completed' && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-zinc-500/40 bg-zinc-500/10 text-zinc-400 shrink-0">🏆 Completed</span>}
-                          {customStatus === 'Cancelled' && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-500/40 bg-red-500/10 text-red-400 shrink-0">❌ Cancelled</span>}
                         </div>
                       </div>
                       <h3 className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors mb-1 line-clamp-1">{tour.name}</h3>
