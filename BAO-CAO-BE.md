@@ -93,12 +93,32 @@ lại. Dấu ngoặc vuông cũng giúp nhìn thấy khoảng trắng bằng m�
 
 ---
 
+## 🟡 3. `populate-tournament` gọi lần thứ hai thì đổ lỗi 500 chung chung
+
+**Nơi sửa:** `DemoService.PopulateTournamentAsync`
+
+Gọi lần đầu chạy đúng, gọi lại trên cùng một giải thì hỏng với thông báo không nói được gì:
+
+```
+POST /api/demo/populate-tournament/122?count=5    → 200 "populated successfully with 5 entries."
+POST /api/demo/populate-tournament/122?count=20   → 500 "An error occurred during tournament
+                                                        population." detail: "An error occurred
+                                                        while saving the entity changes."
+```
+
+Nhiều khả năng do cố thêm lại ngựa đã đăng ký nên vi phạm ràng buộc. Dù nguyên nhân là gì,
+người dùng cũng không biết phải làm gì với câu lỗi này. Đề xuất: bỏ qua những ngựa đã có
+trong giải và chỉ thêm phần còn thiếu, hoặc trả về `400` kèm câu giải thích rõ.
+
+---
+
 ## Tổng hợp
 
 | # | Nội dung | Mức độ | Nơi sửa |
 |---|---|---|---|
 | 1 | God API tạo phân công trọng tài là `Assigned`, nơi tra cứu đòi `Active` → không nộp được kết quả | 🔴 Cao | `DemoService.cs:175` |
 | 2 | Nhờ kiểm tra khoảng trắng thừa trong `Horse.Name` của bản ghi `Id = 1014` trên deploy | 🟡 Vừa | Cơ sở dữ liệu Azure |
+| 3 | `populate-tournament` gọi lần hai đổ lỗi 500 chung chung | 🟡 Vừa | `DemoService.cs` |
 
 ---
 

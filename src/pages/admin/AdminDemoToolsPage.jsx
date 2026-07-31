@@ -13,6 +13,8 @@ export function AdminDemoToolsPage() {
   const [tournaments, setTournaments] = useState([]);
   const [loadingTournaments, setLoadingTournaments] = useState(true);
   const [selectedId, setSelectedId] = useState('');
+  // Số suất đua muốn thêm — backend nhận từ 1 tới 48.
+  const [count, setCount] = useState('12');
   const [loading, setLoading] = useState({ populate: false, resolve: false });
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -34,13 +36,16 @@ export function AdminDemoToolsPage() {
     loadTournaments();
   }, []);
 
+  const soSuat = Number(count);
+  const soSuatHopLe = Number.isInteger(soSuat) && soSuat >= 1 && soSuat <= 48;
+
   async function handlePopulate() {
-    if (!selectedId) return;
+    if (!selectedId || !soSuatHopLe) return;
     setLoading((p) => ({ ...p, populate: true }));
     setResult(null);
     setError('');
     try {
-      const res = await populateTournament(selectedId);
+      const res = await populateTournament(selectedId, soSuat);
       setResult(res);
       showToast('Success', 'Tournament populated successfully.');
       await loadTournaments();
@@ -120,10 +125,27 @@ export function AdminDemoToolsPage() {
               )}
             </div>
 
+            <div>
+              <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">
+                Horses to add
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={48}
+                value={count}
+                onChange={(e) => setCount(e.target.value)}
+                className="w-32 bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors"
+              />
+              <p className="text-[11px] text-muted mt-1.5">
+                {soSuatHopLe ? 'Between 1 and 48. Only applies to Populate Tournament.' : <span className="text-amber-400">Enter a whole number between 1 and 48.</span>}
+              </p>
+            </div>
+
             <div className="flex gap-3 flex-wrap">
               <button
                 onClick={handlePopulate}
-                disabled={anyLoading || !selectedId}
+                disabled={anyLoading || !selectedId || !soSuatHopLe}
                 className="px-5 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-blue-400 border border-blue-500/30 text-sm font-bold rounded-lg transition-colors"
               >
                 {loading.populate ? 'Working...' : 'Populate Tournament'}
