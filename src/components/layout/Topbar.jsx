@@ -146,31 +146,36 @@ export function Topbar() {
   return (
     <div className="sticky top-0 z-50 flex flex-col w-full">
       {readinessAlerts.map((alert) => (
-        <div key={alert.tournamentId} className="bg-red-600 text-white border-b border-red-300/40 px-6 py-2.5 flex flex-wrap items-center gap-3 text-xs font-bold shadow-lg">
-          <AlertTriangle size={17} className="shrink-0 animate-pulse" />
-          <span className="flex-grow">
+        <div key={alert.tournamentId} className="bg-slate-900/95 bg-gradient-to-r from-amber-950/70 via-slate-900/90 to-amber-950/70 text-slate-200 border-b border-amber-500/30 px-6 py-2 flex flex-wrap items-center gap-3 text-xs shadow-md backdrop-blur-md">
+          <div className="flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0">
+            <AlertTriangle size={12} className="text-amber-400 shrink-0" />
+            <span>Attention</span>
+          </div>
+          <span className="flex-grow font-normal text-slate-300">
             {alert.hasInvalidHorseCount ? (
-              `URGENT: '${alert.name}' cannot be scheduled: ${alert.qualifiedHorses}/12 qualified horses. Extend registration or cancel the tournament.`
+              <>Tournament <strong className="text-amber-300 font-semibold">{`'${alert.name}'`}</strong> cannot be scheduled: {alert.qualifiedHorses}/12 qualified horses. Extend registration or cancel the tournament.</>
             ) : (
               <>
-                URGENT: '{alert.name}' starts within 24 hours but is missing
-                {alert.missingLanes && alert.missingReferees ? ' lane and referee assignments.' : alert.missingLanes ? ' lane assignments.' : ' referee assignments.'}
+                Tournament <strong className="text-amber-300 font-semibold">{`'${alert.name}'`}</strong> starts within 24 hours but is missing
+                <span className="text-amber-200 font-medium ml-1">
+                  {alert.missingLanes && alert.missingReferees ? 'lane and referee assignments.' : alert.missingLanes ? 'lane assignments.' : 'referee assignments.'}
+                </span>
               </>
             )}
           </span>
           {alert.hasInvalidHorseCount ? (
-            <button onClick={() => navigate('/admin/tournaments')} className="rounded-md bg-white text-red-700 px-3 py-1.5 hover:bg-red-50 transition-colors">
+            <button onClick={() => navigate('/admin/tournaments')} className="rounded-md bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-3 py-1 text-xs transition-colors shadow-sm">
               Resolve registration
             </button>
           ) : (
             alert.missingLanes && (
-              <button onClick={() => navigate('/admin/races')} className="rounded-md bg-white text-red-700 px-3 py-1.5 hover:bg-red-50 transition-colors">
+              <button onClick={() => navigate('/admin/races')} className="rounded-md bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-3 py-1 text-xs transition-colors shadow-sm">
                 Assign lanes
               </button>
             )
           )}
           {!alert.hasInvalidHorseCount && alert.missingReferees && (
-            <button onClick={() => navigate('/admin/referees')} className="rounded-md bg-white text-red-700 px-3 py-1.5 hover:bg-red-50 transition-colors">
+            <button onClick={() => navigate('/admin/referees')} className="rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-semibold px-3 py-1 text-xs transition-colors">
               Assign referees
             </button>
           )}

@@ -792,9 +792,9 @@ export function AdminTournamentsPage() {
                         {customStatus === 'Scheduled' && (
                           <div className="flex flex-col gap-2 w-full">
                             {show24hWarning && (
-                              <div className="text-red-400 font-bold text-[11px] flex items-start gap-1.5 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5 animate-pulse mb-1">
-                                <AlertTriangle size={13} className="shrink-0 mt-0.5 text-red-400" />
-                                <span>{'Urgent: referees must be assigned (less than 24h before the tournament starts!)'}</span>
+                              <div className="text-amber-300 font-medium text-[11px] flex items-start gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1.5 mb-1">
+                                <AlertTriangle size={13} className="shrink-0 mt-0.5 text-amber-400" />
+                                <span>{'Referees must be assigned (less than 24h before tournament starts)'}</span>
                               </div>
                             )}
                             <div className="flex gap-2 w-full">
