@@ -498,7 +498,7 @@ export function OwnerHorsesPage() {
                             {r.prizeAmount > 0 && (
                               <div className="text-right border-l border-glass-border pl-3 min-w-[70px]">
                                 <div className="text-[10px] text-muted leading-none mb-1">Prize</div>
-                                <div className="text-xs font-mono font-bold text-emerald-400">+{r.prizeAmount.toLocaleString('vi-VN')}đ</div>
+                                <div className="text-xs font-mono font-bold text-emerald-400">+${r.prizeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                               </div>
                             )}
                           </div>

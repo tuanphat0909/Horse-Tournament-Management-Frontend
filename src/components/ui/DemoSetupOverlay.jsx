@@ -37,10 +37,10 @@ export function DemoSetupOverlay({ show }) {
 
             <div className="text-center">
               <div className="font-serif text-lg text-champagne mb-1.5">
-                Đang giả lập dữ liệu giải đấu…
+                Generating demo tournament data…
               </div>
               <div className="text-xs text-muted">
-                Tạo giải, duyệt 12 ngựa, khám sức khoẻ và ký hợp đồng nài ngựa
+                Creating the tournament, approving 12 horses, running medical checks and signing jockey contracts
               </div>
             </div>
 

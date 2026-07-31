@@ -530,7 +530,7 @@ export function MedicalCheckPage() {
                       {loading ? (
                         <>
                           <RefreshCw size={14} className="animate-spin" />
-                          <span>Đang xử lý...</span>
+                          <span>Processing...</span>
                         </>
                       ) : modalType === 'recheck' ? (
                         'Save Recheck Result'

@@ -59,15 +59,15 @@ export function useDemoSetup(onDone) {
       const name = res?.tournamentName ?? res?.result?.tournamentName ?? '';
       fireConfetti();
       showToast(
-        'Đã dựng xong giải demo',
+        'Demo tournament ready',
         name
-          ? `Giải '${name}' đã sẵn sàng với 12 ngựa và nài ngựa.`
-          : 'Giải đấu demo đã sẵn sàng với 12 ngựa và nài ngựa.',
+          ? `Tournament '${name}' is ready with 12 horses and jockeys.`
+          : 'The demo tournament is ready with 12 horses and jockeys.',
         'success'
       );
       await onDoneRef.current?.();
     } catch (err) {
-      showToast('Không dựng được giải demo', parseApiError(err), 'error');
+      showToast('Could not build the demo tournament', parseApiError(err), 'error');
     } finally {
       runningRef.current = false;
       setRunning(false);

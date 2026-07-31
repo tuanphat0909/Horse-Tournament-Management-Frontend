@@ -61,7 +61,7 @@ export function SpectatorDepositPage() {
       if (res && res.paymentUrl) {
         window.location.href = res.paymentUrl;
       } else {
-        throw new Error('Không thể khởi tạo liên kết thanh toán VNPay.');
+        throw new Error('Could not create the VNPay payment link.');
       }
     } catch (err) {
       setDepErr(parseApiError(err));

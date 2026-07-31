@@ -34,7 +34,7 @@ function CountUp({ value }) {
 
   return (
     <span ref={ref} className="tabular">
-      {value == null ? '—' : display.toLocaleString('vi-VN')}
+      {value == null ? '—' : display.toLocaleString('en-US')}
     </span>
   );
 }

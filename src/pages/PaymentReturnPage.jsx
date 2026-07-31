@@ -33,14 +33,14 @@ export function PaymentReturnPage() {
     // 1. Check for signature errors
     if (statusParam === 'invalid_signature') {
       setStatus('ERROR');
-      setMessage('Giao dịch thất bại: Chữ ký số không hợp lệ hoặc dữ liệu bị can thiệp.');
+      setMessage('Transaction failed: invalid signature or the data was tampered with.');
       setLoading(false);
       return;
     }
 
     if (!txnRef) {
       setStatus('ERROR');
-      setMessage('Yêu cầu không hợp lệ: Thiếu mã tham chiếu giao dịch.');
+      setMessage('Invalid request: the transaction reference is missing.');
       setLoading(false);
       return;
     }
@@ -53,14 +53,14 @@ export function PaymentReturnPage() {
     // 2. Map response codes
     if (responseCode === '24') {
       setStatus('CANCELLED');
-      setMessage('Giao dịch đã bị hủy bỏ bởi khách hàng.');
+      setMessage('Transaction was cancelled by the customer.');
       setLoading(false);
       return;
     }
 
     if (responseCode !== '00' || transactionStatus !== '00') {
       setStatus('FAILED');
-      setMessage(`Giao dịch thất bại. Mã phản hồi: ${responseCode || 'N/A'}`);
+      setMessage(`Transaction failed. Response code: ${responseCode || 'N/A'}`);
       setLoading(false);
       return;
     }
@@ -76,23 +76,23 @@ export function PaymentReturnPage() {
 
         if (txStatus === 'SUCCESS') {
           setStatus('SUCCESS');
-          setMessage('Nạp tiền thành công! Số dư ví của bạn đã được cập nhật.');
+          setMessage('Deposit successful. Your wallet balance has been updated.');
           setLoading(false);
           clearInterval(intervalId);
         } else if (txStatus === 'FAILED') {
           setStatus('FAILED');
-          setMessage('Nạp tiền thất bại. Vui lòng thử lại sau.');
+          setMessage('Deposit failed. Please try again later.');
           setLoading(false);
           clearInterval(intervalId);
         } else if (txStatus === 'CANCELLED') {
           setStatus('CANCELLED');
-          setMessage('Giao dịch đã bị hủy.');
+          setMessage('Transaction was cancelled.');
           setLoading(false);
           clearInterval(intervalId);
         } else if (pollCount.current > 15) {
           // Timeout after 30 seconds (15 polls * 2s)
           setStatus('ERROR');
-          setMessage('Giao dịch đang được xử lý. Vui lòng kiểm tra lại ví của bạn sau vài phút.');
+          setMessage('Transaction is being processed. Please check your wallet again in a few minutes.');
           setLoading(false);
           clearInterval(intervalId);
         }
@@ -141,7 +141,7 @@ export function PaymentReturnPage() {
         </div>
 
         {/* Status text */}
-        <h2 className="text-xl font-serif text-white mb-2">{loading ? 'Đang Xử Lý Giao Dịch' : status === 'SUCCESS' ? 'Nạp Tiền Thành Công' : 'Giao Dịch Thất Bại'}</h2>
+        <h2 className="text-xl font-serif text-white mb-2">{loading ? 'Processing Transaction' : status === 'SUCCESS' ? 'Deposit Successful' : 'Transaction Failed'}</h2>
 
         <p className="text-xs text-muted leading-relaxed mb-6 px-4">{message}</p>
 
@@ -149,19 +149,19 @@ export function PaymentReturnPage() {
         {txnRef && (
           <div className="w-full bg-white/[0.02] border border-glass-border rounded-xl p-4 mb-8 text-left text-xs space-y-3">
             <div className="flex justify-between items-center py-0.5">
-              <span className="text-muted">Mã Giao Dịch:</span>
+              <span className="text-muted">Transaction ID:</span>
               <span className="font-semibold text-white truncate max-w-[200px]" title={txnRef}>
                 {txnRef}
               </span>
             </div>
             {amount > 0 && (
               <div className="flex justify-between items-center py-0.5 border-t border-glass-border/40 pt-2.5">
-                <span className="text-muted">Số Tiền Nạp:</span>
+                <span className="text-muted">Amount:</span>
                 <span className="font-bold text-gold">{amount.toLocaleString('vi-VN')} VND</span>
               </div>
             )}
             <div className="flex justify-between items-center py-0.5 border-t border-glass-border/40 pt-2.5">
-              <span className="text-muted">Phương Thức:</span>
+              <span className="text-muted">Method:</span>
               <span className="font-semibold text-white">VNPay Sandbox</span>
             </div>
           </div>
@@ -170,7 +170,7 @@ export function PaymentReturnPage() {
         {/* Action Button */}
         <button onClick={() => navigate(getWalletPath())} className="w-full py-3.5 bg-gold hover:bg-gold-hover text-black rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-gold/15 hover:shadow-gold/25 transition-all duration-200 cursor-pointer">
           <Wallet size={16} />
-          Quay Lại Quản Lý Ví
+          Back to Wallet
         </button>
       </div>
     </div>
