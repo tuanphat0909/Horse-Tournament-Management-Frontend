@@ -1,17 +1,14 @@
 # Báo cáo gửi Backend
 
-**Cập nhật:** 31/07/2026
-**Bản backend đã kiểm tra:** commit `4b87585` — *fix: QA feedback on God API, DataSeeder, and Tournament Status (#153)*
+**Cập nhật:** 01/08/2026
+**Bản backend đã kiểm tra:** commit `0f97e5e` — *Merge pull request #159*
 **Môi trường:** Backend local `http://localhost:55446` + SQL Server `.\SQLEXPRESS`
 
 Tất cả nội dung bên dưới đều **kiểm chứng bằng cách gọi API thật**, không suy đoán từ tài liệu.
 
-> **Đã sửa xong ở bản `4b87585`:** DataSeeder nay tự tạo hồ sơ nài ngựa còn thiếu (kể cả
-> vá dữ liệu cũ khi khởi động), God API lấy thẳng từ bảng hồ sơ nên tạo đủ 12/12 suất đua
-> và đặt giải về `Upcoming` đúng chuẩn. Đã chạy lại và xác nhận cả ba.
->
-> File này chỉ liệt kê những gì **còn phải xử lý**. Mục nào có dấu 🆕 là mới phát hiện
-trong lần kiểm tra gần nhất; mục không có dấu là đã báo từ trước mà chưa sửa.
+> File này chỉ liệt kê những gì **còn phải xử lý**. Phần backend đã sửa xong được chuyển
+> xuống mục *"Backend đã sửa xong"* ở cuối, và các thay đổi mới cần frontend lưu ý nằm ở
+> mục *"Thay đổi mới"*.
 
 **Cách dùng file này:** mỗi lần kiểm tra lại, tôi xoá các mục backend đã sửa và thêm mục
 mới kèm ngày phát hiện — nên file luôn phản ánh đúng tình trạng hiện tại, không cộng dồn
@@ -19,73 +16,7 @@ lịch sử. Muốn xem lại các lỗi đã sửa thì tra trong lịch sử g
 
 ---
 
-## 🔴 1. Ràng buộc khoá tài khoản của **Nài ngựa** vẫn dùng danh sách trạng thái cũ
-
-> *Báo từ 31/07, backend chưa xử lý — đã kiểm chứng lại trên bản `4b87585` vẫn còn.*
-
-**Nơi sửa:** `backend/src/HorseRacing.Infrastructure/Repositories/UserRepository.cs`
-— hàm `HasUpcomingJockeyAssignmentsAsync`
-
-Bản sửa hôm qua đã đổi ràng buộc của **Chủ ngựa** sang cách đảo ngược logic (giải nào
-chưa `Completed`/`Cancelled` thì coi là đang diễn ra) — rất tốt. Nhưng **hàm dành cho
-Nài ngựa thì bị bỏ sót**, vẫn giữ nguyên cách liệt kê cũ:
-
-```csharp
-public async Task<bool> HasUpcomingJockeyAssignmentsAsync(int jockeyId)
-{
-    return await _context.JockeyContracts.AnyAsync(c =>
-        c.JockeyId == jockeyId &&
-        c.Status == "Active" &&
-        c.Tournament != null &&
-        (c.Tournament.Status == "PendingRegistration" ||
-         c.Tournament.Status == "PendingScheduling"  ||
-         c.Tournament.Status == "Pending"      ||   // không tồn tại trong hệ thống
-         c.Tournament.Status == "Scheduled"    ||   // chỉ God API sinh ra
-         c.Tournament.Status == "InProgress"));     // không tồn tại trong hệ thống
-}
-```
-
-Danh sách này **thiếu hẳn** các trạng thái quan trọng: `Active`, `Upcoming`,
-`Registration Open`, `Registration Suspended`, `AwaitingResults`.
-
-### Kiểm chứng
-
-Đưa ví về 0 để chỉ còn ràng buộc nghiệp vụ, rồi thử khoá:
-
-```
-jockey@gmail.com — hợp đồng Active ở giải trạng thái "Scheduled"  → BỊ CHẶN ✅
-jk2@test.com     — hợp đồng Active ở giải trạng thái "Upcoming"   → KHOÁ ĐƯỢC ❌
-```
-
-### Hậu quả
-
-**Nài ngựa đang có hợp đồng ở giải sắp đua (`Upcoming`) hoặc đang đua (`Active`) vẫn bị
-khoá bình thường** — đúng tình huống cần chặn nhất. Ràng buộc hiện chỉ chặn được giải ở
-giai đoạn chuẩn bị, tức là lúc ít quan trọng hơn.
-
-### Đề xuất
-
-Dùng chung một kiểu với hàm của Chủ ngựa cho thống nhất:
-
-```csharp
-public async Task<bool> HasUpcomingJockeyAssignmentsAsync(int jockeyId)
-{
-    return await _context.JockeyContracts.AnyAsync(c =>
-        c.JockeyId == jockeyId &&
-        c.Status == "Active" &&
-        c.Tournament != null &&
-        !(c.Tournament.Status == "Completed" || c.Tournament.Status == "Cancelled"));
-}
-```
-
-**Nên rà thêm `HasUpcomingRefereeAssignmentsAsync`** — hàm này lọc theo trạng thái
-*cuộc đua* (`Upcoming`, `Scheduled`, `Live`, `InProgress`, `Running`), trong đó
-`InProgress` và `Running` cũng không thấy dùng ở đâu. Cùng cách sửa: loại trừ
-`Completed`/`Cancelled` thay vì liệt kê.
-
----
-
-## 🔴 2. 🆕 Giải đã có người đặt cược thì **không bao giờ huỷ được** — thiếu cơ chế hoàn cược
+## 🔴 1. Giải đã có người đặt cược thì **không bao giờ huỷ được** — thiếu cơ chế hoàn cược
 
 > *Phát hiện 31/07 khi chạy thử vòng đời huỷ giải trên máy.*
 
@@ -195,7 +126,7 @@ giải — hiện chưa có trường nào cho thông tin này.
 
 ---
 
-## 🔴 3. 🆕 Chạy BE bằng file `.exe` là vô tình nối thẳng vào database deploy
+## 🔴 2. Chạy BE bằng file `.exe` là vô tình nối thẳng vào database deploy
 
 > *Phát hiện 31/07 khi God API báo "Chỉ có 1 nài ngựa có hồ sơ" dù DB local có 93.*
 
@@ -237,53 +168,7 @@ khoá tài khoản, duyệt rút tiền đều là thao tác ghi.
 
 ---
 
-## 🟡 4. 🆕 Database deploy thiếu hồ sơ nài ngựa — God API không chạy được trên bản deploy
-
-> *Phát hiện 31/07.*
-
-Khi BE nối vào Azure, God API báo **chỉ có 1 nài ngựa có hồ sơ**, trong khi cần 12. Phần
-tự vá hồ sơ thiếu mà backend thêm ở bản `4b87585` chạy tốt trên DB local (93/93 hồ sơ)
-nhưng **dữ liệu trên deploy vẫn chưa được vá**.
-
-### Vì sao phần tự vá không chạy — chỗ này là điểm yếu của code
-
-Đoạn vá nằm ở `DataSeeder.cs:618`, nhưng **bị đặt bên trong** `SeedSUTournamentsAsync()`
-— một hàm tạo dữ liệu test — và đứng **sau** một lệnh thoát sớm không liên quan gì tới nó:
-
-```csharp
-var vetUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == "vet@gmail.com")
-    ?? await _context.Users.FirstOrDefaultAsync(u => u.RoleId == 6);
-if (vetUser == null) return;          // ← thoat o day
-
-// ... 45 dong sau moi toi:
-// 3.5. Ensure all seeded Jockeys have a JockeyProfile (fixes corrupted data)
-```
-
-Ba cách để phần vá **im lặng không chạy**:
-
-| # | Tình huống | Kết quả |
-|---|---|---|
-| 1 | Database không có tài khoản bác sĩ thú y (`vet@gmail.com` hoặc `RoleId = 6`) | Thoát ở dòng 573, chưa tới chỗ vá |
-| 2 | Bất kỳ bước nào trước đó ném lỗi | Lời gọi nằm ở bước 7 cuối khối `try`; lỗi bị `catch` nuốt, `Program.cs` nuốt tiếp với log *"Continuing startup..."* |
-| 3 | Script SQL đánh số vai trò khác | Đoạn vá tìm theo `RoleId == 3` viết cứng, không khớp ai |
-
-Trường hợp DB deploy được dựng bằng script SQL thay vì để seeder tự tạo thì rất dễ rơi vào
-tình huống 1 hoặc 3.
-
-### Đề xuất
-
-Tách đoạn vá hồ sơ thành **một bước độc lập, chạy đầu tiên trong `SeedAsync`**, không phụ
-thuộc vào tài khoản vet hay 55 nài ngựa test. Đây là sửa chữa dữ liệu cho toàn hệ thống,
-không phải một phần của việc tạo dữ liệu test. Đồng thời tìm nài ngựa theo **tên vai trò**
-(`Role.Name == "Jockey"`) thay vì `RoleId == 3` viết cứng, để không phụ thuộc vào thứ tự
-chèn của script.
-
-Nếu buổi trình bày định demo trên bản deploy thì cần chạy lại phần seeding trên Azure
-trước, nếu không phím tắt God API sẽ hỏng ngay trên sân khấu.
-
----
-
-## 🔴 5. 🆕 Giải không bao giờ tự chuyển sang `Active` — vòng đời giải bị kẹt
+## 🔴 3. Giải không bao giờ tự chuyển sang `Active` — vòng đời giải bị kẹt
 
 > *Phát hiện 31/07 khi chạy trọn vòng đời một giải trên máy.*
 
@@ -333,7 +218,7 @@ trạng thái giải phụ thuộc vào việc có ai mở trang hay không.
 
 ---
 
-## 🟡 6. 🆕 Endpoint duy nhất trả về danh sách vòng đấu không được frontend dùng
+## 🟡 4. Endpoint duy nhất trả về danh sách vòng đấu không được frontend dùng
 
 > *Phát hiện 31/07.*
 
@@ -348,7 +233,7 @@ cho nhất quán.
 
 ---
 
-## 🟡 7. Tên trường trong phản hồi lỗi không thống nhất
+## 🟡 5. Tên trường trong phản hồi lỗi không thống nhất
 
 > *Báo từ 30/07, backend chưa xử lý*
 
@@ -370,21 +255,39 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 
 | # | Nội dung | Mức độ | Phát hiện | Nơi sửa |
 |---|---|---|---|---|
-| 1 | Ràng buộc khoá tài khoản của Nài ngựa vẫn dùng danh sách trạng thái cũ | 🔴 Cao | 31/07 | `UserRepository.cs` |
-| 2 | 🆕 Điều kiện huỷ giải và điều kiện đặt cược chồng lấn → giải có cược kẹt vĩnh viễn | 🔴 Cao | 31/07 | `TournamentService.cs` |
-| 3 | 🆕 Chạy `.exe` là nối thẳng vào DB deploy + chuỗi kết nối kèm mật khẩu đã commit | 🔴 Cao | 31/07 | `appsettings.json` |
-| 4 | 🆕 Đoạn tự vá hồ sơ nài ngựa bị đặt sau lệnh thoát sớm nên không chạy trên DB deploy | 🟡 Vừa | 31/07 | `DataSeeder.cs:618` |
-| 5 | 🆕 Giải không tự chuyển sang `Active`, vòng đời giải bị kẹt ở `Upcoming` | 🔴 Cao | 31/07 | `TournamentDeadlineWorker.cs` |
-| 6 | 🆕 Endpoint trả về vòng đấu không được frontend dùng | 🟡 Vừa | 31/07 | `PublicController.cs` |
-| 7 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
+| 1 | Điều kiện huỷ giải và điều kiện đặt cược chồng lấn → giải có cược kẹt vĩnh viễn | 🔴 Cao | 31/07 | `TournamentService.cs:1406` |
+| 2 | Chạy `.exe` là nối thẳng vào DB deploy + chuỗi kết nối kèm mật khẩu đã commit | 🔴 Cao | 31/07 | `appsettings.json` |
+| 3 | Giải không tự chuyển sang `Active`, vòng đời giải bị kẹt ở `Upcoming` | 🔴 Cao | 31/07 | `TournamentDeadlineWorker.cs` |
+| 4 | Endpoint trả về vòng đấu không được frontend dùng | 🟡 Vừa | 31/07 | `PublicController.cs` |
+| 5 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
-**Ưu tiên mục 5** — đây là mục chặn cứng việc chạy trọn vòng đời một giải, cần xong trước
-buổi trình bày.
-**Mục 3** là mục duy nhất có thể gây hỏng dữ liệu thật, và phần đổi mật khẩu nên làm sớm
-vì mật khẩu cũ đã nằm trong lịch sử git.
-**Mục 1** chỉ cần sửa một hàm, dùng lại đúng cách đã áp dụng cho Chủ ngựa.
-**Mục 2** khoá cứng một luồng nghiệp vụ và dính tới tiền của người dùng.
-**Mục 4** cần xong trước buổi trình bày nếu định demo trên bản deploy.
+**Ưu tiên mục 3** — chặn cứng việc chạy trọn vòng đời một giải, cần xong trước buổi trình bày.
+**Mục 2** là mục duy nhất có thể gây hỏng dữ liệu thật; phần đổi mật khẩu nên làm sớm vì
+mật khẩu cũ đã nằm trong lịch sử git.
+
+---
+
+## ✅ Backend đã sửa xong ở bản `0f97e5e`
+
+| Nội dung đã báo | Trạng thái |
+|---|---|
+| Ràng buộc khoá tài khoản của Nài ngựa dùng danh sách trạng thái cũ | ✅ Đã sửa đúng cách đề xuất — nay loại trừ `Completed`/`Cancelled` thay vì liệt kê (`UserRepository.cs:85`) |
+| Đoạn tự vá hồ sơ nài ngựa không chạy | ⚠️ Không còn liên quan — `DataSeeder` đã bị **tắt hẳn** ở `Program.cs:117-118` |
+
+---
+
+## 🆕 Thay đổi mới cần phía frontend lưu ý
+
+Rà 27 commit vừa được gộp vào `main`:
+
+| Thay đổi | Ảnh hưởng tới frontend |
+|---|---|
+| `auto-setup` → **`setup-race`**, bỏ `resolve-race`, thêm `start-race/{id}` | Ctrl+Space bị 404 — **đã sửa** ở phía frontend |
+| `populate-tournament/{id}` nhận `?count=` (tối đa 48), không có giá trị mặc định | Thiếu tham số thì tạo 0 suất — **đã truyền mặc định 12** |
+| Giới hạn **tối đa 3 ngựa mỗi chủ ngựa cho một giải** (`RegistrationService.cs:101`) | Nên hiện trước giới hạn ở trang đăng ký thay vì để người dùng bấm rồi mới báo lỗi |
+| Tắt seeder tự động khi khởi động | Database mới sẽ **trống hoàn toàn** — phải dùng God API hoặc nhập tay |
+| Xoá toàn bộ EF migrations, dùng thẳng schema đã deploy | Thay đổi schema từ nay phải làm tay trên cơ sở dữ liệu |
+| Bỏ tự động phân công trọng tài trong `PopulateTournamentAsync` | Sau khi populate phải tự phân công trọng tài, nếu không giải không chạy được |
 
 ---
 
