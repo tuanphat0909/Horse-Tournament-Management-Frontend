@@ -182,6 +182,72 @@ và khớp với luồng sinh cuộc đua thủ công (`generate-races` cũng ch
 
 ---
 
+## 🆕 🔴 5. Ràng buộc khoá tài khoản của **Nài ngựa** vẫn dùng danh sách trạng thái cũ
+
+> *Phát hiện 31/07 — mục mới. Đây là phần còn sót của bản sửa hôm qua.*
+
+**Nơi sửa:** `backend/src/HorseRacing.Infrastructure/Repositories/UserRepository.cs`
+— hàm `HasUpcomingJockeyAssignmentsAsync`
+
+Bản sửa hôm qua đã đổi ràng buộc của **Chủ ngựa** sang cách đảo ngược logic (giải nào
+chưa `Completed`/`Cancelled` thì coi là đang diễn ra) — rất tốt. Nhưng **hàm dành cho
+Nài ngựa thì bị bỏ sót**, vẫn giữ nguyên cách liệt kê cũ:
+
+```csharp
+public async Task<bool> HasUpcomingJockeyAssignmentsAsync(int jockeyId)
+{
+    return await _context.JockeyContracts.AnyAsync(c =>
+        c.JockeyId == jockeyId &&
+        c.Status == "Active" &&
+        c.Tournament != null &&
+        (c.Tournament.Status == "PendingRegistration" ||
+         c.Tournament.Status == "PendingScheduling"  ||
+         c.Tournament.Status == "Pending"      ||   // không tồn tại trong hệ thống
+         c.Tournament.Status == "Scheduled"    ||   // chỉ God API sinh ra
+         c.Tournament.Status == "InProgress"));     // không tồn tại trong hệ thống
+}
+```
+
+Danh sách này **thiếu hẳn** các trạng thái quan trọng: `Active`, `Upcoming`,
+`Registration Open`, `Registration Suspended`, `AwaitingResults`.
+
+### Kiểm chứng
+
+Đưa ví về 0 để chỉ còn ràng buộc nghiệp vụ, rồi thử khoá:
+
+```
+jockey@gmail.com — hợp đồng Active ở giải trạng thái "Scheduled"  → BỊ CHẶN ✅
+jk2@test.com     — hợp đồng Active ở giải trạng thái "Upcoming"   → KHOÁ ĐƯỢC ❌
+```
+
+### Hậu quả
+
+**Nài ngựa đang có hợp đồng ở giải sắp đua (`Upcoming`) hoặc đang đua (`Active`) vẫn bị
+khoá bình thường** — đúng tình huống cần chặn nhất. Ràng buộc hiện chỉ chặn được giải ở
+giai đoạn chuẩn bị, tức là lúc ít quan trọng hơn.
+
+### Đề xuất
+
+Dùng chung một kiểu với hàm của Chủ ngựa cho thống nhất:
+
+```csharp
+public async Task<bool> HasUpcomingJockeyAssignmentsAsync(int jockeyId)
+{
+    return await _context.JockeyContracts.AnyAsync(c =>
+        c.JockeyId == jockeyId &&
+        c.Status == "Active" &&
+        c.Tournament != null &&
+        !(c.Tournament.Status == "Completed" || c.Tournament.Status == "Cancelled"));
+}
+```
+
+**Nên rà thêm `HasUpcomingRefereeAssignmentsAsync`** — hàm này lọc theo trạng thái
+*cuộc đua* (`Upcoming`, `Scheduled`, `Live`, `InProgress`, `Running`), trong đó
+`InProgress` và `Running` cũng không thấy dùng ở đâu. Cùng cách sửa: loại trừ
+`Completed`/`Cancelled` thay vì liệt kê.
+
+---
+
 ## 🟡 4. Tên trường trong phản hồi lỗi không thống nhất
 
 > *Báo từ 30/07, backend chưa xử lý*
@@ -208,8 +274,12 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 | 2 | God API chỉ tạo 7/12 suất đua, không cảnh báo | 🟡 Vừa | 🆕 31/07 | `DemoService.cs` |
 | 3 | God API đặt trạng thái `Scheduled` không có trong hệ thống | 🟡 Vừa | 🆕 31/07 | `DemoService.cs` |
 | 4 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
+| 5 | Ràng buộc khoá tài khoản của Nài ngựa vẫn dùng danh sách trạng thái cũ | 🔴 Cao | 🆕 31/07 | `UserRepository.cs` |
 
-Mục 1 là gốc của mục 2 — sửa mục 1 thì mục 2 tự hết. Mục 2 và 3 nằm cùng một file.
+**Hai mục cần ưu tiên:** số 1 và số 5 — đều khiến tính năng đã làm nhưng không chạy đúng.
+
+Mục 1 là gốc của mục 2, sửa mục 1 thì mục 2 tự hết. Mục 2 và 3 nằm cùng một file
+`DemoService.cs`. Mục 5 chỉ cần sửa một hàm, dùng lại đúng cách đã áp dụng cho Chủ ngựa.
 
 ---
 
