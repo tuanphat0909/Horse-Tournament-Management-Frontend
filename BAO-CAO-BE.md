@@ -126,7 +126,60 @@ giải — hiện chưa có trường nào cho thông tin này.
 
 ---
 
-## 🔴 2. Chạy BE bằng file `.exe` là vô tình nối thẳng vào database deploy
+## 🔴 2. Giải dựng bằng God API không nộp được kết quả — hai nơi dùng hai giá trị trạng thái khác nhau
+
+> *Phát hiện 01/08 khi dựng lại kịch bản trên cơ sở dữ liệu local đã làm sạch.*
+
+**Nơi sửa:** `DemoService.cs:175` (hoặc `ResultRepository.cs:45`)
+
+### Chuyện gì xảy ra
+
+Bản ghi phân công trọng tài được tạo với **hai giá trị trạng thái khác nhau** tuỳ nơi tạo:
+
+| Nơi tạo | Trạng thái đặt vào |
+|---|---|
+| Admin phân công tay — `RefereeAssignmentService.cs:71` | `"Active"` |
+| God API dựng giải — `DemoService.cs:175` | **`"Assigned"`** |
+
+Nhưng hàm tra cứu lúc nộp kết quả chỉ chấp nhận đúng một giá trị:
+
+```csharp
+// ResultRepository.cs:45
+.FirstOrDefaultAsync(rra => rra.RaceId == raceId
+                         && rra.RefereeId == refereeId
+                         && rra.Status == "Active");
+```
+
+### Hậu quả
+
+Giải nào dựng bằng God API thì trọng tài **bị coi như chưa được phân công**, dù bản ghi
+phân công tồn tại. Nộp kết quả trả về:
+
+```
+POST /api/referee/races/136/results
+→ 400 "The referee is not assigned to this race."
+```
+
+Câu lỗi này **gây hiểu nhầm nặng** — người dùng đi phân công lại, nhưng bản ghi đã có sẵn
+nên không sửa được gì.
+
+### Kiểm chứng
+
+```
+Truoc: RaceRefereeAssignment.Status = 'Assigned'  →  400 "referee is not assigned"
+Sau  : doi thanh 'Active'                          →  nop ket qua thanh cong, RaceResult id=56
+```
+
+### Đề xuất
+
+Thống nhất một giá trị. Đơn giản nhất là sửa `DemoService.cs:175` thành `"Active"` cho
+khớp với chỗ phân công tay. Nếu muốn giữ `"Assigned"` như một trạng thái riêng thì phải
+sửa `GetAssignmentAsync` chấp nhận cả hai, và rà lại mọi chỗ khác đang so sánh
+`Status == "Active"` trên bảng này.
+
+---
+
+## 🔴 3. Chạy BE bằng file `.exe` là vô tình nối thẳng vào database deploy
 
 > *Phát hiện 31/07 khi God API báo "Chỉ có 1 nài ngựa có hồ sơ" dù DB local có 93.*
 
@@ -168,7 +221,7 @@ khoá tài khoản, duyệt rút tiền đều là thao tác ghi.
 
 ---
 
-## 🔴 3. Giải không bao giờ tự chuyển sang `Active` — vòng đời giải bị kẹt
+## 🔴 4. Giải không bao giờ tự chuyển sang `Active` — vòng đời giải bị kẹt
 
 > *Phát hiện 31/07 khi chạy trọn vòng đời một giải trên máy.*
 
@@ -218,7 +271,7 @@ trạng thái giải phụ thuộc vào việc có ai mở trang hay không.
 
 ---
 
-## 🟡 4. Endpoint duy nhất trả về danh sách vòng đấu không được frontend dùng
+## 🟡 5. Endpoint duy nhất trả về danh sách vòng đấu không được frontend dùng
 
 > *Phát hiện 31/07.*
 
@@ -233,7 +286,7 @@ cho nhất quán.
 
 ---
 
-## 🟡 5. Tên trường trong phản hồi lỗi không thống nhất
+## 🟡 6. Tên trường trong phản hồi lỗi không thống nhất
 
 > *Báo từ 30/07, backend chưa xử lý*
 
@@ -256,10 +309,11 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 | # | Nội dung | Mức độ | Phát hiện | Nơi sửa |
 |---|---|---|---|---|
 | 1 | Điều kiện huỷ giải và điều kiện đặt cược chồng lấn → giải có cược kẹt vĩnh viễn | 🔴 Cao | 31/07 | `TournamentService.cs:1406` |
-| 2 | Chạy `.exe` là nối thẳng vào DB deploy + chuỗi kết nối kèm mật khẩu đã commit | 🔴 Cao | 31/07 | `appsettings.json` |
-| 3 | Giải không tự chuyển sang `Active`, vòng đời giải bị kẹt ở `Upcoming` | 🔴 Cao | 31/07 | `TournamentDeadlineWorker.cs` |
-| 4 | Endpoint trả về vòng đấu không được frontend dùng | 🟡 Vừa | 31/07 | `PublicController.cs` |
-| 5 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
+| 2 | 🆕 God API tạo phân công trọng tài là `Assigned`, nơi tra cứu đòi `Active` → không nộp được kết quả | 🔴 Cao | 01/08 | `DemoService.cs:175` |
+| 3 | Chạy `.exe` là nối thẳng vào DB deploy + chuỗi kết nối kèm mật khẩu đã commit | 🔴 Cao | 31/07 | `appsettings.json` |
+| 4 | Giải không tự chuyển sang `Active`, vòng đời giải bị kẹt ở `Upcoming` | 🔴 Cao | 31/07 | `TournamentDeadlineWorker.cs` |
+| 5 | Endpoint trả về vòng đấu không được frontend dùng | 🟡 Vừa | 31/07 | `PublicController.cs` |
+| 6 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
 **Ưu tiên mục 3** — chặn cứng việc chạy trọn vòng đời một giải, cần xong trước buổi trình bày.
 **Mục 2** là mục duy nhất có thể gây hỏng dữ liệu thật; phần đổi mật khẩu nên làm sớm vì
