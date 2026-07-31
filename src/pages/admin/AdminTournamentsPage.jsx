@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader, Plus, Search, Trophy, Clock, ArrowUpDown, Calendar, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Loader, Plus, Search, Trophy, Clock, ArrowUpDown, Calendar, AlertCircle, AlertTriangle, Lock } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
@@ -90,6 +90,19 @@ function getTournamentCustomStatus(tour) {
   if (status === 'pendingscheduling') return 'Registration Closed';
 
   return 'Scheduled';
+}
+
+// Khi lịch đua đã xếp xong thì khán giả bắt đầu đặt cược được, nên từ lúc đó giải không
+// huỷ được nữa — tiền cược đã vào hệ thống thì giải buộc phải chạy tới cùng. Hai trạng
+// thái 'Scheduled' và 'Pending Admin Attention' đều đã có lịch đua, nên thay nút Huỷ bằng
+// dòng giải thích này để admin khỏi bấm rồi mới nhận lỗi từ backend.
+function BettingLockedNote() {
+  return (
+    <div className="text-muted text-[11px] flex items-start gap-1.5 bg-white/[0.04] border border-glass-border rounded-lg px-2.5 py-1.5">
+      <Lock size={13} className="shrink-0 mt-0.5" />
+      <span>{'Betting is open — this tournament can no longer be cancelled.'}</span>
+    </div>
+  );
 }
 
 const INPUT = 'w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors';
@@ -787,15 +800,10 @@ export function AdminTournamentsPage() {
                             )}
                             <div className="flex gap-2 w-full">
                               {show24hWarning ? (
-                                <>
-                                  <button onClick={() => navigate('/admin/races', { state: { openTournamentId: tour.tournamentId } })} className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 animate-pulse">
-                                    <Calendar size={13} />
-                                    {'Assign referees'}
-                                  </button>
-                                  <button onClick={() => setCancelWarningTournament(tour)} className="px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5">
-                                    {'Cancel'}
-                                  </button>
-                                </>
+                                <button onClick={() => navigate('/admin/races', { state: { openTournamentId: tour.tournamentId } })} className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-red-400 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 animate-pulse">
+                                  <Calendar size={13} />
+                                  {'Assign referees'}
+                                </button>
                               ) : raceState.canGenerateFinal ? (
                                 <button onClick={() => handleGenerateFinal(tour.tournamentId)} disabled={isGenerating} className="flex-1 px-3 py-2 rounded-lg text-xs font-bold text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 disabled:opacity-60 transition-colors flex items-center justify-center gap-1.5">
                                   {isGenerating ? <Loader size={13} className="animate-spin" /> : <Trophy size={13} />}
@@ -807,6 +815,7 @@ export function AdminTournamentsPage() {
                                 </button>
                               )}
                             </div>
+                            <BettingLockedNote />
                           </div>
                         )}
 
@@ -821,10 +830,8 @@ export function AdminTournamentsPage() {
                                 <Calendar size={13} />
                                 {'Assign referees'}
                               </button>
-                              <button onClick={() => setCancelWarningTournament(tour)} className="px-3 py-2 rounded-lg text-xs font-bold text-red-500 border border-red-500/50 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5">
-                                {'Cancel Tournament'}
-                              </button>
                             </div>
+                            <BettingLockedNote />
                           </div>
                         )}
 

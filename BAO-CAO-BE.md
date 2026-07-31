@@ -195,7 +195,62 @@ giải — hiện chưa có trường nào cho thông tin này.
 
 ---
 
-## 🟡 3. Tên trường trong phản hồi lỗi không thống nhất
+## 🔴 3. 🆕 Chạy BE bằng file `.exe` là vô tình nối thẳng vào database deploy
+
+> *Phát hiện 31/07 khi God API báo "Chỉ có 1 nài ngựa có hồ sơ" dù DB local có 93.*
+
+**Nơi sửa:** cấu hình khởi chạy, không phải mã nghiệp vụ.
+
+### Chuyện gì xảy ra
+
+`launchSettings.json` đặt `ASPNETCORE_ENVIRONMENT=Development`, nhưng file này **chỉ có
+tác dụng khi chạy qua `dotnet run` hoặc Visual Studio**. Bấm thẳng vào
+`bin/Debug/net10.0/HorseRacing.API.exe` thì biến môi trường không được đặt → .NET mặc định
+**Production** → đọc `appsettings.json` → **Azure SQL deploy**.
+
+### Kiểm chứng
+
+Cùng một file `.exe`, chỉ khác biến môi trường:
+
+```
+(khong dat bien)                    → DB Azure  →  God API: "Chi co 1 nai ngua co ho so"
+ASPNETCORE_ENVIRONMENT=Development  → DB local  →  God API: tao xong giai #115, 12 ngua + 12 nai
+```
+
+### Hậu quả
+
+Người chạy BE trên máy **tưởng đang thử trên dữ liệu local nhưng thực ra đang đọc ghi vào
+cơ sở dữ liệu thật của bản deploy**. Riêng God API thì có transaction bao ngoài nên lần
+hỏng đã rollback, nhưng **các luồng khác không chắc đều được bảo vệ như vậy** — huỷ giải,
+khoá tài khoản, duyệt rút tiền đều là thao tác ghi.
+
+### Đề xuất
+
+1. Đổi `appsettings.json` mặc định về chuỗi kết nối **local**, và đưa chuỗi Azure sang
+   `appsettings.Production.json` hoặc biến môi trường trên máy chủ. Mặc định an toàn phải
+   là local — chạy nhầm ra local thì vô hại, chạy nhầm ra deploy thì hỏng dữ liệu thật.
+2. Ghi rõ trong README cách chạy đúng: `dotnet run` chứ không bấm file `.exe`.
+3. **Chuỗi kết nối Azure hiện đang nằm trong `appsettings.json` và đã commit lên git, kèm
+   nguyên văn mật khẩu tài khoản `dac-admin`.** Ai clone được repo là vào được cơ sở dữ
+   liệu thật. Nên đưa ra biến môi trường / user-secrets, và **đổi mật khẩu** vì mật khẩu cũ
+   đã nằm trong lịch sử git.
+
+---
+
+## 🟡 4. 🆕 Database deploy thiếu hồ sơ nài ngựa — God API không chạy được trên bản deploy
+
+> *Phát hiện 31/07.*
+
+Khi BE nối vào Azure, God API báo **chỉ có 1 nài ngựa có hồ sơ**, trong khi cần 12. Phần
+tự vá hồ sơ thiếu mà backend thêm ở bản `4b87585` chạy tốt trên DB local (93/93 hồ sơ)
+nhưng **dữ liệu trên deploy vẫn chưa được vá**.
+
+Nếu buổi trình bày định demo trên bản deploy thì cần chạy lại phần seeding trên Azure
+trước, nếu không phím tắt God API sẽ hỏng ngay trên sân khấu.
+
+---
+
+## 🟡 5. Tên trường trong phản hồi lỗi không thống nhất
 
 > *Báo từ 30/07, backend chưa xử lý*
 
@@ -219,10 +274,15 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 |---|---|---|---|---|
 | 1 | Ràng buộc khoá tài khoản của Nài ngựa vẫn dùng danh sách trạng thái cũ | 🔴 Cao | 31/07 | `UserRepository.cs` |
 | 2 | 🆕 Điều kiện huỷ giải và điều kiện đặt cược chồng lấn → giải có cược kẹt vĩnh viễn | 🔴 Cao | 31/07 | `TournamentService.cs` |
-| 3 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
+| 3 | 🆕 Chạy `.exe` là nối thẳng vào DB deploy + chuỗi kết nối kèm mật khẩu đã commit | 🔴 Cao | 31/07 | `appsettings.json` |
+| 4 | 🆕 DB deploy thiếu hồ sơ nài ngựa, God API hỏng trên bản deploy | 🟡 Vừa | 31/07 | Seeding trên Azure |
+| 5 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
-**Ưu tiên mục 1** — chỉ cần sửa một hàm, dùng lại đúng cách đã áp dụng cho Chủ ngựa.
-**Mục 2 nặng hơn** vì đang khoá cứng một luồng nghiệp vụ và dính tới tiền của người dùng.
+**Ưu tiên mục 3** — đây là mục duy nhất có thể gây hỏng dữ liệu thật, và phần đổi mật khẩu
+nên làm sớm vì mật khẩu cũ đã nằm trong lịch sử git.
+**Mục 1** chỉ cần sửa một hàm, dùng lại đúng cách đã áp dụng cho Chủ ngựa.
+**Mục 2** khoá cứng một luồng nghiệp vụ và dính tới tiền của người dùng.
+**Mục 4** cần xong trước buổi trình bày nếu định demo trên bản deploy.
 
 ---
 
