@@ -112,6 +112,45 @@ trong giải và chỉ thêm phần còn thiếu, hoặc trả về `400` kèm c
 
 ---
 
+## 🟡 4. Vòng sơ loại và vòng chung kết cùng mang `RoundNumber = 1`
+
+**Nơi sửa:** `DemoService.cs:349` và `DemoService.cs:394`
+
+Bản `7234182` đặt tên vòng theo đúng nghiệp vụ (*Prefinal Round* / *Final Round*) — rất tốt.
+Nhưng cả hai đều được gán **cùng một số thứ tự**:
+
+```csharp
+Name = "Final Round",     RoundNumber = 1,   // dong 348-349
+Name = "Prefinal Round",  RoundNumber = 1,   // dong 393-394
+```
+
+### Hậu quả
+
+Không thể phân biệt hai loại vòng bằng `RoundNumber`. Giải nào có cả sơ loại lẫn chung kết
+thì hai vòng trùng số, không biết vòng nào chạy trước. Frontend trước đây dựa vào
+`roundNumber === 1` là sơ loại và `=== 2` là chung kết — cách đó **đã hỏng** nên phía frontend
+đã chuyển sang nhận dạng theo tên.
+
+### Một cái bẫy kèm theo
+
+Chuỗi `"Prefinal"` **có chứa** `"final"`. Bất kỳ chỗ nào kiểm tra kiểu
+`name.Contains("final")` sẽ nhận nhầm vòng sơ loại thành chung kết. Frontend đã vấp đúng lỗi
+này và phải kiểm tra `"prefinal"` trước.
+
+### Đề xuất
+
+Đặt `RoundNumber = 1` cho *Prefinal Round* và `= 2` cho *Final Round*. Như vậy số thứ tự
+phản ánh đúng trình tự thi đấu, và mọi nơi đều phân biệt được mà không phải so khớp chuỗi.
+
+### Kiểm chứng
+
+```
+setup-race (12 ngua)              → Round [Final Round]    so=1, Race [FinalRace]
+populate-tournament?count=24      → Round [Prefinal Round] so=1, Race [Prefinal Race 1..2]
+```
+
+---
+
 ## Tổng hợp
 
 | # | Nội dung | Mức độ | Nơi sửa |
@@ -119,6 +158,7 @@ trong giải và chỉ thêm phần còn thiếu, hoặc trả về `400` kèm c
 | 1 | God API tạo phân công trọng tài là `Assigned`, nơi tra cứu đòi `Active` → không nộp được kết quả | 🔴 Cao | `DemoService.cs:175` |
 | 2 | Nhờ kiểm tra khoảng trắng thừa trong `Horse.Name` của bản ghi `Id = 1014` trên deploy | 🟡 Vừa | Cơ sở dữ liệu Azure |
 | 3 | `populate-tournament` gọi lần hai đổ lỗi 500 chung chung | 🟡 Vừa | `DemoService.cs` |
+| 4 | Vòng sơ loại và chung kết cùng `RoundNumber = 1`, không phân biệt được bằng số | 🟡 Vừa | `DemoService.cs:349,394` |
 
 ---
 

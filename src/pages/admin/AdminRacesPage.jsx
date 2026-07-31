@@ -39,14 +39,27 @@ const fixMojibake = (str) => {
   }
 };
 
+// Backend đặt tên vòng là "Prefinal Round" / "Final Round" và cuộc đua là
+// "Prefinal Race N" / "FinalRace". Chuỗi "prefinal" CÓ CHỨA "final", nên phải kiểm tra
+// sơ loại trước, nếu không vòng sơ loại sẽ bị nhận nhầm thành chung kết.
+// Không dùng roundNumber để phân biệt vì backend hiện đặt cả hai vòng đều bằng 1.
+function laSoLoai(name = '') {
+  const n = name.toLowerCase();
+  return n.includes('prefinal') || n.includes('sơ loại') || n.includes('so loai') || n.includes('vòng loại') || n.includes('heat') || n.includes('qualifier');
+}
+
+function laChungKet(name = '') {
+  const n = name.toLowerCase();
+  return !laSoLoai(n) && (n.includes('final') || n.includes('chung kết') || n.includes('chung ket'));
+}
+
 // Detect race type from name for badge
 function raceTypeBadge(name = '') {
-  const n = name.toLowerCase();
-  if (n.includes('chung kết') || n.includes('chung ket') || n.includes('final')) {
-    return { label: '🏆 Final', cls: 'text-gold bg-gold/15 border-gold/30' };
-  }
-  if (n.includes('sơ loại') || n.includes('so loai') || n.includes('heat') || n.includes('vòng loại')) {
+  if (laSoLoai(name)) {
     return { label: '⚡ Qualifier', cls: 'text-orange-400 bg-orange-500/10 border-orange-500/25' };
+  }
+  if (laChungKet(name)) {
+    return { label: '🏆 Final', cls: 'text-gold bg-gold/15 border-gold/30' };
   }
   return null;
 }
@@ -251,7 +264,7 @@ export function AdminRacesPage() {
       return [];
     }
     if (horseCount === 12) {
-      return allRounds.filter((r) => r.roundNumber === 2 || r.name?.toLowerCase().includes('final'));
+      return allRounds.filter((r) => laChungKet(r.name));
     }
     return allRounds;
   }, [selectedTournamentId, tournamentsList, roundsByTournamentId, selectedTournamentApprovedHorsesCount]);
@@ -707,8 +720,8 @@ export function AdminRacesPage() {
     const isTerminalTournament = normalizedTournamentStatus === 'completed' || normalizedTournamentStatus === 'finished' || normalizedTournamentStatus === 'cancelled';
     const rounds = roundsByTournamentId.get(t.tournamentId) ?? [];
 
-    const prefinalRound = rounds.find((r) => r.roundNumber === 1);
-    const finalRound = rounds.find((r) => r.roundNumber === 2);
+    const prefinalRound = rounds.find((r) => laSoLoai(r.name)) ?? rounds.find((r) => r.races.some((rc) => laSoLoai(rc.name)));
+    const finalRound = rounds.find((r) => laChungKet(r.name)) ?? rounds.find((r) => r.races.some((rc) => laChungKet(rc.name)));
     const hasPrefinalRaces = Boolean(prefinalRound && prefinalRound.races.length > 0);
     const prefinalFinished = Boolean(prefinalRound && prefinalRound.races.length > 0 && prefinalRound.races.every((r) => r.status === 'Finished' || r.status === 'Completed'));
 
@@ -1138,7 +1151,7 @@ export function AdminRacesPage() {
                                 <div className="flex items-center justify-between border-b border-glass-border/30 pb-2">
                                   <h3 className="text-sm font-bold text-champagne uppercase tracking-wider flex items-center gap-2">
                                     <span>{r.name}</span>
-                                    <span className="text-[10px] text-muted normal-case font-normal">({r.roundNumber === 1 ? 'Prefinal Round - Qualifier' : 'Final Round - Finals'})</span>
+                                    <span className="text-[10px] text-muted normal-case font-normal">({laSoLoai(r.name) ? 'Prefinal Round - Qualifier' : 'Final Round - Finals'})</span>
                                   </h3>
                                   <button onClick={() => openRaceModal(r.roundId)} className="text-[11px] text-gold hover:underline flex items-center gap-1 font-semibold">
                                     <Plus size={12} /> Add Race Manually
