@@ -6,6 +6,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getJockeyStats, getAssignedHorses } from '../../api/jockeyService';
+import { parseApiError } from '../../api/authService';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
@@ -26,7 +27,15 @@ export function JockeyStatsPage() {
     ])
       .catch((err) => {
         console.error(err);
-        setError('Failed to load jockey statistics');
+        // Tài khoản có vai trò Jockey nhưng chưa có hồ sơ nài ngựa thì backend trả
+        // "Jockey profile not found". Nói rõ để người dùng biết phải liên hệ ai,
+        // thay vì chỉ báo tải thất bại chung chung.
+        const message = parseApiError(err);
+        setError(
+          /profile not found/i.test(message)
+            ? 'Your account does not have a jockey profile yet. Please contact an administrator to have it created.'
+            : 'Failed to load jockey statistics'
+        );
       })
       .finally(() => {
         setLoading(false);
