@@ -10,11 +10,18 @@ Tất cả nội dung bên dưới đều **kiểm chứng bằng cách gọi AP
 > đã gán ngày mở/đóng đăng ký, tài liệu đã sửa đường dẫn nạp ví. Ghi nhận thêm: God API
 > nay còn tự tạo cuộc đua và gán trọng tài — tiện hơn nhiều.
 >
-> File này chỉ liệt kê những gì **còn phải xử lý**.
+> File này chỉ liệt kê những gì **còn phải xử lý**. Mục nào có dấu 🆕 là mới phát hiện
+trong lần kiểm tra gần nhất; mục không có dấu là đã báo từ trước mà chưa sửa.
+
+**Cách dùng file này:** mỗi lần kiểm tra lại, tôi xoá các mục backend đã sửa và thêm mục
+mới kèm ngày phát hiện — nên file luôn phản ánh đúng tình trạng hiện tại, không cộng dồn
+lịch sử. Muốn xem lại các lỗi đã sửa thì tra trong lịch sử git của file này.
 
 ---
 
-## 🔴 1. 55 tài khoản nài ngựa không dùng được vì thiếu hồ sơ
+## 🆕 🔴 1. 55 tài khoản nài ngựa không dùng được vì thiếu hồ sơ
+
+> *Phát hiện 31/07 — mục mới*
 
 **Nơi sửa:** `backend/src/HorseRacing.Infrastructure/Persistence/DataSeeder.cs` dòng ~594-616
 
@@ -80,7 +87,9 @@ cho lần chạy sau.
 
 ---
 
-## 🟡 2. God API chỉ tạo được 7/12 suất đua
+## 🆕 🟡 2. God API chỉ tạo được 7/12 suất đua
+
+> *Phát hiện 31/07 — mục mới*
 
 **Nơi sửa:** `backend/src/HorseRacing.API/Services/DemoService.cs` dòng ~159
 
@@ -128,7 +137,9 @@ Im lặng bỏ qua khiến người dùng tưởng đã tạo đủ, tới lúc 
 
 ---
 
-## 🟡 3. God API đặt trạng thái giải là `Scheduled` — tên này không có trong hệ thống
+## 🆕 🟡 3. God API đặt trạng thái giải là `Scheduled` — tên này không có trong hệ thống
+
+> *Phát hiện 31/07 — mục mới*
 
 **Nơi sửa:** `backend/src/HorseRacing.API/Services/DemoService.cs`
 
@@ -173,6 +184,8 @@ và khớp với luồng sinh cuộc đua thủ công (`generate-races` cũng ch
 
 ## 🟡 4. Tên trường trong phản hồi lỗi không thống nhất
 
+> *Báo từ 30/07, backend chưa xử lý*
+
 Mỗi controller đặt tên một kiểu:
 
 | Nơi | Trường chứa câu lỗi |
@@ -189,12 +202,12 @@ ro bỏ sót về sau. Đề xuất dùng chung `{ message, blockers?, detail? }
 
 ## Tổng hợp
 
-| # | Nội dung | Mức độ | Nơi sửa |
-|---|---|---|---|
-| 1 | 55 tài khoản nài ngựa thiếu hồ sơ → không dùng được | 🔴 Cao | `DataSeeder.cs` |
-| 2 | God API chỉ tạo 7/12 suất đua, không cảnh báo | 🟡 Vừa | `DemoService.cs` |
-| 3 | God API đặt trạng thái `Scheduled` không có trong hệ thống | 🟡 Vừa | `DemoService.cs` |
-| 4 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | Các controller |
+| # | Nội dung | Mức độ | Phát hiện | Nơi sửa |
+|---|---|---|---|---|
+| 1 | 55 tài khoản nài ngựa thiếu hồ sơ → không dùng được | 🔴 Cao | 🆕 31/07 | `DataSeeder.cs` |
+| 2 | God API chỉ tạo 7/12 suất đua, không cảnh báo | 🟡 Vừa | 🆕 31/07 | `DemoService.cs` |
+| 3 | God API đặt trạng thái `Scheduled` không có trong hệ thống | 🟡 Vừa | 🆕 31/07 | `DemoService.cs` |
+| 4 | Tên trường phản hồi lỗi chưa thống nhất | 🟡 Vừa | 30/07 | Các controller |
 
 Mục 1 là gốc của mục 2 — sửa mục 1 thì mục 2 tự hết. Mục 2 và 3 nằm cùng một file.
 
