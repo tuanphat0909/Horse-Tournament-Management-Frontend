@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
 import { PageAmbience } from '../../components/layout/PageAmbience';
-import { populateTournament, resolveRace } from '../../api/adminService';
-import { getTournaments } from '../../api/publicService';
+import { populateTournament, resolveRace, startSingleRace } from '../../api/adminService';
+import { getTournaments, getRaceSchedule } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
 import { useNotifications } from '../../context/NotificationContext';
 
@@ -15,7 +15,9 @@ export function AdminDemoToolsPage() {
   const [selectedId, setSelectedId] = useState('');
   // Số suất đua muốn thêm — backend nhận từ 1 tới 48.
   const [count, setCount] = useState('12');
-  const [loading, setLoading] = useState({ populate: false, resolve: false });
+  const [races, setRaces] = useState([]);
+  const [selectedRaceId, setSelectedRaceId] = useState('');
+  const [loading, setLoading] = useState({ populate: false, resolve: false, startRace: false });
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
@@ -32,9 +34,39 @@ export function AdminDemoToolsPage() {
     }
   }
 
+  // Lịch đua dùng để chọn riêng một cuộc đua cần chạy ngay.
+  async function loadRaces() {
+    try {
+      const res = await getRaceSchedule();
+      setRaces(Array.isArray(res?.result) ? res.result : Array.isArray(res) ? res : []);
+    } catch {
+      setRaces([]);
+    }
+  }
+
   useEffect(() => {
     loadTournaments();
+    loadRaces();
   }, []);
+
+  async function handleStartSingleRace() {
+    if (!selectedRaceId) return;
+    setLoading((p) => ({ ...p, startRace: true }));
+    setResult(null);
+    setError('');
+    try {
+      const res = await startSingleRace(selectedRaceId);
+      setResult(res);
+      showToast('Success', 'Race started — the referee can enter results now.');
+      await loadRaces();
+    } catch (err) {
+      const msg = parseApiError(err);
+      setError(msg);
+      showToast('Error', msg, 'error');
+    } finally {
+      setLoading((p) => ({ ...p, startRace: false }));
+    }
+  }
 
   const soSuat = Number(count);
   const soSuatHopLe = Number.isInteger(soSuat) && soSuat >= 1 && soSuat <= 48;
@@ -78,7 +110,9 @@ export function AdminDemoToolsPage() {
   }
 
   const selectedTour = tournaments.find((t) => String(t.tournamentId) === selectedId);
-  const anyLoading = loading.populate || loading.resolve;
+  const anyLoading = loading.populate || loading.resolve || loading.startRace;
+  // Chỉ hiện cuộc đua của giải đang chọn; chưa chọn giải thì hiện tất cả.
+  const racesCuaGiai = selectedId ? races.filter((r) => String(r.tournamentId) === String(selectedId)) : races;
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
@@ -139,6 +173,38 @@ export function AdminDemoToolsPage() {
               />
               <p className="text-[11px] text-muted mt-1.5">
                 {soSuatHopLe ? 'Between 1 and 48. Only applies to Populate Tournament.' : <span className="text-amber-400">Enter a whole number between 1 and 48.</span>}
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-glass-border/50">
+              <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">
+                Start one race now
+              </label>
+              <div className="flex gap-3 flex-wrap items-start">
+                <select
+                  value={selectedRaceId}
+                  onChange={(e) => { setSelectedRaceId(e.target.value); setResult(null); setError(''); }}
+                  className="flex-1 min-w-[220px] bg-navy/50 border border-glass-border rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:border-gold/40 transition-colors"
+                >
+                  <option value="">-- Select a race --</option>
+                  {racesCuaGiai.map((r) => (
+                    <option key={r.raceId} value={String(r.raceId)}>
+                      {r.name ?? `Race #${r.raceId}`} — {r.status ?? 'Unknown'}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleStartSingleRace}
+                  disabled={anyLoading || !selectedRaceId}
+                  className="px-5 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-400 border border-emerald-500/30 text-sm font-bold rounded-lg transition-colors"
+                >
+                  {loading.startRace ? 'Working...' : 'Start Race'}
+                </button>
+              </div>
+              <p className="text-[11px] text-muted mt-1.5">
+                Sets the race to Active and moves its date to now, so the referee can enter results
+                without waiting for the scheduled day.
+                {racesCuaGiai.length === 0 && ' No races found for the selected tournament.'}
               </p>
             </div>
 

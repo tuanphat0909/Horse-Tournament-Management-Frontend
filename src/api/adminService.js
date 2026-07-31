@@ -80,3 +80,7 @@ export const setupDemoTournament = () => api.post('/demo/setup-race');
 // thiếu nó thì tạo 0 suất.
 export const populateTournament = (tournamentId, count = 12) => api.post(`/demo/populate-tournament/${tournamentId}?count=${count}`);
 export const resolveRace = (tournamentId) => api.post(`/demo/start-race/${tournamentId}`);
+
+// Đưa một cuộc đua cụ thể sang Active và kéo ngày đua về hiện tại — nhờ vậy trọng tài nhập
+// được kết quả ngay, không phải chờ tới ngày đã hẹn.
+export const startSingleRace = (raceId) => api.post(`/demo/start-single-race/${raceId}`);
