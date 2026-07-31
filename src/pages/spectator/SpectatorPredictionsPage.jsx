@@ -166,7 +166,7 @@ export function SpectatorPredictionsPage() {
           {/* Summary */}
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Total Won', value: totalWon > 0 ? `${totalWon.toLocaleString()} coins` : '—', icon: Sparkles, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
+              { label: 'Total Won', value: totalWon > 0 ? `$${totalWon.toLocaleString()}` : '—', icon: Sparkles, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
               { label: 'Win Rate', value: accuracy, icon: TrendingUp, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
               { label: 'Total Bets', value: bets.length, icon: CheckCircle, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20' },
             ].map((s, i) => (
@@ -222,9 +222,9 @@ export function SpectatorPredictionsPage() {
                       </div>
                       <div className="text-right shrink-0 flex flex-col items-end gap-1">
                         <div className="text-xs text-muted">
-                          Bet: <span className="text-white font-medium">{Number(b.amount ?? 0).toLocaleString()} coins</span>
+                          Bet: <span className="text-white font-medium">${Number(b.amount ?? 0).toLocaleString()}</span>
                         </div>
-                        {b.prize != null && b.prize > 0 && <div className="text-sm font-bold text-gold">+{Number(b.prize).toLocaleString()} coins</div>}
+                        {b.prize != null && b.prize > 0 && <div className="text-sm font-bold text-gold">+${Number(b.prize).toLocaleString()}</div>}
                         {isExpanded ? <ChevronUp size={14} className="text-muted mt-1" /> : <ChevronDown size={14} className="text-muted mt-1" />}
                       </div>
                     </button>
@@ -361,7 +361,7 @@ export function SpectatorPredictionsPage() {
                             </div>
                             <div className="flex justify-between text-white font-medium">
                               <span>Total return if wins:</span>
-                              <span className="text-emerald-400 font-bold">{totalReturn.toLocaleString()} coins</span>
+                              <span className="text-emerald-400 font-bold">${totalReturn.toLocaleString()}</span>
                             </div>
                           </div>
                         );

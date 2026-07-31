@@ -96,7 +96,7 @@ export function SpectatorDashboardPage() {
           {/* Stats */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-5 gap-4">
             {[
-              { title: 'Balance', value: balance.toLocaleString(), trend: `≈ $${(balance / 100).toFixed(2)}`, icon: Wallet, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/spectator/wallet' },
+              { title: 'Balance', value: `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, trend: 'USD', icon: Wallet, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/spectator/wallet' },
               { title: 'Active', value: liveRaces.length > 0 ? String(liveRaces.length) : '—', trend: 'Live Now', icon: Activity, color: 'text-red-400', bg: 'from-red-500/15 to-red-900/20', path: '/spectator/live' },
               { title: 'Tournaments', value: String(new Set(upcoming.filter((r) => r.status?.toLowerCase() !== 'finished').map((r) => r.tournamentId)).size), trend: 'Following', icon: Trophy, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/spectator/tournaments' },
               { title: 'Predictions', value: String(bets.length), trend: `${pendingBets} ${'pending results'}`, icon: BarChart3, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/spectator/predictions' },
@@ -230,7 +230,7 @@ export function SpectatorDashboardPage() {
                         </div>
                         <div className="text-right">
                           <div className={`text-[11px] font-bold ${isWin ? 'text-emerald-400' : isLose ? 'text-red-400' : 'text-yellow-400'}`}>{isWin ? 'Correct' : isLose ? 'Incorrect' : 'Pending'}</div>
-                          <div className="text-xs text-gold font-bold">{b.prize != null ? '+' + Number(b.prize).toLocaleString() + ' coins' : ''}</div>
+                          <div className="text-xs text-gold font-bold">{b.prize != null ? '+$' + Number(b.prize).toLocaleString() : ''}</div>
                         </div>
                       </div>
                     );

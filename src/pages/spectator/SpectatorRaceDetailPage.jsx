@@ -21,6 +21,9 @@ const RACE_STATUS_CONFIG = {
   cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-500/10 border-red-500/20', dot: 'bg-red-400' },
 };
 
+const BUOC_TIEN = 10;
+const MAX_BET = 1000;
+
 export function SpectatorRaceDetailPage() {
   const { raceId } = useParams();
   const user = getCurrentUser();
@@ -50,6 +53,9 @@ export function SpectatorRaceDetailPage() {
   };
 
   const amount = Number(amountStr) || 0;
+  // Backend nhan cuoc tu $5 den $1000; phia giao dien chi cho bo so cua 10 nen
+  // muc thap nhat thuc te la $10.
+  const betLe = amount > 0 && !Number.isInteger(amount / BUOC_TIEN);
   const odds = getOdds(selectedEntry);
   const potentialProfit = amount * (odds - 1);
   const totalReturn = amount * odds;
@@ -114,6 +120,8 @@ export function SpectatorRaceDetailPage() {
 
     if (!selectedEntry) return setBetError('Please select a horse to bet on.');
     if (amount <= 0) return setBetError('Bet amount must be greater than 0.');
+    if (betLe) return setBetError(`Bet amount must be a multiple of $${BUOC_TIEN}.`);
+    if (amount > MAX_BET) return setBetError(`Bet amount cannot exceed $${MAX_BET}.`);
     if (amount > balance) return setBetError('Insufficient wallet balance.');
 
     setBetLoading(true);
@@ -337,32 +345,32 @@ export function SpectatorRaceDetailPage() {
 
                   <div className="space-y-4 mb-6">
                     <div>
-                      <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-2">Bet Amount (Coins)</label>
-                      <input type="number" min="0" step="100" value={amountStr} onChange={(e) => setAmountStr(e.target.value)} placeholder="Example: 1000" disabled={!isBettingAllowed} className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-3 text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" />
+                      <label className="block text-xs font-bold text-muted uppercase tracking-wider mb-2">Bet Amount (USD)</label>
+                      <input type="number" min={BUOC_TIEN} step={BUOC_TIEN} max={MAX_BET} value={amountStr} onChange={(e) => setAmountStr(e.target.value)} placeholder={`Example: 50 — multiples of $${BUOC_TIEN}`} disabled={!isBettingAllowed} className="w-full bg-navy/50 border border-glass-border rounded-lg px-4 py-3 text-white placeholder:text-muted/60 outline-none focus:border-gold/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" />
                     </div>
 
                     <div className="flex justify-between items-center px-1">
                       <span className="text-xs text-muted">Wallet Balance:</span>
-                      <span className={`text-sm font-bold tabular-nums ${amount > balance ? 'text-red-400' : 'text-emerald-400'}`}>{balance.toLocaleString()} coins</span>
+                      <span className={`text-sm font-bold tabular-nums ${amount > balance ? 'text-red-400' : 'text-emerald-400'}`}>${balance.toLocaleString()}</span>
                     </div>
                   </div>
 
                   <div className="space-y-3 pt-4 border-t border-glass-border/40 mb-6">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted">Bet Amount:</span>
-                      <span className="text-white tabular-nums">{amount.toLocaleString()} coins</span>
+                      <span className="text-white tabular-nums">${amount.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted">Expected Payout:</span>
-                      <span className="text-emerald-400 font-medium tabular-nums">+{potentialProfit.toLocaleString()} coins</span>
+                      <span className="text-emerald-400 font-medium tabular-nums">+${potentialProfit.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-base font-bold">
                       <span className="text-white">Total Return:</span>
-                      <span className="text-gold tabular-nums">{totalReturn.toLocaleString()} coins</span>
+                      <span className="text-gold tabular-nums">${totalReturn.toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <button onClick={handlePlaceBet} disabled={!isBettingAllowed || betLoading || amount <= 0 || amount > balance} className="w-full bg-gradient-to-r from-gold to-gold-light text-navy font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                  <button onClick={handlePlaceBet} disabled={!isBettingAllowed || betLoading || amount <= 0 || betLe || amount > MAX_BET || amount > balance} className="w-full bg-gradient-to-r from-gold to-gold-light text-navy font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                     {betLoading ? 'Processing...' : 'Confirm Bet'}
                   </button>
 

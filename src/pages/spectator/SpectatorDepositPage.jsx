@@ -10,8 +10,10 @@ import { parseApiError, getCurrentUser } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { api } from '../../services/api';
 
-const COINS_PER_USD = 100;
-const QUICK_AMTS = [5, 10, 20, 50];
+// Số dư ví tính thẳng bằng USD, không còn quy đổi qua điểm.
+// Số tiền nạp phải là bội số của 10 để tránh những con số lẻ khó đối soát.
+const BUOC_TIEN = 10;
+const QUICK_AMTS = [10, 20, 50, 100];
 
 export function SpectatorDepositPage() {
   const [balance, setBalance] = useState(0);
@@ -25,7 +27,8 @@ export function SpectatorDepositPage() {
   const user = getCurrentUser();
   const isLocked = (user?.status?.toLowerCase() ?? '') !== 'active';
   const effectiveUsd = quickAmt ?? (parseFloat(usdInput) || 0);
-  const coinsPreview = effectiveUsd * COINS_PER_USD;
+  const hopLe = effectiveUsd > 0 && Number.isInteger(effectiveUsd / BUOC_TIEN);
+  const loiSoTien = effectiveUsd > 0 && !hopLe ? `Amount must be a multiple of $${BUOC_TIEN}.` : '';
 
   async function loadBalance() {
     setPageLoading(true);
@@ -45,7 +48,7 @@ export function SpectatorDepositPage() {
   }, []);
 
   async function handleDeposit() {
-    if (effectiveUsd <= 0) return;
+    if (!hopLe) return;
     setDepLoading(true);
     setDepErr('');
     setDepMsg('');
@@ -80,7 +83,7 @@ export function SpectatorDepositPage() {
             imagePosition="center 50%"
             badge={
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/25 text-gold text-[10px] font-bold uppercase tracking-widest">
-                <Coins size={10} /> $1 = {COINS_PER_USD} coins
+                <Coins size={10} /> Multiples of ${BUOC_TIEN}
               </div>
             }
           />
@@ -93,9 +96,8 @@ export function SpectatorDepositPage() {
                 <LoadingSkeleton />
               ) : (
                 <div className="flex items-end gap-2">
-                  <span className="text-3xl font-serif font-bold text-white">{balance.toLocaleString()}</span>
-                  <span className="text-base text-gold font-bold mb-0.5">coins</span>
-                  <span className="text-sm text-muted ml-1">(${(balance / COINS_PER_USD).toFixed(2)} USD)</span>
+                  <span className="text-3xl font-serif font-bold text-white">${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="text-base text-gold font-bold mb-0.5">USD</span>
                 </div>
               )}
             </div>
@@ -142,38 +144,36 @@ export function SpectatorDepositPage() {
                 <DollarSign size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                 <input
                   type="number"
-                  min="1"
+                  min={BUOC_TIEN}
+                  step={BUOC_TIEN}
                   value={usdInput}
                   disabled={isLocked}
                   onChange={(e) => {
                     setUsdInput(e.target.value);
                     setQuickAmt(null);
                   }}
-                  placeholder="0.00"
+                  placeholder={`e.g. ${BUOC_TIEN}`}
                   className={`w-full bg-white/[0.04] border border-glass-border rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-muted/50 outline-none focus:border-gold/40 transition-colors ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 />
               </div>
             </div>
 
             {/* Preview */}
-            {coinsPreview > 0 && (
+            {hopLe && (
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-5 p-4 rounded-xl bg-gold/5 border border-gold/20">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">You will receive</span>
-                  <span className="text-sm font-bold text-gold">{coinsPreview.toLocaleString()} coins</span>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-muted">Exchange rate</span>
-                  <span className="text-xs text-muted">$1 USD = {COINS_PER_USD} coins</span>
+                  <span className="text-sm font-bold text-gold">${effectiveUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
                 </div>
               </motion.div>
             )}
 
+            {loiSoTien && <div className="mb-4 text-xs text-amber-400 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20">{loiSoTien}</div>}
             {depositErr && <div className="mb-4 text-xs text-red-400 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20">{depositErr}</div>}
             {depositMsg && <div className="mb-4 text-xs text-emerald-400 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">{depositMsg}</div>}
 
-            <button onClick={handleDeposit} disabled={coinsPreview <= 0 || depositLoading || isLocked} className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all ${isLocked ? 'bg-red-500/10 border border-red-500/20 text-red-400 cursor-not-allowed' : coinsPreview > 0 ? 'btn-gold' : 'bg-white/5 text-muted cursor-not-allowed border border-glass-border'}`}>
-              {isLocked ? '🔒 Deposits Disabled' : depositLoading ? 'Redirecting to VNPay...' : coinsPreview > 0 ? `Deposit $${effectiveUsd} via VNPay` : 'Select Amount'}
+            <button onClick={handleDeposit} disabled={!hopLe || depositLoading || isLocked} className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all ${isLocked ? 'bg-red-500/10 border border-red-500/20 text-red-400 cursor-not-allowed' : hopLe ? 'btn-gold' : 'bg-white/5 text-muted cursor-not-allowed border border-glass-border'}`}>
+              {isLocked ? '🔒 Deposits Disabled' : depositLoading ? 'Redirecting to VNPay...' : hopLe ? `Deposit $${effectiveUsd} via VNPay` : 'Select Amount'}
             </button>
           </motion.div>
         </main>

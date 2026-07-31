@@ -23,7 +23,7 @@ const OwnerPreview = () => {
         </div>
       </div>
 
-      {/* Ba ô khớp đúng card trên Owner Dashboard thật, đơn vị tiền là coins (¢) */}
+      {/* Ba ô khớp đúng card trên Owner Dashboard thật, đơn vị tiền là USD */}
       <div className="grid grid-cols-3 gap-1.5">
         {[
           { value: '12', label: 'My Horses', color: 'text-[#B58A30]' },
@@ -227,7 +227,7 @@ const SpectatorPreview = () => {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        {/* Trang thật đặt tên là "My Bets", tiền thưởng tính bằng coins */}
+        {/* Trang thật đặt tên là "My Bets", tiền thưởng tính bằng USD */}
         <div className="text-[9px] text-slate-400 uppercase tracking-widest mb-1.5">{'My Bets'}</div>
         {[
           { horse: 'Thunderstrike', pred: 'Win', correct: true, reward: '+1,500 ¢' },

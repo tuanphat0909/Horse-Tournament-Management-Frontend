@@ -10,7 +10,9 @@ import { parseApiError } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
 // ── Constants ─────────────────────────────────────────────────────
-const COINS_PER_USD = 100;
+// So du ví tính thẳng bằng USD. Số tiền rút phải là bội số của 10 để tránh
+// những con số lẻ khó đối soát với ngân hàng.
+const BUOC_TIEN = 10;
 const BANK_FEE_FLAT = 1; // $1 flat fee per transaction
 const MIN_WITHDRAW = 10; // USD — Spectator minimum
 const DAILY_LIMIT = 1_000; // USD — Spectator tier (low)
@@ -94,7 +96,7 @@ export function SpectatorWithdrawPage() {
 
   // ── Derived values ───────────────────────────────────────────────
   const amtNum = parseFloat(amount) || 0;
-  const availableUsd = balance / COINS_PER_USD;
+  const availableUsd = balance;
   const dailyRemaining = DAILY_LIMIT - dailyUsed;
   const netAmount = Math.max(0, amtNum - BANK_FEE_FLAT);
 
@@ -103,8 +105,9 @@ export function SpectatorWithdrawPage() {
   const amtTooLow = amtNum > 0 && amtNum < MIN_WITHDRAW;
   const amtOverBal = amtNum > availableUsd;
   const amtOverLim = amtNum > dailyRemaining;
+  const amtLe = amtNum > 0 && !Number.isInteger(amtNum / BUOC_TIEN);
 
-  const isValid = isValidAccountNumber(accountNo) && holderName.trim().length >= 2 && amtNum >= MIN_WITHDRAW && amtNum <= availableUsd && amtNum <= dailyRemaining;
+  const isValid = isValidAccountNumber(accountNo) && holderName.trim().length >= 2 && amtNum >= MIN_WITHDRAW && amtNum <= availableUsd && amtNum <= dailyRemaining && !amtLe;
 
   const btnDisabled = !isValid || loading;
 
@@ -163,9 +166,8 @@ export function SpectatorWithdrawPage() {
                 <LoadingSkeleton />
               ) : (
                 <div className="flex items-end gap-2">
-                  <span className="text-3xl font-serif font-bold text-white">{balance.toLocaleString()}</span>
-                  <span className="text-base text-gold font-bold mb-0.5">coins</span>
-                  <span className="text-sm text-muted ml-1">(${availableUsd.toFixed(2)} USD)</span>
+                  <span className="text-3xl font-serif font-bold text-white">${availableUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="text-base text-gold font-bold mb-0.5">USD</span>
                 </div>
               )}
             </div>
@@ -268,9 +270,9 @@ export function SpectatorWithdrawPage() {
                 <label className="block text-[11px] font-bold text-muted uppercase tracking-wider mb-2">Withdrawal Amount (USD)</label>
                 <div className="relative">
                   <DollarSign size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-                  <input type="number" value={amount} min={MIN_WITHDRAW} onChange={(e) => setAmount(e.target.value)} placeholder={`Minimum: $${MIN_WITHDRAW}`} className={`w-full bg-white/[0.04] border rounded-xl pl-9 pr-20 py-3 text-sm text-white placeholder:text-muted/40 outline-none transition-colors ${amtTooLow || amtOverBal || amtOverLim ? 'border-red-500/40 focus:border-red-400/50' : 'border-glass-border focus:border-yellow-400/40'}`} />
+                  <input type="number" value={amount} min={MIN_WITHDRAW} step={BUOC_TIEN} onChange={(e) => setAmount(e.target.value)} placeholder={`Minimum: $${MIN_WITHDRAW}`} className={`w-full bg-white/[0.04] border rounded-xl pl-9 pr-20 py-3 text-sm text-white placeholder:text-muted/40 outline-none transition-colors ${amtTooLow || amtOverBal || amtOverLim ? 'border-red-500/40 focus:border-red-400/50' : 'border-glass-border focus:border-yellow-400/40'}`} />
 
-                  <button onClick={() => setAmount(Math.min(availableUsd, dailyRemaining).toFixed(2))} className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-yellow-400 hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/[0.06] border border-yellow-500/30">
+                  <button onClick={() => setAmount(String(Math.floor(Math.min(availableUsd, dailyRemaining) / BUOC_TIEN) * BUOC_TIEN))} className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-yellow-400 hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/[0.06] border border-yellow-500/30">
                     All
                   </button>
                 </div>
@@ -331,7 +333,12 @@ export function SpectatorWithdrawPage() {
                     <AlertCircle size={12} /> Minimum withdrawal is ${MIN_WITHDRAW}
                   </motion.div>
                 )}
-                {amtOverBal && !amtTooLow && (
+                {amtLe && !amtTooLow && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-[11px] text-amber-400 px-3 py-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                    <AlertCircle size={12} /> Amount must be a multiple of ${BUOC_TIEN}
+                  </motion.div>
+                )}
+                {amtOverBal && !amtTooLow && !amtLe && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-[11px] text-red-400 px-3 py-2 bg-red-500/10 rounded-lg border border-red-500/20">
                     <AlertCircle size={12} /> Amount exceeds available balance (${availableUsd.toFixed(2)})
                   </motion.div>

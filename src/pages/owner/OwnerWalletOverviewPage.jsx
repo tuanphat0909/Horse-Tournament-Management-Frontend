@@ -10,7 +10,6 @@ import { parseApiError } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { useNavigate } from 'react-router-dom';
 
-const COINS_PER_USD = 100;
 
 // Chủ ngựa không còn nạp tiền, nhưng vẫn giữ kiểu `deposit` ở đây để những giao dịch
 // nạp cũ trong lịch sử hiển thị đúng nhãn thay vì rơi vào nhóm "Other".
@@ -74,7 +73,7 @@ export function OwnerWalletOverviewPage() {
     })
     .reduce((s, t) => s + Math.abs(t.amount ?? 0), 0);
 
-  const dailyUsedUsd = withdrawUsed24h / COINS_PER_USD;
+  const dailyUsedUsd = withdrawUsed24h;
   const dailyPct = Math.min((dailyUsedUsd / OWNER_DAILY_LIMIT) * 100, 100);
 
   const FILTER_TABS = [
@@ -99,7 +98,7 @@ export function OwnerWalletOverviewPage() {
             imagePosition="center 5%"
             badge={
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/25 text-gold text-[10px] font-bold uppercase tracking-widest">
-                <Coins size={10} /> $1 = {COINS_PER_USD} coins
+                <Coins size={10} /> Amounts in USD
               </div>
             }
           />
@@ -124,10 +123,9 @@ export function OwnerWalletOverviewPage() {
                 ) : (
                   <>
                     <div className="flex items-end gap-3 mb-1">
-                      <span className="text-4xl font-serif font-bold text-white">{balance.toLocaleString()}</span>
-                      <span className="text-lg text-gold font-bold mb-1">coins</span>
+                      <span className="text-4xl font-serif font-bold text-white">${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="text-lg text-gold font-bold mb-1">USD</span>
                     </div>
-                    <div className="text-sm text-muted">${(balance / COINS_PER_USD).toFixed(2)} USD</div>
                   </>
                 )}
               </div>
@@ -246,7 +244,7 @@ export function OwnerWalletOverviewPage() {
                       </div>
                       <div className={`text-sm font-bold shrink-0 tabular-nums ${isPending ? 'text-yellow-400' : isPrize ? 'text-amber-400' : isPos ? 'text-emerald-400' : 'text-red-400'}`}>
                         {isPos ? '+' : ''}
-                        {Number(amt).toLocaleString()} <span className="text-[10px] font-normal text-muted">coins</span>
+                        ${Number(amt).toLocaleString()} <span className="text-[10px] font-normal text-muted">USD</span>
                       </div>
                     </motion.div>
                   );
