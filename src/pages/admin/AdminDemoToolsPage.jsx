@@ -229,6 +229,19 @@ export function AdminDemoToolsPage() {
               </button>
             </div>
 
+            {/* Backend khong con tu sinh cuoc dua trong setup-race nua, phai xep lich truoc */}
+            <ol className="text-[11px] text-muted space-y-1 list-decimal list-inside">
+              <li>Ctrl + Space, or Populate Tournament, to create the tournament and its entries</li>
+              <li>
+                Go to{' '}
+                <Link to="/admin/races" className="text-gold hover:underline">
+                  Manage Races
+                </Link>{' '}
+                and click <b>Auto Assign Lanes</b> to generate the races
+              </li>
+              <li>Come back here and use <b>Resolve Race</b> or <b>Start Race</b></li>
+            </ol>
+
             {selectedTour && (
               <p className="text-xs text-muted">
                 Tournament ID: <span className="text-white font-mono">{selectedTour.tournamentId}</span>
