@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatUSD } from '../../utils/format';
 import { motion } from 'framer-motion';
 import { Users, Trophy, ClipboardList, Calendar, TrendingUp, ChevronRight, Activity, UserCheck, Megaphone } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -162,7 +163,7 @@ export function AdminDashboardPage() {
             {[
               { title: 'Users', value: stats ? stats.totalUsers : '—', trend: 'Active', icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
               { title: 'Tournaments', value: stats ? stats.totalTournaments : '—', trend: 'Season 2026', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
-              { title: 'Profit (VND)', value: stats ? new Intl.NumberFormat('en-US').format(stats.profit) : '—', trend: 'Betting Revenue', icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/wallet' },
+              { title: 'Profit', value: stats ? formatUSD(stats.profit) : '—', trend: 'Betting Revenue', icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/wallet' },
               { title: 'Races', value: stats ? stats.activeRaces : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} ${'total'}` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
             ].map((m, i) => (
               <MotionLink key={i} to={m.path} variants={child} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer block" style={{ height: '130px' }}>

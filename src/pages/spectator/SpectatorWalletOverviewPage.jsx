@@ -11,7 +11,7 @@ import { parseApiError } from '../../api/authService';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { useNavigate } from 'react-router-dom';
 
-const SPECTATOR_DAILY_LIMIT = 1_000; // USDT — low tier
+const SPECTATOR_DAILY_LIMIT = 1_000; // USD
 
 const TX_CONFIG = {
   deposit: { color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', label: 'Deposit', icon: Coins },
@@ -177,14 +177,14 @@ export function SpectatorWalletOverviewPage() {
                 Used: <span className="text-white font-semibold tabular-nums">{formatUSD(dailyUsedUsd)}</span>
               </span>
               <span>
-                Limit: <span className="text-white font-semibold tabular-nums">{formatUSD(SPECTATOR_DAILY_LIMIT)}</span> USDT
+                Limit: <span className="text-white font-semibold tabular-nums">{formatUSD(SPECTATOR_DAILY_LIMIT)}</span>
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all duration-700" style={{ width: `${dailyPct}%` }} />
             </div>
             <div className="text-[10px] text-muted/60 mt-1.5 text-right">
-              Remaining: <span className="text-emerald-400 font-semibold tabular-nums">{formatUSD(SPECTATOR_DAILY_LIMIT - dailyUsedUsd)}</span> USDT
+              Remaining: <span className="text-emerald-400 font-semibold tabular-nums">{formatUSD(SPECTATOR_DAILY_LIMIT - dailyUsedUsd)}</span>
             </div>
           </motion.div>
 

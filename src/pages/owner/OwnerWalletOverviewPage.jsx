@@ -35,7 +35,7 @@ const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transit
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
 
 // 24h limits per role
-const OWNER_DAILY_LIMIT = 50_000; // USDT
+const OWNER_DAILY_LIMIT = 50_000; // USD
 
 export function OwnerWalletOverviewPage() {
   const navigate = useNavigate();
@@ -182,14 +182,14 @@ export function OwnerWalletOverviewPage() {
                 Used: <span className="text-white font-semibold tabular-nums">{formatUSD(dailyUsedUsd)}</span>
               </span>
               <span>
-                Limit: <span className="text-white font-semibold tabular-nums">{formatUSD(OWNER_DAILY_LIMIT)}</span> USDT
+                Limit: <span className="text-white font-semibold tabular-nums">{formatUSD(OWNER_DAILY_LIMIT)}</span>
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-700" style={{ width: `${dailyPct}%` }} />
             </div>
             <div className="text-[10px] text-muted/60 mt-1.5 text-right">
-              Remaining: <span className="text-emerald-400 font-semibold tabular-nums">{formatUSD(OWNER_DAILY_LIMIT - dailyUsedUsd)}</span> USDT
+              Remaining: <span className="text-emerald-400 font-semibold tabular-nums">{formatUSD(OWNER_DAILY_LIMIT - dailyUsedUsd)}</span>
             </div>
           </motion.div>
 
