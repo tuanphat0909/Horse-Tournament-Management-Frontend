@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatUSD } from '../../utils/format';
 import { motion } from 'framer-motion';
 import { Wallet, Trophy, History, CheckCircle, ArrowUpRight, Coins, Users, TrendingUp } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -123,7 +124,7 @@ export function OwnerWalletOverviewPage() {
                 ) : (
                   <>
                     <div className="flex items-end gap-3 mb-1">
-                      <span className="text-4xl font-serif font-bold text-white">${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <span className="text-4xl font-serif font-bold text-white">{formatUSD(balance)}</span>
                       <span className="text-lg text-gold font-bold mb-1">USD</span>
                     </div>
                   </>
@@ -138,7 +139,7 @@ export function OwnerWalletOverviewPage() {
               <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-3 relative z-10">
                 <Trophy size={16} />
               </div>
-              <div className="relative z-10 text-xl font-serif font-bold text-amber-400">{pageLoading ? '…' : `+${prizeTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
+              <div className="relative z-10 text-xl font-serif font-bold text-amber-400">{pageLoading ? '…' : `+${formatUSD(prizeTotal)}`}</div>
               <div className="relative z-10 text-[11px] text-muted font-medium mt-1">Total Prize Earned</div>
             </motion.div>
 
@@ -149,7 +150,7 @@ export function OwnerWalletOverviewPage() {
               <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-3 relative z-10">
                 <Users size={16} />
               </div>
-              <div className="relative z-10 text-xl font-serif font-bold text-purple-400">{pageLoading ? '…' : `-${jockeyTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</div>
+              <div className="relative z-10 text-xl font-serif font-bold text-purple-400">{pageLoading ? '…' : `-${formatUSD(jockeyTotal)}`}</div>
               <div className="relative z-10 text-[11px] text-muted font-medium mt-1">Jockey Hire Costs</div>
             </motion.div>
 
@@ -178,17 +179,17 @@ export function OwnerWalletOverviewPage() {
             </div>
             <div className="flex items-center justify-between text-xs text-muted mb-2">
               <span>
-                Used: <span className="text-white font-semibold">${dailyUsedUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                Used: <span className="text-white font-semibold">{formatUSD(dailyUsedUsd)}</span>
               </span>
               <span>
-                Limit: <span className="text-white font-semibold">${OWNER_DAILY_LIMIT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> USDT
+                Limit: <span className="text-white font-semibold">{formatUSD(OWNER_DAILY_LIMIT)}</span> USDT
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-700" style={{ width: `${dailyPct}%` }} />
             </div>
             <div className="text-[10px] text-muted/60 mt-1.5 text-right">
-              Remaining: <span className="text-emerald-400 font-semibold">${(OWNER_DAILY_LIMIT - dailyUsedUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> USDT
+              Remaining: <span className="text-emerald-400 font-semibold">{formatUSD(OWNER_DAILY_LIMIT - dailyUsedUsd)}</span> USDT
             </div>
           </motion.div>
 
@@ -244,7 +245,7 @@ export function OwnerWalletOverviewPage() {
                       </div>
                       <div className={`text-sm font-bold shrink-0 tabular-nums ${isPending ? 'text-yellow-400' : isPrize ? 'text-amber-400' : isPos ? 'text-emerald-400' : 'text-red-400'}`}>
                         {isPos ? '+' : ''}
-                        ${Number(amt).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[10px] font-normal text-muted">USD</span>
+                        {formatUSD(Number(amt))} <span className="text-[10px] font-normal text-muted">USD</span>
                       </div>
                     </motion.div>
                   );

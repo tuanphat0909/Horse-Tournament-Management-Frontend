@@ -9,7 +9,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { createTournament, generateFinalRace, closeTournamentRegistration, extendTournamentRegistration, cancelTournament, getAdminWalletBalance, updateTournament } from '../../api/adminService';
 import { getRaceSchedule, getTournaments } from '../../api/publicService';
 import { parseApiError } from '../../api/authService';
-import { formatDateTime } from '../../utils/format';
+import { formatUSD, formatDateTime } from '../../utils/format';
 import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { useNotifications } from '../../context/NotificationContext';
 import { useConfirm } from '../../context/ConfirmContext';
@@ -335,7 +335,7 @@ export function AdminTournamentsPage() {
     }
     const totalPrizePool = firstPrize + secondPrize + thirdPrize;
     if (totalPrizePool > adminWalletBalance) {
-      setError(`Insufficient Admin wallet balance. Available: $${adminWalletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD; required: $${totalPrizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD. Please enter lower prizes or deposit more funds.`);
+      setError(`Insufficient Admin wallet balance. Available: ${formatUSD(adminWalletBalance)} USD; required: ${formatUSD(totalPrizePool)} USD. Please enter lower prizes or deposit more funds.`);
       return;
     }
 
@@ -714,7 +714,7 @@ export function AdminTournamentsPage() {
                                   .map((p) => (
                                     <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
                                       <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
-                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap">${Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</div>
+                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap">{formatUSD(Number(p.amount))} USD</div>
                                     </div>
                                   ))}
                               </div>
@@ -978,10 +978,10 @@ export function AdminTournamentsPage() {
                 <span className="font-bold text-white text-[11px] uppercase tracking-wider mb-2 block">{'Prize Structure (USD)'}</span>
                 <div className="mb-2 text-[11px] text-muted flex flex-wrap justify-between gap-2">
                   <span>
-                    Admin wallet: <b className="text-emerald-400">${adminWalletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</b>
+                    Admin wallet: <b className="text-emerald-400">{formatUSD(adminWalletBalance)} USD</b>
                   </span>
                   <span>
-                    Total prizes: <b className="text-gold">${[form.firstPrize, form.secondPrize, form.thirdPrize].reduce((sum, value) => sum + (Number(value) || 0), 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</b>
+                    Total prizes: <b className="text-gold">{formatUSD([form.firstPrize, form.secondPrize, form.thirdPrize].reduce((sum, value) => sum + (Number(value) || 0), 0))} USD</b>
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">

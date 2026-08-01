@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { formatUSD } from '../../utils/format';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpRight, ChevronDown, AlertCircle, Wallet, CheckCircle2, Building2, User, DollarSign, Crown } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -153,7 +154,7 @@ export function OwnerWithdrawPage() {
             imagePosition="center 5%"
             badge={
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-300 text-[10px] font-bold uppercase tracking-widest">
-                <Crown size={10} /> Owner tier — Daily limit ${DAILY_LIMIT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <Crown size={10} /> Owner tier — Daily limit {formatUSD(DAILY_LIMIT)}
               </div>
             }
           />
@@ -166,7 +167,7 @@ export function OwnerWithdrawPage() {
                 <LoadingSkeleton />
               ) : (
                 <div className="flex items-end gap-2">
-                  <span className="text-3xl font-serif font-bold text-white">${availableUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="text-3xl font-serif font-bold text-white">{formatUSD(availableUsd)}</span>
                   <span className="text-base text-gold font-bold mb-0.5">USD</span>
                 </div>
               )}
@@ -280,7 +281,7 @@ export function OwnerWithdrawPage() {
                 <div className="grid grid-cols-4 gap-2 mt-2.5">
                   {QUICK_AMOUNTS.map((q) => (
                     <button key={q} onClick={() => setAmount(String(q))} className={`py-2 rounded-lg text-xs font-bold border transition-all ${parseFloat(amount) === q ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-white/[0.03] border-glass-border text-muted hover:text-white hover:border-white/20'}`}>
-                      ${q.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {formatUSD(q)}
                     </button>
                   ))}
                 </div>
@@ -295,7 +296,7 @@ export function OwnerWithdrawPage() {
                 <div className="p-3.5 bg-white/[0.025] rounded-xl border border-glass-border">
                   <div className="text-[10px] text-muted uppercase tracking-wider mb-1.5">24h Limit Remaining</div>
                   <div className="text-sm font-bold text-blue-400">
-                    ${dailyRemaining.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${DAILY_LIMIT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatUSD(dailyRemaining)} / {formatUSD(DAILY_LIMIT)}
                   </div>
                   {/* Progress bar */}
                   <div className="mt-1.5 h-1 bg-white/10 rounded-full overflow-hidden">
@@ -344,7 +345,7 @@ export function OwnerWithdrawPage() {
                 )}
                 {amtOverLim && !amtOverBal && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 text-[11px] text-amber-400 px-3 py-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                    <AlertCircle size={12} /> Exceeds 24h limit of ${DAILY_LIMIT.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} for Owner accounts
+                    <AlertCircle size={12} /> Exceeds 24h limit of {formatUSD(DAILY_LIMIT)} for Owner accounts
                   </motion.div>
                 )}
               </AnimatePresence>

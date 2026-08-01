@@ -7,6 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getBetStats, getBets, getPredictionStats, getPredictions } from '../../api/adminService';
 import { Pager, paginate } from '../../components/ui/Pager';
+import { formatUSD } from '../../utils/format';
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 
 export function AdminPredictionsPage() {
@@ -124,7 +125,7 @@ export function AdminPredictionsPage() {
   const statsDisplay = [
     {
       label: 'Total Bet Volume',
-      value: loading ? '...' : `$${(stats?.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: loading ? '...' : formatUSD(stats?.totalAmount),
       icon: DollarSign,
       color: 'text-blue-400',
       bg: 'from-blue-500/15 to-blue-900/20',
@@ -138,14 +139,14 @@ export function AdminPredictionsPage() {
     },
     {
       label: 'Total Payouts Paid',
-      value: loading ? '...' : `$${(stats?.totalPayoutsPaid ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: loading ? '...' : formatUSD(stats?.totalPayoutsPaid),
       icon: Coins,
       color: 'text-gold',
       bg: 'from-gold/15 to-amber-900/20',
     },
     {
       label: 'House Profit',
-      value: loading ? '...' : `$${(stats?.houseProfit ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: loading ? '...' : formatUSD(stats?.houseProfit),
       icon: TrendingUp,
       color: (stats?.houseProfit ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400',
       bg: 'from-purple-500/15 to-purple-900/20',
@@ -172,7 +173,7 @@ export function AdminPredictionsPage() {
                   </div>
                   <span className="text-[11px] uppercase tracking-wider text-muted font-bold">{s.label}</span>
                 </div>
-                <div className="relative z-10 text-xl font-serif font-bold text-white">{s.value}</div>
+                <div className="relative z-10 text-xl font-extrabold tracking-tight tabular-nums text-white">{s.value}</div>
               </motion.div>
             ))}
           </div>
@@ -248,9 +249,9 @@ export function AdminPredictionsPage() {
                           <td className="px-6 py-4 font-medium">{b.spectatorName}</td>
                           <td className="px-6 py-4 text-muted">{b.raceName}</td>
                           <td className="px-6 py-4 text-gold font-semibold">{b.horseName}</td>
-                          <td className="px-6 py-4 font-mono text-xs">${b.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-6 py-4 font-mono text-xs">{formatUSD(b.amount)}</td>
                           <td className="px-6 py-4 font-mono text-xs text-amber-400 font-bold">x{b.odds?.toFixed(2) || '1.00'}</td>
-                          <td className="px-6 py-4 font-mono text-xs text-emerald-400 font-semibold">${b.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-6 py-4 font-mono text-xs text-emerald-400 font-semibold">{formatUSD(b.potentialPayout)}</td>
                           <td className="px-6 py-4">
                             <span className={`px-2.5 py-1 rounded text-xs font-semibold ${st === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' : st === 'won' || st === 'paidout' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>{st === 'pending' ? 'Pending' : st === 'won' || st === 'paidout' ? 'Won' : 'Lost'}</span>
                           </td>

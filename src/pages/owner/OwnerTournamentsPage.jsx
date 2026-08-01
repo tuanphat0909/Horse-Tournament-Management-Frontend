@@ -7,7 +7,7 @@ import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getTournaments } from '../../api/publicService';
 import { getMyRegistrations } from '../../api/ownerService';
-import { formatDateTime } from '../../utils/format';
+import { formatUSD, formatDateTime } from '../../utils/format';
 import { CountdownTimer } from '../../components/ui/CountdownTimer';
 import { getTournamentStatusStyle, getStatusOrder } from '../../constants/tournamentStatus';
 
@@ -264,7 +264,7 @@ export function OwnerTournamentsPage() {
                                 .map((p) => (
                                   <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
                                     <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
-                                    <div className="text-gold font-bold text-[10px] whitespace-nowrap">${Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                    <div className="text-gold font-bold text-[10px] whitespace-nowrap">{formatUSD(Number(p.amount))}</div>
                                   </div>
                                 ))}
                             </div>

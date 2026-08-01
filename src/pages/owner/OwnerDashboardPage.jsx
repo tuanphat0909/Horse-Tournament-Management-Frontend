@@ -8,7 +8,7 @@ import { PageAmbience } from '../../components/layout/PageAmbience';
 import { PageHero } from '../../components/layout/PageHero';
 import { getCurrentUser, parseApiError } from '../../api/authService';
 import { getMyHorses, getOwnerWalletBalance, getOwnerResults } from '../../api/ownerService';
-import { calculateAge, formatDateTime } from '../../utils/format';
+import { formatUSD, calculateAge, formatDateTime } from '../../utils/format';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const child = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -131,9 +131,9 @@ export function OwnerDashboardPage() {
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
               { title: 'My Horses', value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0], to: '/owner/horses' },
-              { title: 'Wallet Balance', value: walletBalance === null ? '…' : `$${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, trend: '', icon: Wallet, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[1], to: '/owner/wallet' },
+              { title: 'Wallet Balance', value: walletBalance === null ? '…' : `${formatUSD(walletBalance)}`, trend: '', icon: Wallet, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[1], to: '/owner/wallet' },
               { title: 'Upcoming', value: scheduleLoading ? '…' : String(schedule.length), trend: '3 days left', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2], to: '/owner/tournaments' },
-              { title: 'Prize Money', value: prizeTotal === null ? '…' : `$${prizeTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, trend: '', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3], to: '/owner/results' },
+              { title: 'Prize Money', value: prizeTotal === null ? '…' : `${formatUSD(prizeTotal)}`, trend: '', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3], to: '/owner/results' },
             ].map((m, i) => {
               const isForbidden = isLocked && (m.to === '/owner/horses' || m.to === '/owner/registrations' || m.to === '/owner/tournaments');
               return (

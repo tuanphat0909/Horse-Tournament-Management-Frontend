@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatUSD } from '../../utils/format';
 import { useFormik } from 'formik';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Plus, CheckCircle, XCircle, Clock, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
@@ -169,7 +170,7 @@ export function SpectatorPredictionsPage() {
           {/* Summary */}
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Total Won', value: totalWon > 0 ? `$${totalWon.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—', icon: Sparkles, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
+              { label: 'Total Won', value: totalWon > 0 ? `${formatUSD(totalWon)}` : '—', icon: Sparkles, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20' },
               { label: 'Win Rate', value: accuracy, icon: TrendingUp, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20' },
               { label: 'Total Bets', value: bets.length, icon: CheckCircle, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20' },
             ].map((s, i) => (
@@ -225,9 +226,9 @@ export function SpectatorPredictionsPage() {
                       </div>
                       <div className="text-right shrink-0 flex flex-col items-end gap-1">
                         <div className="text-xs text-muted">
-                          Bet: <span className="text-white font-medium">${Number(b.amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          Bet: <span className="text-white font-medium">{formatUSD(Number(b.amount ?? 0))}</span>
                         </div>
-                        {tienThang(b) > 0 && <div className="text-sm font-bold text-gold">+${Number(tienThang(b)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>}
+                        {tienThang(b) > 0 && <div className="text-sm font-bold text-gold">+{formatUSD(Number(tienThang(b)))}</div>}
                         {isExpanded ? <ChevronUp size={14} className="text-muted mt-1" /> : <ChevronDown size={14} className="text-muted mt-1" />}
                       </div>
                     </button>
@@ -364,7 +365,7 @@ export function SpectatorPredictionsPage() {
                             </div>
                             <div className="flex justify-between text-white font-medium">
                               <span>Total return if wins:</span>
-                              <span className="text-emerald-400 font-bold">${totalReturn.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              <span className="text-emerald-400 font-bold">{formatUSD(totalReturn)}</span>
                             </div>
                           </div>
                         );

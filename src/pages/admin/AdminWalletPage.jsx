@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatUSD } from '../../utils/format';
 import { motion } from 'framer-motion';
 import { Wallet, ArrowDownLeft, ArrowUpRight, Trophy, Coins, History, ClipboardList, TrendingUp, DollarSign } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -133,7 +134,7 @@ export function AdminWalletPage() {
                       <Wallet size={18} />
                     </div>
                   </div>
-                  <div className="text-3xl font-extrabold text-white tracking-tight tabular-nums mb-3 relative z-10">${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div className="text-3xl font-extrabold text-white tracking-tight tabular-nums mb-3 relative z-10">{formatUSD(balance)}</div>
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-gold/10 relative z-10">
                     <div className="text-[10px] text-muted">Operational Liquidity</div>
                     <div className="flex items-center gap-1.5 relative z-20">
@@ -178,7 +179,7 @@ export function AdminWalletPage() {
                       <TrendingUp size={18} />
                     </div>
                   </div>
-                  <div className="text-3xl font-extrabold text-white tracking-tight tabular-nums mb-1">${(stats?.profit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div className="text-3xl font-extrabold text-white tracking-tight tabular-nums mb-1">{formatUSD(stats?.profit)}</div>
                   <div className="text-[10px] text-muted">Betting Volume minus Spectator Payouts</div>
                 </motion.div>
 
@@ -191,7 +192,7 @@ export function AdminWalletPage() {
                       <DollarSign size={18} />
                     </div>
                   </div>
-                  <div className="text-3xl font-extrabold text-white tracking-tight tabular-nums mb-1">${(stats?.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div className="text-3xl font-extrabold text-white tracking-tight tabular-nums mb-1">{formatUSD(stats?.totalRevenue)}</div>
                   <div className="text-[10px] text-muted">Total sum of placed spectator predictions</div>
                 </motion.div>
               </motion.div>
@@ -258,7 +259,7 @@ export function AdminWalletPage() {
                               </td>
                               <td className="px-6 py-4 text-muted">{tx.createdAt ? new Date(tx.createdAt).toLocaleString('en-US') : '—'}</td>
                               <td className={`px-6 py-4 text-right font-bold font-mono text-sm ${isNegative ? 'text-blue-400' : 'text-emerald-400'}`}>
-                                {isNegative ? '-' : '+'}${Math.abs(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {isNegative ? '-' : '+'}{formatUSD(Math.abs(tx.amount))}
                               </td>
                             </tr>
                           );
@@ -391,7 +392,7 @@ export function AdminWalletPage() {
                 <div className="bg-white/5 rounded-2xl p-4 border border-blue-500/30 text-xs space-y-3">
                   <div className="flex items-center justify-between py-1 border-b border-glass-border/30">
                     <span className="text-muted">Available Treasury Balance:</span>
-                    <span className="text-gold font-mono font-bold text-sm">${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="text-gold font-mono font-bold text-sm">{formatUSD(balance)}</span>
                   </div>
                   {balance <= 0 && <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-semibold flex items-center gap-1.5">⚠️ Current treasury balance is $0.00. You cannot withdraw more than the available balance.</div>}
                   <div className="flex items-center justify-between py-1 border-b border-glass-border/30">
@@ -414,7 +415,7 @@ export function AdminWalletPage() {
                   Cancel
                 </button>
                 <button type="submit" disabled={actionLoading} className={`px-5 py-2.5 rounded-xl text-xs font-bold text-rich-black transition-all cursor-pointer shadow-lg flex items-center gap-1.5 ${modalType === 'deposit' ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-gold hover:bg-amber-300'} disabled:opacity-50`}>
-                  {actionLoading ? 'Processing...' : modalType === 'deposit' ? `Confirm Deposit ($${(parseFloat(amountInput) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})` : `Confirm Withdraw ($${(parseFloat(amountInput) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
+                  {actionLoading ? 'Processing...' : modalType === 'deposit' ? `Confirm Deposit (${formatUSD(parseFloat(amountInput))})` : `Confirm Withdraw (${formatUSD(parseFloat(amountInput))})`}
                 </button>
               </div>
             </form>

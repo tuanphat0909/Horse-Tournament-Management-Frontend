@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatUSD } from '../../utils/format';
 import { motion } from 'framer-motion';
 import { Trophy, Award } from 'lucide-react';
 import { Sidebar } from '../../components/layout/Sidebar';
@@ -100,7 +101,7 @@ export function OwnerResultsPage() {
                           </td>
                           <td className="px-6 py-4 font-mono text-xs text-muted">{res.finishTime}</td>
                           <td className="px-6 py-4 font-mono text-xs text-gold">{res.status === 'Finished' ? `+${res.point}` : '—'}</td>
-                          <td className="px-6 py-4 text-right font-mono text-emerald-400 font-semibold">{res.status === 'Finished' && res.prizeAmount > 0 ? `$${res.prizeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}</td>
+                          <td className="px-6 py-4 text-right font-mono text-emerald-400 font-semibold">{res.status === 'Finished' && res.prizeAmount > 0 ? `${formatUSD(res.prizeAmount)}` : '—'}</td>
                         </tr>
                       ))}
                     </tbody>

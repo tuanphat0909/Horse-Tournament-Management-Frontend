@@ -76,3 +76,15 @@ export function formatDateOnly(value) {
 
   return `${day}/${month}/${year}`;
 }
+
+/**
+ * Hiển thị số tiền theo USD: luôn dùng dấu phân cách của en-US và hai chữ số thập phân,
+ * không phụ thuộc ngôn ngữ máy người dùng (máy tiếng Việt sẽ ra "10.800" thay vì "10,800.00").
+ *
+ * Số âm đặt dấu trừ TRƯỚC ký hiệu tiền — "-$9,800.00" chứ không phải "$-9,800.00".
+ */
+export function formatUSD(value) {
+  const so = Number(value) || 0;
+  const chuoi = Math.abs(so).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return so < 0 ? `-$${chuoi}` : `$${chuoi}`;
+}
