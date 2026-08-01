@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { HomePage } from '../pages/HomePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
-import { DashboardPage } from '../pages/DashboardPage';
 import { VerifyEmailPage } from '../pages/VerifyEmailPage';
 import { PaymentReturnPage } from '../pages/PaymentReturnPage';
 
@@ -106,16 +105,6 @@ export function AppRoutes() {
             element={
               <PrivateRoute>
                 <PaymentReturnPage />
-              </PrivateRoute>
-            }
-          />
-
-          {/* Horse Owner (legacy route kept for backward compat) */}
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <DashboardPage />
               </PrivateRoute>
             }
           />

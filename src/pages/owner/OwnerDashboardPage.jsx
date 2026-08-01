@@ -130,9 +130,9 @@ export function OwnerDashboardPage() {
           {/* ROW 2: STATS */}
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
-              { title: 'My Horses', value: String(horses.length), trend: '+12%', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0], to: '/owner/horses' },
+              { title: 'My Horses', value: String(horses.length), trend: '', icon: Star, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', spark: SPARKS[0], to: '/owner/horses' },
               { title: 'Wallet Balance', value: walletBalance === null ? '…' : `${formatUSD(walletBalance)}`, trend: '', icon: Wallet, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[1], to: '/owner/wallet' },
-              { title: 'Upcoming', value: scheduleLoading ? '…' : String(schedule.length), trend: '3 days left', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2], to: '/owner/tournaments' },
+              { title: 'Upcoming', value: scheduleLoading ? '…' : String(schedule.length), trend: '', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', spark: SPARKS[2], to: '/owner/tournaments' },
               { title: 'Prize Money', value: prizeTotal === null ? '…' : `${formatUSD(prizeTotal)}`, trend: '', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', spark: SPARKS[3], to: '/owner/results' },
             ].map((m, i) => {
               const isForbidden = isLocked && (m.to === '/owner/horses' || m.to === '/owner/registrations' || m.to === '/owner/tournaments');

@@ -71,19 +71,16 @@ export function JockeyDashboardPage() {
     return s === 'pending' || s === 'waiting';
   });
 
-  const upcomingRacesCount = myRaces.filter((r) => {
-    const s = (r.status ?? '').toLowerCase();
-    return s !== 'completed' && s !== 'finished';
-  }).length;
+  // Cuộc đua đã chạy xong hoặc bị huỷ thì không còn là phân công đang hiệu lực.
+  const daKetThuc = (r) => ['completed', 'finished', 'cancelled'].includes((r.status ?? '').toLowerCase());
 
-  const completedRaces = myRaces.filter((r) => {
-    const s = (r.status ?? '').toLowerCase();
-    return s === 'completed' || s === 'finished';
-  });
+  const dangHieuLuc = myRaces.filter((r) => !daKetThuc(r));
+  const completedRaces = myRaces.filter(daKetThuc);
+  const upcomingRacesCount = dangHieuLuc.length;
 
   // Mỗi bản ghi là một lượt "ngựa trong một cuộc đua", nài ngựa có thể cưỡi cùng một con
-  // ở nhiều cuộc — nên đếm theo mã ngựa không trùng mới ra đúng số ngựa được giao.
-  const soNguaDuocGiao = new Set(myRaces.map((r) => r.horseId).filter((id) => id != null)).size;
+  // ở nhiều cuộc — nên đếm theo mã ngựa không trùng, và chỉ tính phân công còn hiệu lực.
+  const soNguaDuocGiao = new Set(dangHieuLuc.map((r) => r.horseId).filter((id) => id != null)).size;
 
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>

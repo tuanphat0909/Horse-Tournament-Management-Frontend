@@ -180,10 +180,7 @@ export const NotificationProvider = ({ children }) => {
 
     newConnection
       .start()
-      .then(() => {
-        console.log('[SignalR] Connected successfully.');
-        setConnection(newConnection);
-      })
+      .then(() => setConnection(newConnection))
       .catch((err) => console.error('[SignalR] Connection failed:', err));
 
     return () => {
