@@ -226,9 +226,9 @@ export function SpectatorPredictionsPage() {
                       </div>
                       <div className="text-right shrink-0 flex flex-col items-end gap-1">
                         <div className="text-xs text-muted">
-                          Bet: <span className="text-white font-medium">{formatUSD(Number(b.amount ?? 0))}</span>
+                          Bet: <span className="text-white font-medium tabular-nums">{formatUSD(Number(b.amount ?? 0))}</span>
                         </div>
-                        {tienThang(b) > 0 && <div className="text-sm font-bold text-gold">+{formatUSD(Number(tienThang(b)))}</div>}
+                        {tienThang(b) > 0 && <div className="text-sm font-bold text-gold tabular-nums">+{formatUSD(Number(tienThang(b)))}</div>}
                         {isExpanded ? <ChevronUp size={14} className="text-muted mt-1" /> : <ChevronDown size={14} className="text-muted mt-1" />}
                       </div>
                     </button>
@@ -365,7 +365,7 @@ export function SpectatorPredictionsPage() {
                             </div>
                             <div className="flex justify-between text-white font-medium">
                               <span>Total return if wins:</span>
-                              <span className="text-emerald-400 font-bold">{formatUSD(totalReturn)}</span>
+                              <span className="text-emerald-400 font-bold tabular-nums">{formatUSD(totalReturn)}</span>
                             </div>
                           </div>
                         );

@@ -125,7 +125,7 @@ export function SpectatorWalletOverviewPage() {
                 ) : (
                   <>
                     <div className="flex items-end gap-3 mb-1">
-                      <span className="text-4xl font-serif font-bold text-white">{formatUSD(balance)}</span>
+                      <span className="text-4xl text-white font-extrabold tracking-tight tabular-nums">{formatUSD(balance)}</span>
                       <span className="text-lg text-gold font-bold mb-1">USD</span>
                     </div>
                   </>
@@ -138,7 +138,7 @@ export function SpectatorWalletOverviewPage() {
               <div className="w-9 h-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold mb-3 relative z-10">
                 <TrendingUp size={16} />
               </div>
-              <div className="relative z-10 text-xl font-serif font-bold text-gold">{pageLoading ? '…' : `+${formatUSD(winTotal)}`}</div>
+              <div className="relative z-10 text-xl text-gold font-extrabold tracking-tight tabular-nums">{pageLoading ? '…' : `+${formatUSD(winTotal)}`}</div>
               <div className="relative z-10 text-[11px] text-muted font-medium mt-1">Total Bet Winnings</div>
             </motion.div>
 
@@ -174,17 +174,17 @@ export function SpectatorWalletOverviewPage() {
             </div>
             <div className="flex items-center justify-between text-xs text-muted mb-2">
               <span>
-                Used: <span className="text-white font-semibold">{formatUSD(dailyUsedUsd)}</span>
+                Used: <span className="text-white font-semibold tabular-nums">{formatUSD(dailyUsedUsd)}</span>
               </span>
               <span>
-                Limit: <span className="text-white font-semibold">{formatUSD(SPECTATOR_DAILY_LIMIT)}</span> USDT
+                Limit: <span className="text-white font-semibold tabular-nums">{formatUSD(SPECTATOR_DAILY_LIMIT)}</span> USDT
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all duration-700" style={{ width: `${dailyPct}%` }} />
             </div>
             <div className="text-[10px] text-muted/60 mt-1.5 text-right">
-              Remaining: <span className="text-emerald-400 font-semibold">{formatUSD(SPECTATOR_DAILY_LIMIT - dailyUsedUsd)}</span> USDT
+              Remaining: <span className="text-emerald-400 font-semibold tabular-nums">{formatUSD(SPECTATOR_DAILY_LIMIT - dailyUsedUsd)}</span> USDT
             </div>
           </motion.div>
 

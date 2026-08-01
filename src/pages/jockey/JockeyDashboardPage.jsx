@@ -137,7 +137,7 @@ export function JockeyDashboardPage() {
                   <div className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">{m.trend}</div>
                 </div>
                 <div className="relative z-10">
-                  <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
+                  <div className="text-2xl text-white group-hover:text-champagne transition-colors font-extrabold tracking-tight tabular-nums">{m.value}</div>
                   <div className="text-[11px] text-muted/70 font-medium">{m.title}</div>
                 </div>
               </motion.div>
@@ -294,7 +294,7 @@ export function JockeyDashboardPage() {
                         {/* Inner label */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none z-10">
                           <span className="text-[9px] uppercase tracking-wider text-muted font-bold">{hoveredIndex !== null ? segments[hoveredIndex].label : 'Total Races'}</span>
-                          <span className="text-lg font-bold text-white font-serif mt-0.5">{hoveredIndex !== null ? `${segments[hoveredIndex].percentage}%` : `${total} ${'races'}`}</span>
+                          <span className="text-lg text-white mt-0.5 font-extrabold tracking-tight tabular-nums">{hoveredIndex !== null ? `${segments[hoveredIndex].percentage}%` : `${total} ${'races'}`}</span>
                         </div>
                       </div>
 

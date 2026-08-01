@@ -167,7 +167,7 @@ export function SpectatorWithdrawPage() {
                 <LoadingSkeleton />
               ) : (
                 <div className="flex items-end gap-2">
-                  <span className="text-3xl font-serif font-bold text-white">{formatUSD(availableUsd)}</span>
+                  <span className="text-3xl text-white font-extrabold tracking-tight tabular-nums">{formatUSD(availableUsd)}</span>
                   <span className="text-base text-gold font-bold mb-0.5">USD</span>
                 </div>
               )}

@@ -97,7 +97,7 @@ export function SpectatorDepositPage() {
                 <LoadingSkeleton />
               ) : (
                 <div className="flex items-end gap-2">
-                  <span className="text-3xl font-serif font-bold text-white">{formatUSD(balance)}</span>
+                  <span className="text-3xl text-white font-extrabold tracking-tight tabular-nums">{formatUSD(balance)}</span>
                   <span className="text-base text-gold font-bold mb-0.5">USD</span>
                 </div>
               )}
@@ -164,7 +164,7 @@ export function SpectatorDepositPage() {
               <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-5 p-4 rounded-xl bg-gold/5 border border-gold/20">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted">You will receive</span>
-                  <span className="text-sm font-bold text-gold">{formatUSD(effectiveUsd)} USD</span>
+                  <span className="text-sm font-bold text-gold tabular-nums">{formatUSD(effectiveUsd)} USD</span>
                 </div>
               </motion.div>
             )}

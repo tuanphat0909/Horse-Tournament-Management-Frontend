@@ -75,7 +75,7 @@ export function JockeyStatsPage() {
                 <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${s.bg} border border-white/[0.08] flex items-center justify-center ${s.color} mb-3 relative z-10`}>
                   <s.icon size={16} />
                 </div>
-                <div className="relative z-10 text-3xl font-serif font-bold text-white group-hover:text-champagne transition-colors">{s.value}</div>
+                <div className="relative z-10 text-3xl text-white group-hover:text-champagne transition-colors font-extrabold tracking-tight tabular-nums">{s.value}</div>
                 <div className="relative z-10 text-[11px] text-muted font-medium mt-0.5">{s.label}</div>
               </motion.div>
             ))}

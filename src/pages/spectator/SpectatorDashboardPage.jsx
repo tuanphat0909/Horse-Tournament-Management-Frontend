@@ -121,7 +121,7 @@ export function SpectatorDashboardPage() {
                     <div className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">{m.trend}</div>
                   </div>
                   <div className="relative z-10">
-                    <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
+                    <div className="text-2xl text-white group-hover:text-champagne transition-colors font-extrabold tracking-tight tabular-nums">{m.value}</div>
                     <div className="text-[11px] text-muted/70 font-medium">
                       {m.title} {isForbidden && '🔒'}
                     </div>
@@ -230,7 +230,7 @@ export function SpectatorDashboardPage() {
                         </div>
                         <div className="text-right">
                           <div className={`text-[11px] font-bold ${isWin ? 'text-emerald-400' : isLose ? 'text-red-400' : 'text-yellow-400'}`}>{isWin ? 'Correct' : isLose ? 'Incorrect' : 'Pending'}</div>
-                          <div className="text-xs text-gold font-bold">{(b.actualPayout ?? b.prize) != null ? '+' + formatUSD(b.actualPayout ?? b.prize) : ''}</div>
+                          <div className="text-xs text-gold font-bold tabular-nums">{(b.actualPayout ?? b.prize) != null ? '+' + formatUSD(b.actualPayout ?? b.prize) : ''}</div>
                         </div>
                       </div>
                     );

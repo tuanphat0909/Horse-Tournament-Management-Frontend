@@ -714,7 +714,7 @@ export function AdminTournamentsPage() {
                                   .map((p) => (
                                     <div key={p.id} className="bg-white/[0.03] border border-glass-border/40 rounded px-1 py-1">
                                       <div className="text-[9px] text-muted font-semibold">Rank {p.rankPosition}</div>
-                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap">{formatUSD(Number(p.amount))} USD</div>
+                                      <div className="text-gold font-bold text-[10px] whitespace-nowrap tabular-nums">{formatUSD(Number(p.amount))} USD</div>
                                     </div>
                                   ))}
                               </div>
@@ -978,10 +978,10 @@ export function AdminTournamentsPage() {
                 <span className="font-bold text-white text-[11px] uppercase tracking-wider mb-2 block">{'Prize Structure (USD)'}</span>
                 <div className="mb-2 text-[11px] text-muted flex flex-wrap justify-between gap-2">
                   <span>
-                    Admin wallet: <b className="text-emerald-400">{formatUSD(adminWalletBalance)} USD</b>
+                    Admin wallet: <b className="text-emerald-400 tabular-nums">{formatUSD(adminWalletBalance)} USD</b>
                   </span>
                   <span>
-                    Total prizes: <b className="text-gold">{formatUSD([form.firstPrize, form.secondPrize, form.thirdPrize].reduce((sum, value) => sum + (Number(value) || 0), 0))} USD</b>
+                    Total prizes: <b className="text-gold tabular-nums">{formatUSD([form.firstPrize, form.secondPrize, form.thirdPrize].reduce((sum, value) => sum + (Number(value) || 0), 0))} USD</b>
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">

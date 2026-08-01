@@ -92,7 +92,7 @@ export function DashboardPage() {
                   </div>
                 </div>
                 <div className="relative z-10">
-                  <div className="text-2xl font-serif text-white font-bold group-hover:text-champagne transition-colors">{m.value}</div>
+                  <div className="text-2xl text-white group-hover:text-champagne transition-colors font-extrabold tracking-tight tabular-nums">{m.value}</div>
                   <div className="text-[11px] text-muted/70 font-medium">{m.title}</div>
                 </div>
                 <svg className="absolute bottom-0 left-0 w-full h-10 opacity-10 group-hover:opacity-25 transition-opacity" viewBox="0 0 100 20" preserveAspectRatio="none">
@@ -280,7 +280,7 @@ export function DashboardPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-lg font-serif text-white font-bold group-hover:text-champagne transition-colors">{s.value}</div>
+                      <div className="text-lg text-white group-hover:text-champagne transition-colors font-extrabold tracking-tight tabular-nums">{s.value}</div>
                       <div className="text-[10px] text-muted uppercase tracking-wider font-semibold">{s.label}</div>
                     </div>
                   </div>
