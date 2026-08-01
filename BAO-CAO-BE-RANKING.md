@@ -65,6 +65,12 @@ Nếu chọn hướng B thì `RaceResults` hiện đã đủ thông tin: bảng 
 
 ---
 
-## Ghi chú cho frontend
+## Frontend đang tạm chữa thế nào
 
-Frontend **không tự chữa được** — endpoint `/public/rankings/jockeys` chỉ trả về `RankingPoint`, không có số trận thắng. Cần backend bổ sung `WinsCount` cho `JockeyRankingResponse` giống `HorseRankingResponse` đã có.
+Endpoint `/public/rankings/jockeys` chỉ trả `RankingPoint`, không có số trận thắng. Nên frontend
+phải **tự đếm**: gọi `/public/races/schedule`, lọc các cuộc đã kết thúc, rồi gọi
+`/public/races/{id}/entries` cho từng cuộc và đếm `finishPosition === 1` theo `jockeyId`.
+
+Cách này ra số đúng nhưng **tốn N+1 lượt gọi mạng** mỗi lần mở trang — giải càng nhiều cuộc đua
+thì càng chậm. Rất mong backend bổ sung `WinsCount` (và `RacesCount`) vào `JockeyRankingResponse`
+giống `HorseRankingResponse` đã có, để frontend bỏ được vòng lặp này.

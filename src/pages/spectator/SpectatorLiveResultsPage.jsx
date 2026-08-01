@@ -7,6 +7,7 @@ import { Topbar } from '../../components/layout/Topbar';
 import { PageHero } from '../../components/layout/PageHero';
 import { PageAmbience } from '../../components/layout/PageAmbience';
 import { getRaceSchedule, getJockeyRankings, getHorseRankings, getTournaments } from '../../api/publicService';
+import { demThongKeTuKetQua } from '../../utils/rankingStats';
 
 import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 const POS_STYLE = {
@@ -39,10 +40,16 @@ export function SpectatorLiveResultsPage() {
       .catch(() => setTournaments([]))
       .finally(() => setTourLoading(false));
 
-    Promise.all([getJockeyRankings(), getHorseRankings()])
-      .then(([jr, hr]) => {
-        setJockeyRankings(jr?.result ?? (Array.isArray(jr) ? jr : []));
-        setHorseRankings(hr?.result ?? (Array.isArray(hr) ? hr : []));
+    // Ghép thêm số trận/số thắng đếm từ kết quả đua: điểm xếp hạng nài ngựa mà API trả
+    // về luôn bằng 0 nên tự nó không xếp hạng được gì.
+    Promise.all([getJockeyRankings(), getHorseRankings(), demThongKeTuKetQua()])
+      .then(([jr, hr, { theoNgua, theoNaiNgua }]) => {
+        const ghep = (ds, map, khoa) =>
+          ds
+            .map((x) => ({ ...x, ...(map.get(x[khoa]) ?? { races: 0, wins: x.winsCount ?? 0 }) }))
+            .sort((a, b) => b.wins - a.wins || b.races - a.races);
+        setJockeyRankings(ghep(jr?.result ?? (Array.isArray(jr) ? jr : []), theoNaiNgua, 'jockeyId'));
+        setHorseRankings(ghep(hr?.result ?? (Array.isArray(hr) ? hr : []), theoNgua, 'horseId'));
       })
       .catch(() => {
         setJockeyRankings([]);
@@ -152,7 +159,7 @@ export function SpectatorLiveResultsPage() {
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <div className="flex items-center gap-1 text-gold text-xs font-bold">
-                                <Star size={11} /> {j.rankingPoint ?? 0}
+                                <Star size={11} /> {j.wins ?? 0}
                               </div>
                               {isExpanded ? <ChevronUp size={14} className="text-muted" /> : <ChevronDown size={14} className="text-muted" />}
                             </div>
@@ -165,7 +172,7 @@ export function SpectatorLiveResultsPage() {
                                     Email: <span className="text-champagne">{j.email ?? '—'}</span>
                                   </span>
                                   <span>
-                                    Ranking Points: <span className="text-gold font-bold">{j.rankingPoint ?? 0}</span>
+                                    Wins: <span className="text-gold font-bold">{j.wins ?? 0}</span> / {j.races ?? 0} races
                                   </span>
                                   <span>
                                     Experience: <span className="text-white">{j.experienceYears ?? 0} years</span>
@@ -212,11 +219,11 @@ export function SpectatorLiveResultsPage() {
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center font-serif font-bold text-sm border shrink-0 ${POS_STYLE[i + 1] ?? 'bg-white/5 text-muted border-glass-border'}`}>{i + 1}</div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-semibold text-white">{h.name ?? `Horse #${h.horseId}`}</div>
-                              <div className="text-xs text-muted">{h.winsCount ?? 0} wins</div>
+                              <div className="text-xs text-muted">{h.wins ?? h.winsCount ?? 0} wins</div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <div className="flex items-center gap-1 text-gold text-xs font-bold">
-                                <Trophy size={11} /> {h.winsCount ?? 0}
+                                <Trophy size={11} /> {h.wins ?? h.winsCount ?? 0}
                               </div>
                               {isExpanded ? <ChevronUp size={14} className="text-muted" /> : <ChevronDown size={14} className="text-muted" />}
                             </div>
@@ -235,7 +242,7 @@ export function SpectatorLiveResultsPage() {
                                     Age: <span className="text-white">{h.age ?? '—'}</span>
                                   </span>
                                   <span>
-                                    Total Wins: <span className="text-gold font-bold">{h.winsCount ?? 0}</span>
+                                    Total Wins: <span className="text-gold font-bold">{h.wins ?? h.winsCount ?? 0}</span>
                                   </span>
                                 </div>
                               </motion.div>
