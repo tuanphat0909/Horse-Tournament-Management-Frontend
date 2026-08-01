@@ -107,7 +107,11 @@ export function AdminDashboardPage() {
       .finally(() => setActivitiesLoading(false));
   }, []);
 
-  const upcomingRaces = schedule.length;
+  // Backend đếm `activeRaces` theo danh sách trạng thái `Live`/`Scheduled`, nhưng cuộc đua
+  // đang chạy thật lại mang trạng thái `Active` nên không được đếm — ra 0 trong khi vẫn
+  // có cuộc đua. Tự đếm từ lịch đua để hai con số trên cùng một thẻ không mâu thuẫn nhau.
+  const tongSoRace = schedule.length;
+  const raceDangChay = schedule.filter((r) => ['active', 'live', 'running', 'inprogress'].includes(String(r.status ?? '').toLowerCase())).length;
   const pendingRegs = registrations.filter((r) => r.status === 'Pending');
 
   const formatRelativeTime = (date) => {
@@ -164,7 +168,7 @@ export function AdminDashboardPage() {
               { title: 'Users', value: stats ? stats.totalUsers : '—', trend: 'Active', icon: Users, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/admin/users' },
               { title: 'Tournaments', value: stats ? stats.totalTournaments : '—', trend: 'Season 2026', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/admin/tournaments' },
               { title: 'Profit', value: stats ? formatUSD(stats.profit) : '—', trend: 'Betting Revenue', icon: ClipboardList, color: 'text-emerald-400', bg: 'from-emerald-500/15 to-emerald-900/20', path: '/admin/wallet' },
-              { title: 'Races', value: stats ? stats.activeRaces : '—', trend: upcomingRaces > 0 ? `${upcomingRaces} ${'total'}` : '—', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
+              { title: 'Races', value: String(tongSoRace), trend: raceDangChay > 0 ? `${raceDangChay} running` : 'None running', icon: Calendar, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/admin/races' },
             ].map((m, i) => (
               <MotionLink key={i} to={m.path} variants={child} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer block" style={{ height: '130px' }}>
                 <div className={`absolute -top-4 -right-4 w-24 h-24 rounded-full bg-gradient-to-br ${m.bg} blur-[30px] opacity-60 group-hover:opacity-100 transition-opacity`} />
