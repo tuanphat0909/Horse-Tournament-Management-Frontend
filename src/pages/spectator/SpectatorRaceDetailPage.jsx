@@ -351,22 +351,22 @@ export function SpectatorRaceDetailPage() {
 
                     <div className="flex justify-between items-center px-1">
                       <span className="text-xs text-muted">Wallet Balance:</span>
-                      <span className={`text-sm font-bold tabular-nums ${amount > balance ? 'text-red-400' : 'text-emerald-400'}`}>${balance.toLocaleString()}</span>
+                      <span className={`text-sm font-bold tabular-nums ${amount > balance ? 'text-red-400' : 'text-emerald-400'}`}>${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                   </div>
 
                   <div className="space-y-3 pt-4 border-t border-glass-border/40 mb-6">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted">Bet Amount:</span>
-                      <span className="text-white tabular-nums">${amount.toLocaleString()}</span>
+                      <span className="text-white tabular-nums">${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted">Expected Payout:</span>
-                      <span className="text-emerald-400 font-medium tabular-nums">+${potentialProfit.toLocaleString()}</span>
+                      <span className="text-emerald-400 font-medium tabular-nums">+${potentialProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between text-base font-bold">
                       <span className="text-white">Total Return:</span>
-                      <span className="text-gold tabular-nums">${totalReturn.toLocaleString()}</span>
+                      <span className="text-gold tabular-nums">${totalReturn.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                   </div>
 

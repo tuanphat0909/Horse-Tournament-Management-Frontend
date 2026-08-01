@@ -230,7 +230,7 @@ export function SpectatorDashboardPage() {
                         </div>
                         <div className="text-right">
                           <div className={`text-[11px] font-bold ${isWin ? 'text-emerald-400' : isLose ? 'text-red-400' : 'text-yellow-400'}`}>{isWin ? 'Correct' : isLose ? 'Incorrect' : 'Pending'}</div>
-                          <div className="text-xs text-gold font-bold">{(b.actualPayout ?? b.prize) != null ? '+$' + Number(b.actualPayout ?? b.prize).toLocaleString() : ''}</div>
+                          <div className="text-xs text-gold font-bold">{(b.actualPayout ?? b.prize) != null ? '+$' + Number(b.actualPayout ?? b.prize).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}</div>
                         </div>
                       </div>
                     );

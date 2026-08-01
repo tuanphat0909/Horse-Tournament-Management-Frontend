@@ -414,7 +414,7 @@ export function AdminWalletPage() {
                   Cancel
                 </button>
                 <button type="submit" disabled={actionLoading} className={`px-5 py-2.5 rounded-xl text-xs font-bold text-rich-black transition-all cursor-pointer shadow-lg flex items-center gap-1.5 ${modalType === 'deposit' ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-gold hover:bg-amber-300'} disabled:opacity-50`}>
-                  {actionLoading ? 'Processing...' : modalType === 'deposit' ? `Confirm Deposit ($${(parseFloat(amountInput) || 0).toLocaleString()})` : `Confirm Withdraw ($${(parseFloat(amountInput) || 0).toLocaleString()})`}
+                  {actionLoading ? 'Processing...' : modalType === 'deposit' ? `Confirm Deposit ($${(parseFloat(amountInput) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})` : `Confirm Withdraw ($${(parseFloat(amountInput) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}
                 </button>
               </div>
             </form>

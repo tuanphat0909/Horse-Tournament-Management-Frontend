@@ -27,7 +27,7 @@ const OwnerPreview = () => {
       <div className="grid grid-cols-3 gap-1.5">
         {[
           { value: '12', label: 'My Horses', color: 'text-[#B58A30]' },
-          { value: '48,500 ¢', label: 'Prize Money', color: 'text-emerald-400' },
+          { value: '$48,500', label: 'Prize Money', color: 'text-emerald-400' },
           { value: '3', label: 'Upcoming', color: 'text-blue-400' },
         ].map((s, i) => (
           <div key={i} className="bg-slate-100 border border-slate-200 rounded-lg p-2 text-center">
@@ -230,8 +230,8 @@ const SpectatorPreview = () => {
         {/* Trang thật đặt tên là "My Bets", tiền thưởng tính bằng USD */}
         <div className="text-[9px] text-slate-400 uppercase tracking-widest mb-1.5">{'My Bets'}</div>
         {[
-          { horse: 'Thunderstrike', pred: 'Win', correct: true, reward: '+1,500 ¢' },
-          { horse: 'Desert Wind', pred: 'Win', correct: true, reward: '+900 ¢' },
+          { horse: 'Thunderstrike', pred: 'Win', correct: true, reward: '+$1,500' },
+          { horse: 'Desert Wind', pred: 'Win', correct: true, reward: '+$900' },
           { horse: 'Storm Rider', pred: 'Pending', correct: null, reward: '—' },
         ].map((p, i) => (
           <div key={i} className="flex items-center gap-2 py-1 px-1.5 rounded-lg hover:bg-slate-50 mb-0.5">
