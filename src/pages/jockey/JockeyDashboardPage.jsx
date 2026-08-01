@@ -81,6 +81,10 @@ export function JockeyDashboardPage() {
     return s === 'completed' || s === 'finished';
   });
 
+  // Mỗi bản ghi là một lượt "ngựa trong một cuộc đua", nài ngựa có thể cưỡi cùng một con
+  // ở nhiều cuộc — nên đếm theo mã ngựa không trùng mới ra đúng số ngựa được giao.
+  const soNguaDuocGiao = new Set(myRaces.map((r) => r.horseId).filter((id) => id != null)).size;
+
   return (
     <div className="min-h-screen text-body font-sans flex" style={{ backgroundColor: '#0b101e' }}>
       <Sidebar />
@@ -119,9 +123,9 @@ export function JockeyDashboardPage() {
           <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-4 gap-4">
             {[
               { title: 'New Invitations', value: String(pending.length), trend: 'Awaiting Response', icon: Bell, color: 'text-yellow-400', bg: 'from-yellow-500/15 to-yellow-900/20', path: '/jockey/invitations' },
-              { title: 'Upcoming Races', value: upcomingRacesCount > 0 ? String(upcomingRacesCount) : '—', trend: 'Next 7 days', icon: Calendar, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/jockey/schedule' },
+              { title: 'Upcoming Races', value: upcomingRacesCount > 0 ? String(upcomingRacesCount) : '—', trend: 'Not raced yet', icon: Calendar, color: 'text-blue-400', bg: 'from-blue-500/15 to-blue-900/20', path: '/jockey/schedule' },
               { title: 'Total Wins', value: stats?.wins !== undefined ? String(stats.wins) : '—', trend: 'Season 2026', icon: Trophy, color: 'text-gold', bg: 'from-gold/15 to-amber-900/20', path: '/jockey/stats' },
-              { title: 'Assigned Horses', value: 'View Now', trend: 'My Races', icon: Flag, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/jockey/races' },
+              { title: 'Assigned Horses', value: soNguaDuocGiao > 0 ? String(soNguaDuocGiao) : '—', trend: 'Currently assigned', icon: Flag, color: 'text-purple-400', bg: 'from-purple-500/15 to-purple-900/20', path: '/jockey/races' },
             ].map((m, i) => (
               <motion.div key={i} variants={child} onClick={() => navigate(m.path)} className="glass-panel rounded-xl p-5 relative overflow-hidden group cursor-pointer hover:border-gold/30 transition-all" style={{ height: '130px' }}>
                 <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent pointer-events-none" />
